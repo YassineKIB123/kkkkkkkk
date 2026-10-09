@@ -1,0 +1,6 @@
+{
+  "name": "PDFStudio - Professional All-in-One PDF Tools",
+  "description": "Merge, split, compress, convert, edit, sign, and organize PDF documents securely in your browser.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import { AdBanner } from "@/components/ads/AdBanner";
 import { DICTIONARY, Language } from "@/lib/i18n/translations";
+import { useLanguage } from "@/context/LanguageContext";
 
 type CategoryFilter = "all" | "popular" | "scan_edit" | "organize" | "convert";
 
@@ -64,7 +65,7 @@ const HOMEPAGE_FAQS = [
 export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<CategoryFilter>("all");
-  const [selectedLanguage, setSelectedLanguage] = useState<Language>("EN");
+  const { language: selectedLanguage, setLanguage: setSelectedLanguage } = useLanguage();
   const [isLangOpen, setIsLangOpen] = useState(false);
   const [isMegaMenuOpen, setIsMegaMenuOpen] = useState(false);
   const [theme, setTheme] = useState<"light" | "dark">("light");

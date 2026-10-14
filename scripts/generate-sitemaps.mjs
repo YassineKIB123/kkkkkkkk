@@ -27,6 +27,7 @@ if (!fs.existsSync(PUBLIC_DIR)) {
 }
 
 const CORE_TOOLS = [
+  { type: "edit", slug: "edit-pdf" },
   { type: "compress", slug: "compress-pdf" },
   { type: "merge", slug: "merge-pdf" },
   { type: "split", slug: "split-pdf" },
@@ -99,7 +100,7 @@ const MODIFIERS = [
   },
   {
     id: "editable-text",
-    compatibleTools: ["pdf-to-word", "pdf-to-excel", "pdf-to-powerpoint", "pdf-to-text"],
+    compatibleTools: ["edit", "pdf-to-word", "pdf-to-excel", "pdf-to-powerpoint", "pdf-to-text"],
   },
   {
     id: "high-resolution-300dpi",
@@ -130,6 +131,7 @@ allUrls.push({ loc: `${SITE_URL}`, priority: "1.0", changefreq: "daily" });
 
 // 2. Core dedicated tool pages (/tools/*)
 const DEDICATED_TOOL_PATHS = [
+  "/tools/edit-pdf",
   "/tools/compress-pdf",
   "/tools/merge-pdf",
   "/tools/split-pdf",

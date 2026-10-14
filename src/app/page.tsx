@@ -29,12 +29,29 @@ import {
   Laptop,
   Stamp,
   ShieldAlert,
+  FileEdit,
+  UploadCloud,
+  FileText,
+  CheckCircle2,
 } from "lucide-react";
 import { AdBanner } from "@/components/ads/AdBanner";
 import { DICTIONARY, Language } from "@/lib/i18n/translations";
 import { useLanguage } from "@/context/LanguageContext";
 
 type CategoryFilter = "all" | "popular" | "scan_edit" | "organize" | "convert";
+
+declare global {
+  interface Window {
+    __pdfStudioPendingFiles?: File[] | null;
+  }
+}
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  const kb = bytes / 1024;
+  if (kb < 1024) return `${kb.toFixed(1)} KB`;
+  return `${(kb / 1024).toFixed(2)} MB`;
+}
 
 const HOMEPAGE_FAQS = [
   {
@@ -65,6 +82,8 @@ const HOMEPAGE_FAQS = [
 ];
 
 const POPULAR_PSEO_LINKS = [
+  { href: "/edit-pdf-editable-text", label: "Edit Existing PDF Text Online" },
+  { href: "/edit-pdf-for-resumes", label: "Edit PDF Resume & CV Text" },
   { href: "/compress-pdf-under-100kb", label: "Compress PDF Under 100 KB" },
   { href: "/compress-pdf-under-200kb", label: "Compress PDF Under 200 KB" },
   { href: "/compress-pdf-for-email", label: "Compress PDF for Email" },
@@ -91,6 +110,12 @@ export default function HomePage() {
   const [isLangOpen, setIsLangOpen] = useState(false);
   const [isMegaMenuOpen, setIsMegaMenuOpen] = useState(false);
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
+
+  // Hero Dropzone States & Ref to the Main Tools Section below
+  const [droppedFiles, setDroppedFiles] = useState<File[]>([]);
+  const [isDraggingHero, setIsDraggingHero] = useState(false);
+  const heroFileInputRef = useRef<HTMLInputElement>(null);
+  const toolsSectionRef = useRef<HTMLDivElement>(null);
 
   // PWA Install Prompt States
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
@@ -143,11 +168,56 @@ export default function HomePage() {
     }
   };
 
+  // When a PDF or Image is dropped/selected, save it and smoothly scroll right down to the Tools Grid below!
+  const handleHeroFilesPicked = (fileList: FileList | File[]) => {
+    const arr = Array.from(fileList);
+    if (arr.length === 0) return;
+    setDroppedFiles(arr);
+    setActiveCategory("all");
+    if (typeof window !== "undefined") {
+      window.__pdfStudioPendingFiles = arr;
+    }
+    setTimeout(() => {
+      toolsSectionRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }, 80);
+  };
+
   const t = DICTIONARY[selectedLanguage] || DICTIONARY.EN;
   const isRTL = selectedLanguage === "AR";
 
   const toolsDirectory = useMemo(
     () => [
+      {
+        id: "edit",
+        title:
+          selectedLanguage === "FR"
+            ? "Modifier Texte PDF"
+            : selectedLanguage === "ES"
+              ? "Editar Texto PDF"
+              : selectedLanguage === "RU"
+                ? "Редактировать PDF"
+                : selectedLanguage === "AR"
+                  ? "تعديل نص PDF"
+                  : "Edit PDF Text",
+        description:
+          selectedLanguage === "FR"
+            ? "Cliquez sur n'importe quel texte existant dans votre PDF pour le modifier, le remplacer ou l'effacer."
+            : selectedLanguage === "ES"
+              ? "Haz clic en cualquier texto existente de tu PDF para editarlo, reemplazarlo o borrarlo al instante."
+              : selectedLanguage === "AR"
+                ? "انقر على أي نص موجود داخل ملف PDF لتعديله أو استبداله أو مسحه مباشرة."
+                : "Click any existing text in your PDF to edit, replace, whiteout, or add new text directly in your browser.",
+        href: "/tools/edit-pdf",
+        formats: [".PDF"],
+        category: "scan_edit" as const,
+        popular: true,
+        icon: FileEdit,
+        iconBg: "bg-rose-50 border-rose-100 dark:bg-rose-950/40 dark:border-rose-900/50",
+        iconColor: "text-rose-600 dark:text-rose-400",
+      },
       {
         id: "scan",
         title: t.tools.scanTitle,
@@ -277,7 +347,7 @@ export default function HomePage() {
         iconColor: "text-cyan-600 dark:text-cyan-400",
       },
     ],
-    [t]
+    [t, selectedLanguage]
   );
 
   const filteredTools = useMemo(() => {
@@ -317,6 +387,9 @@ export default function HomePage() {
           </Link>
 
           <nav className="hidden md:flex items-center gap-5 text-xs font-semibold text-slate-600 dark:text-slate-300">
+            <Link href="/tools/edit-pdf" className="hover:text-rose-600 transition-colors font-bold text-rose-600 dark:text-rose-400">
+              Edit PDF Text
+            </Link>
             <Link href="/tools/compress-pdf" className="hover:text-rose-600 transition-colors">
               {t.tools.compressTitle}
             </Link>
@@ -427,6 +500,14 @@ export default function HomePage() {
                       </p>
                       <div className="space-y-1">
                         <Link
+                          href="/tools/edit-pdf"
+                          onClick={() => setIsMegaMenuOpen(false)}
+                          className="flex items-center gap-2.5 rounded-lg p-2 text-slate-700 hover:bg-slate-50 hover:text-rose-600 dark:text-slate-300 dark:hover:bg-slate-800 transition-colors"
+                        >
+                          <FileEdit className="h-4 w-4 text-rose-500" />
+                          <span className="font-semibold text-xs">Edit PDF Text</span>
+                        </Link>
+                        <Link
                           href="/tools/scan"
                           onClick={() => setIsMegaMenuOpen(false)}
                           className="flex items-center gap-2.5 rounded-lg p-2 text-slate-700 hover:bg-slate-50 hover:text-rose-600 dark:text-slate-300 dark:hover:bg-slate-800 transition-colors"
@@ -527,9 +608,9 @@ export default function HomePage() {
       </header>
 
       {/* Main Container */}
-      <main className="mx-auto max-w-7xl px-4 pt-12 pb-20 sm:px-6 lg:px-8">
+      <main className="mx-auto max-w-7xl px-4 pt-10 pb-20 sm:px-6 lg:px-8">
         {/* Hero Section */}
-        <div className="mx-auto max-w-3xl text-center space-y-4">
+        <div className="mx-auto max-w-4xl text-center space-y-5">
           <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl text-slate-900 dark:text-white">
             {t.hero.titleStart}{" "}
             <span className="text-rose-600">{t.hero.titleHighlight}</span>
@@ -539,96 +620,225 @@ export default function HomePage() {
             {t.hero.subtitle}
           </p>
 
-          <div className="pt-4 max-w-xl mx-auto">
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={t.hero.searchPlaceholder}
-                className="w-full rounded-2xl border border-slate-200 bg-white pl-11 pr-4 py-3.5 text-sm text-slate-900 shadow-xs placeholder-slate-400 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500/10 dark:border-slate-800 dark:bg-slate-900 dark:text-white dark:placeholder-slate-500"
-              />
+          {/* ================================================================ */}
+          {/* HERO "DROP PDF OR IMG" DROPZONE (SCROLLS TO MAIN TOOLS BELOW)    */}
+          {/* ================================================================ */}
+          <div className="pt-2 max-w-2xl mx-auto">
+            <input
+              ref={heroFileInputRef}
+              type="file"
+              accept=".pdf,application/pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
+              multiple
+              onChange={(e) => {
+                if (e.target.files && e.target.files.length > 0) {
+                  handleHeroFilesPicked(e.target.files);
+                  e.target.value = "";
+                }
+              }}
+              className="hidden"
+            />
+
+            <div
+              onClick={() => heroFileInputRef.current?.click()}
+              onDragOver={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setIsDraggingHero(true);
+              }}
+              onDragLeave={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setIsDraggingHero(false);
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setIsDraggingHero(false);
+                if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                  handleHeroFilesPicked(e.dataTransfer.files);
+                }
+              }}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  heroFileInputRef.current?.click();
+                }
+              }}
+              className={`group relative overflow-hidden rounded-3xl border-2 border-dashed p-7 sm:p-9 transition-all duration-300 cursor-pointer shadow-lg ${
+                isDraggingHero
+                  ? "border-rose-500 bg-rose-50/90 scale-[1.01] shadow-rose-500/20 dark:border-rose-500 dark:bg-rose-950/30"
+                  : "border-rose-300/90 bg-gradient-to-br from-rose-50/70 via-white to-orange-50/50 hover:border-rose-500 hover:shadow-xl hover:shadow-rose-500/10 dark:border-rose-900/60 dark:from-slate-900 dark:via-slate-900 dark:to-rose-950/20"
+              }`}
+            >
+              {/* Subtle decorative background glow */}
+              <div className="pointer-events-none absolute -right-12 -top-12 h-36 w-36 rounded-full bg-rose-500/10 blur-2xl transition-transform group-hover:scale-125" />
+              <div className="pointer-events-none absolute -bottom-12 -left-12 h-36 w-36 rounded-full bg-orange-500/10 blur-2xl transition-transform group-hover:scale-125" />
+
+              <div className="relative flex flex-col items-center justify-center space-y-3.5">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-600 to-orange-500 text-white shadow-md shadow-rose-600/25 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3">
+                  <UploadCloud className="h-8 w-8" />
+                </div>
+
+                <div className="space-y-1">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-100/90 dark:bg-rose-950/70 px-3 py-0.5 text-[11px] font-extrabold uppercase tracking-wider text-rose-700 dark:text-rose-300">
+                    <Sparkles className="h-3 w-3" />
+                    <span>Instant File Drop</span>
+                  </span>
+                  <h2 className="text-xl sm:text-2xl font-black tracking-tight uppercase text-slate-900 dark:text-white">
+                    DROP PDF OR IMG
+                  </h2>
+                  <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+                    Drag & drop your PDF or image here — then pick any tool below to open it right away
+                  </p>
+                </div>
+
+                <div className="pt-1 flex flex-wrap items-center justify-center gap-3">
+                  <span className="inline-flex items-center gap-2 rounded-xl bg-rose-600 group-hover:bg-rose-500 px-5 py-2.5 text-xs sm:text-sm font-bold text-white shadow-sm shadow-rose-600/20 transition-all">
+                    <FileText className="h-4 w-4" />
+                    <span>Select PDF or Image</span>
+                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                  </span>
+
+                  <span className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200/90 bg-white/90 dark:border-slate-800 dark:bg-slate-900 px-3 py-2 text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                    <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
+                    <span>100% Local & Private</span>
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center justify-center gap-2 pt-4">
-            <button
-              type="button"
-              onClick={() => setActiveCategory("all")}
-              className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all ${
-                activeCategory === "all"
-                  ? "bg-rose-600 text-white shadow-xs"
-                  : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
-              }`}
-            >
-              {t.filters.all} ({toolsDirectory.length})
-            </button>
+          {/* ================================================================ */}
+          {/* MAIN TOOLS SECTION ANCHOR (AUTO-SCROLL TARGET WHEN FILE DROPPED) */}
+          {/* ================================================================ */}
+          <div ref={toolsSectionRef} className="pt-4 scroll-mt-20 space-y-4">
+            {/* Compact Active File Pill right above the main tools when a file is dropped */}
+            {droppedFiles.length > 0 && (
+              <div className="mx-auto max-w-2xl flex flex-wrap items-center justify-between gap-3 rounded-2xl border-2 border-emerald-500/80 bg-emerald-50/90 dark:bg-emerald-950/40 px-4 py-3 text-left shadow-md">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                  <div className="min-w-0">
+                    <p className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white truncate">
+                      {droppedFiles[0].name}
+                      {droppedFiles.length > 1 && ` (+${droppedFiles.length - 1} more)`}
+                      <span className="ml-2 font-mono text-[11px] font-normal text-slate-500">
+                        ({formatFileSize(droppedFiles.reduce((a, f) => a + f.size, 0))})
+                      </span>
+                    </p>
+                    <p className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-300">
+                      File ready! Click any tool below to open it directly:
+                    </p>
+                  </div>
+                </div>
 
-            <button
-              type="button"
-              onClick={() => setActiveCategory("popular")}
-              className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all ${
-                activeCategory === "popular"
-                  ? "bg-rose-600 text-white shadow-xs"
-                  : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
-              }`}
-            >
-              {t.filters.popular} (5)
-            </button>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => heroFileInputRef.current?.click()}
+                    className="rounded-lg border border-emerald-300 bg-white px-2.5 py-1 text-xs font-bold text-emerald-800 hover:bg-emerald-100"
+                  >
+                    Change
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDroppedFiles([]);
+                      if (typeof window !== "undefined") {
+                        window.__pdfStudioPendingFiles = null;
+                      }
+                    }}
+                    className="rounded-lg border border-emerald-200 bg-white p-1 text-slate-500 hover:text-red-600"
+                    title="Clear file"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            )}
 
-            <button
-              type="button"
-              onClick={() => setActiveCategory("scan_edit")}
-              className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all ${
-                activeCategory === "scan_edit"
-                  ? "bg-rose-600 text-white shadow-xs"
-                  : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
-              }`}
-            >
-              {t.filters.scan_edit} (4)
-            </button>
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <button
+                type="button"
+                onClick={() => setActiveCategory("all")}
+                className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all ${
+                  activeCategory === "all"
+                    ? "bg-rose-600 text-white shadow-xs"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+                }`}
+              >
+                {t.filters.all} ({toolsDirectory.length})
+              </button>
 
-            <button
-              type="button"
-              onClick={() => setActiveCategory("organize")}
-              className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all ${
-                activeCategory === "organize"
-                  ? "bg-rose-600 text-white shadow-xs"
-                  : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
-              }`}
-            >
-              {t.filters.organize} (4)
-            </button>
+              <button
+                type="button"
+                onClick={() => setActiveCategory("popular")}
+                className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all ${
+                  activeCategory === "popular"
+                    ? "bg-rose-600 text-white shadow-xs"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+                }`}
+              >
+                {t.filters.popular} (6)
+              </button>
 
-            <button
-              type="button"
-              onClick={() => setActiveCategory("convert")}
-              className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all ${
-                activeCategory === "convert"
-                  ? "bg-rose-600 text-white shadow-xs"
-                  : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
-              }`}
-            >
-              {t.filters.convert} (3)
-            </button>
+              <button
+                type="button"
+                onClick={() => setActiveCategory("scan_edit")}
+                className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all ${
+                  activeCategory === "scan_edit"
+                    ? "bg-rose-600 text-white shadow-xs"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+                }`}
+              >
+                {t.filters.scan_edit} (5)
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveCategory("organize")}
+                className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all ${
+                  activeCategory === "organize"
+                    ? "bg-rose-600 text-white shadow-xs"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+                }`}
+              >
+                {t.filters.organize} (4)
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveCategory("convert")}
+                className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all ${
+                  activeCategory === "convert"
+                    ? "bg-rose-600 text-white shadow-xs"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+                }`}
+              >
+                {t.filters.convert} (3)
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Ad Placement */}
-        <div className="my-10">
-          <AdBanner format="leaderboard" />
-        </div>
-
         {/* Tool Cards Responsive Grid */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+        <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           {filteredTools.map((tool) => {
             const Icon = tool.icon;
             return (
               <Link
                 key={tool.id}
                 href={tool.href}
-                className="group relative flex flex-col justify-between rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xs transition-all duration-200 hover:-translate-y-1 hover:border-slate-300 hover:shadow-md dark:border-slate-800/80 dark:bg-slate-900/60 dark:hover:border-slate-700"
+                onClick={() => {
+                  if (typeof window !== "undefined" && droppedFiles.length > 0) {
+                    window.__pdfStudioPendingFiles = droppedFiles;
+                  }
+                }}
+                className={`group relative flex flex-col justify-between rounded-2xl border bg-white p-5 shadow-xs transition-all duration-200 hover:-translate-y-1 hover:shadow-md dark:bg-slate-900/60 ${
+                  droppedFiles.length > 0
+                    ? "border-rose-300 ring-2 ring-rose-500/15 hover:border-rose-500 dark:border-rose-800"
+                    : "border-slate-200/90 hover:border-slate-300 dark:border-slate-800/80 dark:hover:border-slate-700"
+                }`}
               >
                 <div>
                   <div className="flex items-start justify-between mb-3.5">
@@ -675,6 +885,11 @@ export default function HomePage() {
               </Link>
             );
           })}
+        </div>
+
+        {/* Ad Placement */}
+        <div className="my-10">
+          <AdBanner format="leaderboard" />
         </div>
 
         {/* TRUST SECTION */}
@@ -887,6 +1102,7 @@ export default function HomePage() {
                 {t.footer.editScan}
               </p>
               <ul className="space-y-2">
+                <li><Link href="/tools/edit-pdf" className="hover:text-rose-600 font-semibold">Edit PDF Text</Link></li>
                 <li><Link href="/scan-pdf" className="hover:text-rose-600">{t.nav.scan}</Link></li>
                 <li><Link href="/sign-pdf" className="hover:text-rose-600">{t.tools.signTitle}</Link></li>
                 <li><Link href="/pdf-to-text" className="hover:text-rose-600">PDF to Text</Link></li>
@@ -896,7 +1112,12 @@ export default function HomePage() {
           </div>
 
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-between border-t border-slate-200 dark:border-slate-800 pt-6 gap-4 text-slate-500">
-            <p>PDFStudio &copy; 2026. {t.footer.rights}</p>
+            <div className="flex flex-wrap items-center gap-4">
+              <p>PDFStudio &copy; 2026. {t.footer.rights}</p>
+              <Link href="/privacy" className="hover:text-rose-600 underline-offset-4 hover:underline">Privacy Policy</Link>
+              <Link href="/terms" className="hover:text-rose-600 underline-offset-4 hover:underline">Terms of Service</Link>
+              <Link href="/contact" className="hover:text-rose-600 underline-offset-4 hover:underline">Contact</Link>
+            </div>
 
             <div className="flex items-center gap-1.5 font-medium">
               {(["EN", "FR", "ES", "RU", "AR"] as const).map((lang) => (

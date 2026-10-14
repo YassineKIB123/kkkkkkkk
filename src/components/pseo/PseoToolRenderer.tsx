@@ -14,6 +14,7 @@ import ImagesToPdfPage from "@/app/tools/images-to-pdf/page";
 import PdfToImagesPage from "@/app/tools/pdf-to-images/page";
 import WatermarkPdfPage from "@/app/tools/watermark-pdf/page";
 import SanitizePdfPage from "@/app/tools/sanitize-pdf/page";
+import EditPdfPage from "@/app/tools/edit-pdf/page";
 
 interface PseoToolRendererProps {
   toolType: ToolType;
@@ -33,6 +34,8 @@ export function PseoToolRenderer({ toolType, targetKb }: PseoToolRendererProps) 
         return <RotatePdfPage />;
       case "sign":
         return <SignPdfPage />;
+      case "edit":
+        return <EditPdfPage />;
       case "scan":
         return <ScanToPdfPage />;
       case "watermark":

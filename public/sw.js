@@ -3,6 +3,7 @@ const PRECACHE_URLS = [
   "/",
   "/manifest.webmanifest",
   "/favicon.ico",
+  "/tools/edit-pdf",
   "/tools/compress-pdf",
   "/tools/merge-pdf",
   "/tools/split-pdf",

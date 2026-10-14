@@ -126,6 +126,7 @@ export function ToolLayout({
     { label: t.tools.mergeTitle, href: "/tools/merge-pdf", keywords: "merge combine join pdfs" },
     { label: t.tools.splitTitle, href: "/tools/split-pdf", keywords: "split extract separate pages" },
     { label: t.tools.rotateTitle, href: "/tools/rotate-pdf", keywords: "rotate orientation turn pages" },
+    { label: "Edit PDF Text", href: "/tools/edit-pdf", keywords: "edit text modify replace whiteout redact pdf" },
     { label: t.tools.signTitle, href: "/tools/sign-pdf", keywords: "sign signature stamp initials" },
     { label: t.tools.scanTitle, href: "/tools/scan", keywords: "scan camera crop perspective ocr" },
     { label: t.tools.convertTitle, href: "/tools/convert", keywords: "convert word docx excel xlsx pptx text" },
@@ -193,6 +194,7 @@ export function ToolLayout({
             </Link>
 
             <nav className="hidden md:flex items-center gap-5 text-xs font-semibold text-slate-600 dark:text-slate-300">
+              <Link href="/tools/edit-pdf" className="hover:text-rose-600 transition-colors font-bold text-rose-600 dark:text-rose-400">Edit PDF Text</Link>
               <Link href="/tools/compress-pdf" className="hover:text-rose-600 transition-colors">
                 {t.tools.compressTitle}
               </Link>
@@ -645,6 +647,7 @@ export function ToolLayout({
                 {t.footer.editScan}
               </p>
               <ul className="space-y-2">
+                <li><Link href="/edit-pdf" className="hover:text-rose-600 font-semibold">Edit PDF Text</Link></li>
                 <li><Link href="/scan-pdf" className="hover:text-rose-600">{t.nav.scan}</Link></li>
                 <li><Link href="/sign-pdf" className="hover:text-rose-600">{t.tools.signTitle}</Link></li>
                 <li><Link href="/pdf-to-text" className="hover:text-rose-600">PDF to Text</Link></li>
@@ -654,7 +657,12 @@ export function ToolLayout({
           </div>
 
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-between border-t border-slate-200 dark:border-slate-800 pt-6 gap-4 text-slate-500">
-            <p>PDFStudio &copy; 2026. {t.footer.rights}</p>
+            <div className="flex flex-wrap items-center gap-4">
+              <p>PDFStudio &copy; 2026. {t.footer.rights}</p>
+              <Link href="/privacy" className="hover:text-rose-600 underline-offset-4 hover:underline">Privacy Policy</Link>
+              <Link href="/terms" className="hover:text-rose-600 underline-offset-4 hover:underline">Terms of Service</Link>
+              <Link href="/contact" className="hover:text-rose-600 underline-offset-4 hover:underline">Contact</Link>
+            </div>
 
             <div className="flex items-center gap-1.5 font-medium">
               {(["EN", "FR", "ES", "RU", "AR"] as const).map((lang) => (

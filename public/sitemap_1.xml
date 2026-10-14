@@ -7,6 +7,12 @@
     <priority>1.0</priority>
   </url>
   <url>
+    <loc>https://pdftool.fenangplay.workers.dev/tools/edit-pdf</loc>
+    <lastmod>2026-10-14</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.95</priority>
+  </url>
+  <url>
     <loc>https://pdftool.fenangplay.workers.dev/tools/compress-pdf</loc>
     <lastmod>2026-10-14</lastmod>
     <changefreq>weekly</changefreq>
@@ -68,6 +74,12 @@
   </url>
   <url>
     <loc>https://pdftool.fenangplay.workers.dev/tools/sanitize-pdf</loc>
+    <lastmod>2026-10-14</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.95</priority>
+  </url>
+  <url>
+    <loc>https://pdftool.fenangplay.workers.dev/edit-pdf</loc>
     <lastmod>2026-10-14</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.95</priority>
@@ -193,6 +205,12 @@
     <priority>0.95</priority>
   </url>
   <url>
+    <loc>https://pdftool.fenangplay.workers.dev/fr/edit-pdf</loc>
+    <lastmod>2026-10-14</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.90</priority>
+  </url>
+  <url>
     <loc>https://pdftool.fenangplay.workers.dev/fr/compress-pdf</loc>
     <lastmod>2026-10-14</lastmod>
     <changefreq>weekly</changefreq>
@@ -308,6 +326,12 @@
   </url>
   <url>
     <loc>https://pdftool.fenangplay.workers.dev/fr/text-to-pdf</loc>
+    <lastmod>2026-10-14</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.90</priority>
+  </url>
+  <url>
+    <loc>https://pdftool.fenangplay.workers.dev/es/edit-pdf</loc>
     <lastmod>2026-10-14</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
@@ -433,6 +457,12 @@
     <priority>0.90</priority>
   </url>
   <url>
+    <loc>https://pdftool.fenangplay.workers.dev/ru/edit-pdf</loc>
+    <lastmod>2026-10-14</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.90</priority>
+  </url>
+  <url>
     <loc>https://pdftool.fenangplay.workers.dev/ru/compress-pdf</loc>
     <lastmod>2026-10-14</lastmod>
     <changefreq>weekly</changefreq>
@@ -548,6 +578,12 @@
   </url>
   <url>
     <loc>https://pdftool.fenangplay.workers.dev/ru/text-to-pdf</loc>
+    <lastmod>2026-10-14</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.90</priority>
+  </url>
+  <url>
+    <loc>https://pdftool.fenangplay.workers.dev/ar/edit-pdf</loc>
     <lastmod>2026-10-14</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
@@ -671,6 +707,174 @@
     <lastmod>2026-10-14</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
+  </url>
+  <url>
+    <loc>https://pdftool.fenangplay.workers.dev/edit-pdf-for-resumes</loc>
+    <lastmod>2026-10-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://pdftool.fenangplay.workers.dev/edit-pdf-for-email</loc>
+    <lastmod>2026-10-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://pdftool.fenangplay.workers.dev/edit-pdf-for-contracts</loc>
+    <lastmod>2026-10-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://pdftool.fenangplay.workers.dev/edit-pdf-for-invoices</loc>
+    <lastmod>2026-10-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://pdftool.fenangplay.workers.dev/edit-pdf-for-bank-statements</loc>
+    <lastmod>2026-10-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://pdftool.fenangplay.workers.dev/edit-pdf-for-tax-forms</loc>
+    <lastmod>2026-10-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://pdftool.fenangplay.workers.dev/edit-pdf-for-students</loc>
+    <lastmod>2026-10-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://pdftool.fenangplay.workers.dev/edit-pdf-for-teachers</loc>
+    <lastmod>2026-10-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://pdftool.fenangplay.workers.dev/edit-pdf-for-lawyers</loc>
+    <lastmod>2026-10-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://pdftool.fenangplay.workers.dev/edit-pdf-for-real-estate</loc>
+    <lastmod>2026-10-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://pdftool.fenangplay.workers.dev/edit-pdf-for-accountants</loc>
+    <lastmod>2026-10-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://pdftool.fenangplay.workers.dev/edit-pdf-for-medical-records</loc>
+    <lastmod>2026-10-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://pdftool.fenangplay.workers.dev/edit-pdf-for-ebooks</loc>
+    <lastmod>2026-10-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://pdftool.fenangplay.workers.dev/edit-pdf-for-research-papers</loc>
+    <lastmod>2026-10-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://pdftool.fenangplay.workers.dev/edit-pdf-for-passports-and-visas</loc>
+    <lastmod>2026-10-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://pdftool.fenangplay.workers.dev/edit-pdf-on-mac</loc>
+    <lastmod>2026-10-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://pdftool.fenangplay.workers.dev/edit-pdf-on-windows</loc>
+    <lastmod>2026-10-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://pdftool.fenangplay.workers.dev/edit-pdf-on-iphone</loc>
+    <lastmod>2026-10-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://pdftool.fenangplay.workers.dev/edit-pdf-on-android</loc>
+    <lastmod>2026-10-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://pdftool.fenangplay.workers.dev/edit-pdf-on-chromebook</loc>
+    <lastmod>2026-10-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://pdftool.fenangplay.workers.dev/edit-pdf-offline</loc>
+    <lastmod>2026-10-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://pdftool.fenangplay.workers.dev/edit-pdf-without-uploading</loc>
+    <lastmod>2026-10-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://pdftool.fenangplay.workers.dev/edit-pdf-without-watermark</loc>
+    <lastmod>2026-10-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://pdftool.fenangplay.workers.dev/edit-pdf-editable-text</loc>
+    <lastmod>2026-10-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://pdftool.fenangplay.workers.dev/edit-pdf-no-file-limit</loc>
+    <lastmod>2026-10-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://pdftool.fenangplay.workers.dev/edit-pdf-for-job-applications</loc>
+    <lastmod>2026-10-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://pdftool.fenangplay.workers.dev/edit-pdf-for-court-filings</loc>
+    <lastmod>2026-10-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://pdftool.fenangplay.workers.dev/edit-pdf-for-scholarships</loc>
+    <lastmod>2026-10-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
   </url>
   <url>
     <loc>https://pdftool.fenangplay.workers.dev/compress-pdf-for-resumes</loc>
@@ -2792,210 +2996,6 @@
   </url>
   <url>
     <loc>https://pdftool.fenangplay.workers.dev/pdf-to-powerpoint-for-bank-statements</loc>
-    <lastmod>2026-10-14</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.85</priority>
-  </url>
-  <url>
-    <loc>https://pdftool.fenangplay.workers.dev/pdf-to-powerpoint-for-tax-forms</loc>
-    <lastmod>2026-10-14</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.85</priority>
-  </url>
-  <url>
-    <loc>https://pdftool.fenangplay.workers.dev/pdf-to-powerpoint-for-students</loc>
-    <lastmod>2026-10-14</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.85</priority>
-  </url>
-  <url>
-    <loc>https://pdftool.fenangplay.workers.dev/pdf-to-powerpoint-for-teachers</loc>
-    <lastmod>2026-10-14</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.85</priority>
-  </url>
-  <url>
-    <loc>https://pdftool.fenangplay.workers.dev/pdf-to-powerpoint-for-lawyers</loc>
-    <lastmod>2026-10-14</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.85</priority>
-  </url>
-  <url>
-    <loc>https://pdftool.fenangplay.workers.dev/pdf-to-powerpoint-for-real-estate</loc>
-    <lastmod>2026-10-14</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.85</priority>
-  </url>
-  <url>
-    <loc>https://pdftool.fenangplay.workers.dev/pdf-to-powerpoint-for-accountants</loc>
-    <lastmod>2026-10-14</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.85</priority>
-  </url>
-  <url>
-    <loc>https://pdftool.fenangplay.workers.dev/pdf-to-powerpoint-for-medical-records</loc>
-    <lastmod>2026-10-14</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.85</priority>
-  </url>
-  <url>
-    <loc>https://pdftool.fenangplay.workers.dev/pdf-to-powerpoint-for-ebooks</loc>
-    <lastmod>2026-10-14</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.85</priority>
-  </url>
-  <url>
-    <loc>https://pdftool.fenangplay.workers.dev/pdf-to-powerpoint-for-research-papers</loc>
-    <lastmod>2026-10-14</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.85</priority>
-  </url>
-  <url>
-    <loc>https://pdftool.fenangplay.workers.dev/pdf-to-powerpoint-for-passports-and-visas</loc>
-    <lastmod>2026-10-14</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.85</priority>
-  </url>
-  <url>
-    <loc>https://pdftool.fenangplay.workers.dev/pdf-to-powerpoint-on-mac</loc>
-    <lastmod>2026-10-14</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.85</priority>
-  </url>
-  <url>
-    <loc>https://pdftool.fenangplay.workers.dev/pdf-to-powerpoint-on-windows</loc>
-    <lastmod>2026-10-14</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.85</priority>
-  </url>
-  <url>
-    <loc>https://pdftool.fenangplay.workers.dev/pdf-to-powerpoint-on-iphone</loc>
-    <lastmod>2026-10-14</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.85</priority>
-  </url>
-  <url>
-    <loc>https://pdftool.fenangplay.workers.dev/pdf-to-powerpoint-on-android</loc>
-    <lastmod>2026-10-14</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.85</priority>
-  </url>
-  <url>
-    <loc>https://pdftool.fenangplay.workers.dev/pdf-to-powerpoint-on-chromebook</loc>
-    <lastmod>2026-10-14</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.85</priority>
-  </url>
-  <url>
-    <loc>https://pdftool.fenangplay.workers.dev/pdf-to-powerpoint-offline</loc>
-    <lastmod>2026-10-14</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.85</priority>
-  </url>
-  <url>
-    <loc>https://pdftool.fenangplay.workers.dev/pdf-to-powerpoint-without-uploading</loc>
-    <lastmod>2026-10-14</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.85</priority>
-  </url>
-  <url>
-    <loc>https://pdftool.fenangplay.workers.dev/pdf-to-powerpoint-without-watermark</loc>
-    <lastmod>2026-10-14</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.85</priority>
-  </url>
-  <url>
-    <loc>https://pdftool.fenangplay.workers.dev/pdf-to-powerpoint-editable-text</loc>
-    <lastmod>2026-10-14</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.85</priority>
-  </url>
-  <url>
-    <loc>https://pdftool.fenangplay.workers.dev/pdf-to-powerpoint-no-file-limit</loc>
-    <lastmod>2026-10-14</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.85</priority>
-  </url>
-  <url>
-    <loc>https://pdftool.fenangplay.workers.dev/pdf-to-powerpoint-for-job-applications</loc>
-    <lastmod>2026-10-14</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.85</priority>
-  </url>
-  <url>
-    <loc>https://pdftool.fenangplay.workers.dev/pdf-to-powerpoint-for-court-filings</loc>
-    <lastmod>2026-10-14</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.85</priority>
-  </url>
-  <url>
-    <loc>https://pdftool.fenangplay.workers.dev/pdf-to-powerpoint-for-scholarships</loc>
-    <lastmod>2026-10-14</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.85</priority>
-  </url>
-  <url>
-    <loc>https://pdftool.fenangplay.workers.dev/powerpoint-to-pdf-for-resumes</loc>
-    <lastmod>2026-10-14</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.85</priority>
-  </url>
-  <url>
-    <loc>https://pdftool.fenangplay.workers.dev/powerpoint-to-pdf-for-email</loc>
-    <lastmod>2026-10-14</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.85</priority>
-  </url>
-  <url>
-    <loc>https://pdftool.fenangplay.workers.dev/powerpoint-to-pdf-for-contracts</loc>
-    <lastmod>2026-10-14</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.85</priority>
-  </url>
-  <url>
-    <loc>https://pdftool.fenangplay.workers.dev/powerpoint-to-pdf-for-invoices</loc>
-    <lastmod>2026-10-14</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.85</priority>
-  </url>
-  <url>
-    <loc>https://pdftool.fenangplay.workers.dev/powerpoint-to-pdf-for-bank-statements</loc>
-    <lastmod>2026-10-14</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.85</priority>
-  </url>
-  <url>
-    <loc>https://pdftool.fenangplay.workers.dev/powerpoint-to-pdf-for-tax-forms</loc>
-    <lastmod>2026-10-14</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.85</priority>
-  </url>
-  <url>
-    <loc>https://pdftool.fenangplay.workers.dev/powerpoint-to-pdf-for-students</loc>
-    <lastmod>2026-10-14</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.85</priority>
-  </url>
-  <url>
-    <loc>https://pdftool.fenangplay.workers.dev/powerpoint-to-pdf-for-teachers</loc>
-    <lastmod>2026-10-14</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.85</priority>
-  </url>
-  <url>
-    <loc>https://pdftool.fenangplay.workers.dev/powerpoint-to-pdf-for-lawyers</loc>
-    <lastmod>2026-10-14</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.85</priority>
-  </url>
-  <url>
-    <loc>https://pdftool.fenangplay.workers.dev/powerpoint-to-pdf-for-real-estate</loc>
-    <lastmod>2026-10-14</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.85</priority>
-  </url>
-  <url>
-    <loc>https://pdftool.fenangplay.workers.dev/powerpoint-to-pdf-for-accountants</loc>
     <lastmod>2026-10-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.85</priority>

@@ -1,4 +1,5 @@
 export type ToolType =
+  | "edit"
   | "compress"
   | "merge"
   | "split"
@@ -63,6 +64,24 @@ export const CORE_TOOLS: {
   names: Record<PseoLocale, string>;
   action: Record<PseoLocale, string>;
 }[] = [
+  {
+    type: "edit",
+    baseSlug: "edit-pdf",
+    names: {
+      en: "Edit PDF Text",
+      fr: "Modifier Texte PDF",
+      es: "Editar Texto PDF",
+      ru: "Редактировать текст PDF",
+      ar: "تعديل النص في ملف PDF",
+    },
+    action: {
+      en: "edit existing text, numbers, and paragraphs inside PDF files",
+      fr: "modifier le texte existant, les chiffres et les paragraphes d'un PDF",
+      es: "editar el texto existente, números y párrafos dentro de un PDF",
+      ru: "редактировать существующий текст и абзацы прямо в файле PDF",
+      ar: "تعديل النصوص والأرقام والفقرات الموجودة داخل ملفات PDF",
+    },
+  },
   {
     type: "watermark",
     baseSlug: "watermark-pdf",
@@ -707,7 +726,7 @@ export const MODIFIERS: PseoModifier[] = [
     ru: "с возможностью редактирования текста",
     ar: "مع إمكانية تعديل النصوص وتنسيقها",
     category: "quality",
-    compatibleTools: ["pdf-to-word", "pdf-to-excel", "pdf-to-powerpoint", "pdf-to-text"],
+    compatibleTools: ["edit", "pdf-to-word", "pdf-to-excel", "pdf-to-powerpoint", "pdf-to-text"],
   },
   {
     id: "high-resolution-300dpi",

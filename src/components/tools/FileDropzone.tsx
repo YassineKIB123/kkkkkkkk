@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import { UploadCloud, AlertCircle } from "lucide-react";
 
 interface FileDropzoneProps {
-  accept: string; // e.g. "application/pdf" or "image/*" or ".pdf,.png"
+  accept: string;
   multiple?: boolean;
   onFilesSelected: (files: File[]) => void;
   title?: string;
@@ -22,7 +22,6 @@ export function FileDropzone({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Validate incoming files against accept criteria
   const validateFile = useCallback(
     (file: File): boolean => {
       if (!accept || accept === "*") return true;
@@ -81,7 +80,6 @@ export function FileDropzone({
     [accept, multiple, onFilesSelected, validateFile]
   );
 
-  // Drag & drop handlers
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
@@ -104,7 +102,6 @@ export function FileDropzone({
     }
   };
 
-  // Clipboard Paste support (Ctrl+V / Cmd+V)
   useEffect(() => {
     const handlePaste = (e: ClipboardEvent) => {
       if (e.clipboardData?.files && e.clipboardData.files.length > 0) {
@@ -130,10 +127,10 @@ export function FileDropzone({
             fileInputRef.current?.click();
           }
         }}
-        className={`group relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed p-10 text-center cursor-pointer transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 ${
+        className={`group relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed p-10 text-center cursor-pointer transition-all duration-200 outline-none ${
           isDragging
-            ? "border-emerald-500 bg-emerald-950/20 scale-[0.99]"
-            : "border-zinc-800 bg-zinc-900/40 hover:border-zinc-700 hover:bg-zinc-900/70"
+            ? "border-rose-500 bg-rose-50/60 scale-[0.99] dark:border-rose-500 dark:bg-rose-950/20"
+            : "border-slate-300 bg-slate-50/60 hover:border-rose-400 hover:bg-white dark:border-slate-800 dark:bg-slate-900/40 dark:hover:border-slate-700 dark:hover:bg-slate-900"
         }`}
       >
         <input
@@ -144,40 +141,40 @@ export function FileDropzone({
           onChange={(e) => {
             if (e.target.files) {
               processFiles(e.target.files);
-              e.target.value = ""; // Reset input so same file can be selected again
+              e.target.value = "";
             }
           }}
           className="hidden"
         />
 
+        {/* Tinted Icon Box */}
         <div
           className={`flex h-14 w-14 items-center justify-center rounded-xl border transition-colors ${
             isDragging
-              ? "border-emerald-500/60 bg-emerald-950 text-emerald-400"
-              : "border-zinc-800 bg-zinc-900 text-zinc-400 group-hover:border-zinc-700 group-hover:text-emerald-400"
+              ? "border-rose-200 bg-rose-100 text-rose-600 dark:border-rose-800 dark:bg-rose-950 dark:text-rose-400"
+              : "border-rose-100 bg-rose-50 text-rose-600 group-hover:border-rose-200 group-hover:bg-rose-100 dark:border-rose-900/40 dark:bg-rose-950/40 dark:text-rose-400"
           }`}
         >
           <UploadCloud className="h-7 w-7" />
         </div>
 
-        <h3 className="mt-4 text-base font-semibold text-white">
+        <h3 className="mt-4 text-base font-bold text-slate-900 dark:text-white">
           {title || "Click to browse or drop your files here"}
         </h3>
 
-        <p className="mt-1.5 text-xs sm:text-sm text-zinc-400 max-w-sm">
+        <p className="mt-1.5 text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-sm leading-relaxed">
           {description ||
             `Supports ${multiple ? "multiple files" : "a single file"} matching ${accept}. You can also paste directly with Ctrl+V.`}
         </p>
 
-        <div className="mt-4 inline-flex items-center gap-1.5 rounded-md border border-zinc-800 bg-zinc-950/70 px-2.5 py-1 text-[11px] font-mono text-zinc-400">
+        <div className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-mono text-slate-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400 shadow-2xs">
           <span>Processed locally in browser memory</span>
         </div>
       </div>
 
-      {/* Error Message */}
       {errorMessage && (
-        <div className="flex items-center gap-2 rounded-lg border border-red-900/60 bg-red-950/40 px-3 py-2 text-xs text-red-400 animate-fadeIn">
-          <AlertCircle className="h-4 w-4 shrink-0" />
+        <div className="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-3.5 py-2.5 text-xs text-red-700 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-400">
+          <AlertCircle className="h-4 w-4 shrink-0 text-red-600" />
           <span>{errorMessage}</span>
         </div>
       )}

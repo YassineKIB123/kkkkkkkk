@@ -18,14 +18,12 @@ import {
   FileSpreadsheet,
   Presentation,
   FileCode,
-  ArrowRight,
   Download,
   Loader2,
   AlertCircle,
   CheckCircle2,
   Trash2,
   FileType,
-  Sparkles,
   Layers,
 } from "lucide-react";
 
@@ -47,7 +45,6 @@ export default function UniversalConverterPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  // Detect file category from extension
   const getFileCategory = (
     fileName: string
   ): "pdf" | "word" | "excel" | "text" | "image" | "unknown" => {
@@ -70,9 +67,9 @@ export default function UniversalConverterPage() {
 
     const cat = getFileCategory(selected.name);
     if (cat === "pdf") {
-      setSelectedFormat("docx"); // Default target format for PDF is Word
+      setSelectedFormat("docx");
     } else {
-      setSelectedFormat("pdf"); // Non-PDFs default to converting to PDF
+      setSelectedFormat("pdf");
     }
   };
 
@@ -95,7 +92,6 @@ export default function UniversalConverterPage() {
       const category = getFileCategory(file.name);
       const baseName = file.name.replace(/\.[^/.]+$/, "");
 
-      // CASE A: Converting TO PDF
       if (selectedFormat === "pdf") {
         setProgressStatus("Compiling to PDF...");
         let pdfBytes: Uint8Array;
@@ -117,9 +113,7 @@ export default function UniversalConverterPage() {
         const outName = `${baseName}_converted.pdf`;
         downloadBlob(pdfBytes, outName);
         setSuccessMessage(`Success! Converted "${file.name}" to "${outName}".`);
-      }
-      // CASE B: Converting FROM PDF
-      else {
+      } else {
         if (selectedFormat === "docx") {
           setProgressStatus("Reconstructing Word paragraphs...");
           const docxBlob = await pdfToWord(file);
@@ -215,22 +209,22 @@ export default function UniversalConverterPage() {
           />
         )}
 
-        {/* Selected Document Workspace */}
+        {/* Selected Document Workspace (Light Theme) */}
         {file && (
-          <div className="space-y-6 rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5 sm:p-6 backdrop-blur-sm">
-            {/* File Header */}
-            <div className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-950/70 p-4">
+          <div className="space-y-6 rounded-2xl border border-slate-200 bg-slate-50/60 p-5 sm:p-6 dark:border-slate-800 dark:bg-slate-900/60">
+            {/* File Info Header */}
+            <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-zinc-800 bg-zinc-900 text-emerald-400">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-rose-100 bg-rose-50 text-rose-600 dark:border-rose-900/40 dark:bg-rose-950/40 dark:text-rose-400">
                   <FileType className="h-5 w-5" />
                 </div>
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-white">
+                  <p className="truncate text-sm font-bold text-slate-900 dark:text-white">
                     {file.name}
                   </p>
-                  <p className="font-mono text-xs text-zinc-400">
+                  <p className="font-mono text-xs text-slate-500 dark:text-slate-400">
                     Type:{" "}
-                    <span className="text-emerald-400 uppercase font-bold">
+                    <span className="text-rose-600 dark:text-rose-400 uppercase font-bold">
                       {getFileCategory(file.name)}
                     </span>{" "}
                     • {(file.size / 1024).toFixed(1)} KB
@@ -242,7 +236,7 @@ export default function UniversalConverterPage() {
                 type="button"
                 onClick={handleClear}
                 disabled={isConverting}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-1.5 text-xs font-medium text-zinc-400 hover:border-zinc-700 hover:text-white transition-colors"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-850 transition-colors shadow-2xs"
               >
                 <Trash2 className="h-3.5 w-3.5" />
                 <span>Choose Another</span>
@@ -251,34 +245,34 @@ export default function UniversalConverterPage() {
 
             {/* Target Conversion Options */}
             <div className="space-y-3">
-              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-zinc-300">
-                <Layers className="h-4 w-4 text-emerald-400" />
+              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                <Layers className="h-4 w-4 text-rose-600" />
                 <span>Select Target Output Format</span>
               </div>
 
-              {/* IF NON-PDF WAS UPLOADED: Auto-Target PDF */}
+              {/* NON-PDF UPLOADED */}
               {!isPdf && (
-                <div className="rounded-xl border border-emerald-500/50 bg-emerald-950/30 p-4 flex items-center justify-between">
+                <div className="rounded-xl border border-rose-200 bg-rose-50/50 p-4 flex items-center justify-between dark:border-rose-900/50 dark:bg-rose-950/30">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-400">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-rose-600 text-white">
                       <FileType className="h-5 w-5" />
                     </div>
                     <div>
-                      <h4 className="text-sm font-semibold text-white">
+                      <h4 className="text-sm font-bold text-slate-900 dark:text-white">
                         Portable Document Format (.pdf)
                       </h4>
-                      <p className="text-xs text-zinc-400">
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
                         Compile into an optimized, standard PDF document
                       </p>
                     </div>
                   </div>
-                  <span className="text-xs font-mono text-emerald-400 font-semibold uppercase border border-emerald-500/40 px-2 py-0.5 rounded">
-                    Selected
+                  <span className="text-xs font-mono text-rose-600 dark:text-rose-400 font-bold uppercase border border-rose-200 dark:border-rose-800 bg-white dark:bg-slate-900 px-2.5 py-1 rounded-md shadow-2xs">
+                    Target Output
                   </span>
                 </div>
               )}
 
-              {/* IF PDF WAS UPLOADED: Show Format Picker */}
+              {/* PDF UPLOADED */}
               {isPdf && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {PDF_OPTIONS.map((opt) => {
@@ -292,15 +286,15 @@ export default function UniversalConverterPage() {
                         onClick={() => setSelectedFormat(opt.id)}
                         className={`flex items-start gap-3 rounded-xl border p-4 text-left transition-all ${
                           isSelected
-                            ? "border-emerald-500 bg-emerald-950/40 shadow-[0_0_15px_-3px_rgba(16,185,129,0.3)]"
-                            : "border-zinc-800 bg-zinc-950/60 hover:border-zinc-700 hover:bg-zinc-900"
+                            ? "border-rose-500 bg-rose-50/60 ring-2 ring-rose-500/20 shadow-xs dark:border-rose-500 dark:bg-rose-950/40"
+                            : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700"
                         }`}
                       >
                         <div
                           className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition-colors ${
                             isSelected
-                              ? "border-emerald-500/60 bg-emerald-900/50 text-emerald-400"
-                              : "border-zinc-800 bg-zinc-900 text-zinc-400"
+                              ? "border-rose-200 bg-rose-100 text-rose-600 dark:border-rose-800 dark:bg-rose-900/60 dark:text-rose-300"
+                              : "border-slate-200 bg-slate-50 text-slate-500 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-400"
                           }`}
                         >
                           <Icon className="h-4 w-4" />
@@ -308,14 +302,14 @@ export default function UniversalConverterPage() {
 
                         <div>
                           <div className="flex items-center gap-2">
-                            <span className="text-sm font-semibold text-white">
+                            <span className="text-sm font-bold text-slate-900 dark:text-white">
                               {opt.label}
                             </span>
-                            <span className="rounded bg-zinc-900 px-1.5 py-0.2 font-mono text-[10px] text-zinc-400 border border-zinc-800">
+                            <span className="rounded bg-slate-100 dark:bg-slate-800 px-1.5 py-0.2 font-mono text-[10px] text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
                               {opt.ext}
                             </span>
                           </div>
-                          <p className="mt-1 text-xs text-zinc-400 leading-snug">
+                          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 leading-snug">
                             {opt.desc}
                           </p>
                         </div>
@@ -326,24 +320,24 @@ export default function UniversalConverterPage() {
               )}
             </div>
 
-            {/* Status Notifications */}
+            {/* Error / Success Notifications */}
             {errorMessage && (
-              <div className="flex items-start gap-2.5 rounded-xl border border-red-900/60 bg-red-950/40 p-3.5 text-xs text-red-300">
-                <AlertCircle className="h-4 w-4 shrink-0 text-red-400 mt-0.5" />
+              <div className="flex items-start gap-2.5 rounded-xl border border-red-200 bg-red-50 p-3.5 text-xs text-red-700 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-400">
+                <AlertCircle className="h-4 w-4 shrink-0 text-red-600 mt-0.5" />
                 <span>{errorMessage}</span>
               </div>
             )}
 
             {successMessage && (
-              <div className="flex items-start gap-2.5 rounded-xl border border-emerald-900/60 bg-emerald-950/40 p-3.5 text-xs text-emerald-300">
-                <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400 mt-0.5" />
+              <div className="flex items-start gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50 p-3.5 text-xs text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-400">
+                <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 mt-0.5" />
                 <span>{successMessage}</span>
               </div>
             )}
 
             {/* Bottom Actions */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
-              <span className="text-xs text-zinc-500">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2 border-t border-slate-200 dark:border-slate-800">
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                 {progressStatus || "Ready to process in browser memory."}
               </span>
 
@@ -351,16 +345,16 @@ export default function UniversalConverterPage() {
                 type="button"
                 onClick={handleConvert}
                 disabled={isConverting}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 px-6 py-2.5 text-sm font-semibold text-zinc-950 shadow-lg shadow-emerald-500/10 hover:shadow-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-40 transition-all"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-rose-600 hover:bg-rose-500 px-6 py-2.5 text-sm font-semibold text-white shadow-md shadow-rose-600/20 disabled:cursor-not-allowed disabled:opacity-40 transition-all"
               >
                 {isConverting ? (
                   <>
-                    <Loader2 className="h-4 w-4 animate-spin text-zinc-950" />
+                    <Loader2 className="h-4 w-4 animate-spin text-white" />
                     <span>Processing Conversion...</span>
                   </>
                 ) : (
                   <>
-                    <Download className="h-4 w-4 text-zinc-950" />
+                    <Download className="h-4 w-4 text-white" />
                     <span>Convert & Download</span>
                   </>
                 )}

@@ -5,13 +5,13 @@ import { LanguageProvider } from "@/context/LanguageContext";
 
 const inter = Inter({ subsets: ["latin"] });
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://docforge.app";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://pdftool.fenangplay.workers.dev";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "DocForge — Free, Fast & 100% Private PDF Tools",
-    template: "%s | DocForge",
+    default: "PDFStudio — Free, Fast & 100% Private PDF Tools",
+    template: "%s | PDFStudio",
   },
   description:
     "Every PDF tool you need, all in one place. Merge, split, scan, sign, convert, and rotate PDFs with 100% client-side browser privacy. Your files never leave your device.",

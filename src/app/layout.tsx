@@ -9,6 +9,9 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://pdftool.fenangplay
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
+  verification: {
+    google: "TX_b_Rg1BBdC31WpXrXvxkBgRWD0LJ2tilIg3Iw9CV0",
+  },
   title: {
     default: "PDFStudio — Free, Fast & 100% Private PDF Tools",
     template: "%s | PDFStudio",

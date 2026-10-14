@@ -3,7 +3,11 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { ToolLayout } from "@/components/tools/ToolLayout";
 import { FileDropzone } from "@/components/tools/FileDropzone";
-import { embedSignaturesIntoPDF, downloadBlob } from "@/lib/pdf/pdf-utils";
+import {
+  embedSignaturesIntoPDF,
+  downloadBlob,
+  loadPdfJs,
+} from "@/lib/pdf/pdf-utils";
 import {
   PenTool,
   Type,
@@ -21,13 +25,12 @@ import {
   Move,
   Trash2,
   Plus,
+  Calendar,
+  CheckSquare,
+  Upload,
+  BookmarkCheck,
+  Stamp,
 } from "lucide-react";
-
-declare global {
-  interface Window {
-    pdfjsLib?: any;
-  }
-}
 
 interface SignaturePosition {
   xPercent: number;
@@ -43,39 +46,43 @@ interface PlacedSignature {
   position: SignaturePosition;
 }
 
+const SAVED_SIG_STORAGE_KEY = "pdfstudio_saved_signature_v1";
+
 export default function SignPdfPage() {
   const [file, setFile] = useState<File | null>(null);
   const [totalPages, setTotalPages] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [pdfDocProxy, setPdfDocProxy] = useState<any>(null);
 
-  // Multiple Signatures Collection
   const [signatures, setSignatures] = useState<PlacedSignature[]>([]);
   const [selectedSigId, setSelectedSigId] = useState<string | null>(null);
+  const [savedSigDataUrl, setSavedSigDataUrl] = useState<string | null>(null);
+  const [watermarkText, setWatermarkText] = useState<string>("");
 
-  // Modal & Tab States
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<"draw" | "type">("draw");
+  const [activeTab, setActiveTab] = useState<"draw" | "type" | "upload">("draw");
   const [inkColor, setInkColor] = useState<string>("#09090b");
   const [typedName, setTypedName] = useState<string>("");
+  const [uploadedSigUrl, setUploadedSigUrl] = useState<string | null>(null);
 
-  // Processing States
   const [isRenderingPage, setIsRenderingPage] = useState(false);
   const [isSigning, setIsSigning] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  // Drag & Resize tracking
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const activeDragSigId = useRef<string | null>(null);
-  const dragStartRef = useRef<{ clientX: number; clientY: number; initialPos: SignaturePosition }>({
+  const dragStartRef = useRef<{
+    clientX: number;
+    clientY: number;
+    initialPos: SignaturePosition;
+  }>({
     clientX: 0,
     clientY: 0,
     initialPos: { xPercent: 35, yPercent: 75, widthPercent: 28, heightPercent: 10 },
   });
 
-  // DOM Refs
   const pageContainerRef = useRef<HTMLDivElement>(null);
   const pdfCanvasRef = useRef<HTMLCanvasElement>(null);
   const drawCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -83,20 +90,9 @@ export default function SignPdfPage() {
   const isDrawingRef = useRef(false);
   const pointsRef = useRef<{ x: number; y: number }[]>([]);
 
-  // Load PDF.js from CDN
   useEffect(() => {
-    if (!window.pdfjsLib) {
-      const script = document.createElement("script");
-      script.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
-      script.async = true;
-      script.onload = () => {
-        if (window.pdfjsLib) {
-          window.pdfjsLib.GlobalWorkerOptions.workerSrc =
-            "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
-        }
-      };
-      document.body.appendChild(script);
-    }
+    const saved = localStorage.getItem(SAVED_SIG_STORAGE_KEY);
+    if (saved) setSavedSigDataUrl(saved);
   }, []);
 
   const handleFileSelected = async (files: File[]) => {
@@ -111,15 +107,9 @@ export default function SignPdfPage() {
     setSelectedSigId(null);
 
     try {
+      const pdfjs = await loadPdfJs();
       const buffer = await selected.arrayBuffer();
-      if (!window.pdfjsLib) {
-        await new Promise((resolve) => setTimeout(resolve, 600));
-      }
-      if (!window.pdfjsLib) {
-        throw new Error("PDF rendering engine is initializing. Please try again.");
-      }
-
-      const pdf = await window.pdfjsLib.getDocument({ data: buffer }).promise;
+      const pdf = await pdfjs.getDocument({ data: buffer }).promise;
       setPdfDocProxy(pdf);
       setTotalPages(pdf.numPages);
     } catch (err: unknown) {
@@ -160,16 +150,12 @@ export default function SignPdfPage() {
     }
   }, [pdfDocProxy, currentPage, renderPage]);
 
-  // ==========================================
-  // SILKY-SMOOTH HIGH-DPI DRAWING LOGIC
-  // ==========================================
   const initDrawCanvas = () => {
     const canvas = drawCanvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // High DPI scaling (2x) for razor-sharp lines
     const dpr = 2;
     const rect = canvas.getBoundingClientRect();
     canvas.width = (rect.width || 500) * dpr;
@@ -221,7 +207,6 @@ export default function SignPdfPage() {
     ctx.fill();
   };
 
-  // Smooth quadratic bezier curve interpolation
   const drawMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
     if (!isDrawingRef.current) return;
     const canvas = drawCanvasRef.current;
@@ -282,33 +267,41 @@ export default function SignPdfPage() {
     pointsRef.current = [];
   };
 
-  const generateTypedSignaturePng = (name: string, color: string): string => {
+  const generateTextStampPng = (
+    text: string,
+    color: string,
+    fontSpec: string = "italic 68px 'Dancing Script', 'Caveat', 'Brush Script MT', cursive"
+  ): string => {
     const canvas = document.createElement("canvas");
     canvas.width = 700;
-    canvas.height = 220;
+    canvas.height = 200;
     const ctx = canvas.getContext("2d");
     if (!ctx) return "";
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = color;
-    ctx.font = "italic 68px 'Dancing Script', 'Caveat', 'Brush Script MT', cursive";
+    ctx.font = fontSpec;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText(name, canvas.width / 2, canvas.height / 2);
+    ctx.fillText(text, canvas.width / 2, canvas.height / 2);
 
     return canvas.toDataURL("image/png");
   };
 
-  // Add signature to document (Supports multiple additions)
-  const applySignature = () => {
-    let dataUrl = "";
-    if (activeTab === "draw") {
-      const canvas = drawCanvasRef.current;
-      if (!canvas) return;
-      dataUrl = canvas.toDataURL("image/png");
-    } else {
-      if (!typedName.trim()) return;
-      dataUrl = generateTypedSignaturePng(typedName.trim(), inkColor);
+  const placeGraphicOnPage = (
+    dataUrl: string,
+    widthPercent = 28,
+    heightPercent = 10,
+    saveToLocal = false
+  ) => {
+    if (!dataUrl) return;
+    if (saveToLocal) {
+      try {
+        localStorage.setItem(SAVED_SIG_STORAGE_KEY, dataUrl);
+        setSavedSigDataUrl(dataUrl);
+      } catch {
+        // Ignore storage quota errors
+      }
     }
 
     const newSig: PlacedSignature = {
@@ -318,14 +311,47 @@ export default function SignPdfPage() {
       position: {
         xPercent: 35,
         yPercent: 70,
-        widthPercent: 28,
-        heightPercent: 10,
+        widthPercent,
+        heightPercent,
       },
     };
 
     setSignatures((prev) => [...prev, newSig]);
-    setSelectedSigId(newSig.id); // Select newly added signature
+    setSelectedSigId(newSig.id);
     setIsModalOpen(false);
+  };
+
+  const applySignature = () => {
+    if (activeTab === "draw") {
+      const canvas = drawCanvasRef.current;
+      if (!canvas) return;
+      placeGraphicOnPage(canvas.toDataURL("image/png"), 28, 10, true);
+    } else if (activeTab === "type") {
+      if (!typedName.trim()) return;
+      const url = generateTextStampPng(typedName.trim(), inkColor);
+      placeGraphicOnPage(url, 28, 10, true);
+    } else if (activeTab === "upload" && uploadedSigUrl) {
+      placeGraphicOnPage(uploadedSigUrl, 28, 12, true);
+    }
+  };
+
+  const handleAddDateStamp = () => {
+    const today = new Date().toISOString().split("T")[0];
+    const url = generateTextStampPng(
+      today,
+      "#0f172a",
+      "bold 52px ui-monospace, SFMono-Regular, Menlo, monospace"
+    );
+    placeGraphicOnPage(url, 18, 6, false);
+  };
+
+  const handleAddCheckmark = () => {
+    const url = generateTextStampPng(
+      "✓",
+      "#059669",
+      "bold 110px system-ui, sans-serif"
+    );
+    placeGraphicOnPage(url, 7, 5, false);
   };
 
   const handleRemoveSignature = (id: string, e: React.MouseEvent) => {
@@ -334,9 +360,6 @@ export default function SignPdfPage() {
     if (selectedSigId === id) setSelectedSigId(null);
   };
 
-  // ==========================================
-  // DRAG & RESIZE ACTIVE SIGNATURE
-  // ==========================================
   const handlePointerDownDrag = (id: string, e: React.PointerEvent) => {
     e.stopPropagation();
     setSelectedSigId(id);
@@ -385,8 +408,14 @@ export default function SignPdfPage() {
           const { initialPos } = dragStartRef.current;
 
           if (isDragging) {
-            const newX = Math.max(0, Math.min(100 - initialPos.widthPercent, initialPos.xPercent + deltaX));
-            const newY = Math.max(0, Math.min(100 - initialPos.heightPercent, initialPos.yPercent + deltaY));
+            const newX = Math.max(
+              0,
+              Math.min(100 - initialPos.widthPercent, initialPos.xPercent + deltaX)
+            );
+            const newY = Math.max(
+              0,
+              Math.min(100 - initialPos.heightPercent, initialPos.yPercent + deltaY)
+            );
             return {
               ...sig,
               position: {
@@ -396,8 +425,14 @@ export default function SignPdfPage() {
               },
             };
           } else if (isResizing) {
-            const newW = Math.max(8, Math.min(100 - initialPos.xPercent, initialPos.widthPercent + deltaX));
-            const newH = Math.max(3, Math.min(100 - initialPos.yPercent, initialPos.heightPercent + deltaY));
+            const newW = Math.max(
+              5,
+              Math.min(100 - initialPos.xPercent, initialPos.widthPercent + deltaX)
+            );
+            const newH = Math.max(
+              3,
+              Math.min(100 - initialPos.yPercent, initialPos.heightPercent + deltaY)
+            );
             return {
               ...sig,
               position: {
@@ -430,7 +465,7 @@ export default function SignPdfPage() {
   }, [isDragging, isResizing]);
 
   const handleSignDocument = async () => {
-    if (!file || signatures.length === 0) return;
+    if (!file || (signatures.length === 0 && !watermarkText.trim())) return;
 
     setIsSigning(true);
     setErrorMessage(null);
@@ -443,12 +478,15 @@ export default function SignPdfPage() {
           pageNumber: s.pageNumber,
           signatureDataUrl: s.dataUrl,
           position: s.position,
-        }))
+        })),
+        watermarkText
       );
 
       const fileName = `signed_${file.name.replace(/\.pdf$/i, "")}_${Date.now()}.pdf`;
       downloadBlob(signedBytes, fileName);
-      setSuccessMessage(`Success! Saved and downloaded "${fileName}" with ${signatures.length} signature(s).`);
+      setSuccessMessage(
+        `Success! Saved and downloaded "${fileName}" with ${signatures.length} item(s).`
+      );
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to sign PDF.";
       setErrorMessage(msg);
@@ -462,7 +500,7 @@ export default function SignPdfPage() {
   return (
     <ToolLayout
       title="Sign PDF Document"
-      description="Draw or type signatures and place them anywhere on your document. Add as many signatures as needed with zero server uploads."
+      description="Draw, type, or upload signatures, add date stamps and checkmarks, or apply document watermarks with zero server uploads."
     >
       <style jsx global>{`
         @import url("https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Dancing+Script:wght@600&display=swap");
@@ -492,20 +530,50 @@ export default function SignPdfPage() {
                     {file.name}
                   </h2>
                   <p className="font-mono text-xs text-slate-500 dark:text-slate-400">
-                    Page {currentPage} of {totalPages} • {signatures.length} signature(s) placed
+                    Page {currentPage} of {totalPages} • {signatures.length} item(s) placed
                   </p>
                 </div>
               </div>
 
-              {/* Actions */}
-              <div className="flex items-center gap-2">
+              {/* Quick Signing & Stamp Actions */}
+              <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(true)}
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 px-4 py-2 text-xs font-bold text-white shadow-md shadow-rose-600/20 transition-all"
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 px-3.5 py-2 text-xs font-bold text-white shadow-md shadow-rose-600/20 transition-all"
                 >
                   <Plus className="h-4 w-4" />
-                  <span>Add Signature</span>
+                  <span>New Signature</span>
+                </button>
+
+                {savedSigDataUrl && (
+                  <button
+                    type="button"
+                    onClick={() => placeGraphicOnPage(savedSigDataUrl, 28, 10, false)}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 dark:border-rose-900/50 dark:bg-rose-950/40 px-3 py-2 text-xs font-semibold text-rose-700 dark:text-rose-300 hover:bg-rose-100 transition-colors"
+                    title="Insert your saved signature in 1 click"
+                  >
+                    <BookmarkCheck className="h-3.5 w-3.5 text-rose-600" />
+                    <span>Insert Saved</span>
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={handleAddDateStamp}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 transition-colors"
+                >
+                  <Calendar className="h-3.5 w-3.5 text-blue-600" />
+                  <span>+ Date</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleAddCheckmark}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 transition-colors"
+                >
+                  <CheckSquare className="h-3.5 w-3.5 text-emerald-600" />
+                  <span>+ Check ✓</span>
                 </button>
 
                 <button
@@ -523,15 +591,30 @@ export default function SignPdfPage() {
               </div>
             </div>
 
+            {/* Optional Diagonal Watermark Stamp Bar */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs dark:border-slate-800 dark:bg-slate-900">
+              <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300 font-semibold">
+                <Stamp className="h-4 w-4 text-rose-600" />
+                <span>Optional Diagonal Watermark (All Pages):</span>
+              </div>
+              <input
+                type="text"
+                value={watermarkText}
+                onChange={(e) => setWatermarkText(e.target.value)}
+                placeholder="e.g. CONFIDENTIAL, DRAFT, APPROVED (leave empty for none)"
+                className="w-full sm:w-80 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-900 placeholder-slate-400 focus:border-rose-500 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+              />
+            </div>
+
             {/* Page Navigation & Hint */}
             <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
               <span className="font-medium text-slate-500 dark:text-slate-400">
                 {selectedSigId ? (
                   <span className="text-rose-600 dark:text-rose-400 font-semibold">
-                    Signature selected: Drag to position or resize from the corner handle. Click outside to preview.
+                    Item selected: Drag to position or resize from the bottom-right handle.
                   </span>
                 ) : (
-                  <span>Click any placed signature to adjust it. Click outside to see the clean preview.</span>
+                  <span>Click any placed signature or stamp to move/resize it.</span>
                 )}
               </span>
 
@@ -558,7 +641,7 @@ export default function SignPdfPage() {
               </div>
             </div>
 
-            {/* DOCUMENT CANVAS & SIGNATURE OVERLAY (Light Mode) */}
+            {/* DOCUMENT CANVAS & SIGNATURE OVERLAY */}
             <div
               onClick={() => setSelectedSigId(null)}
               className="relative flex justify-center overflow-x-auto rounded-2xl border border-slate-200 bg-slate-100 p-4 min-h-[500px] dark:border-slate-800 dark:bg-slate-950"
@@ -573,10 +656,8 @@ export default function SignPdfPage() {
                 ref={pageContainerRef}
                 className="relative inline-block select-none shadow-xl border border-slate-200/80 bg-white"
               >
-                {/* Rendered PDF Page Canvas */}
                 <canvas ref={pdfCanvasRef} className="block h-auto max-w-full rounded-sm" />
 
-                {/* Placed Signatures on Current Page */}
                 {currentPageSignatures.map((sig) => {
                   const isSelected = selectedSigId === sig.id;
 
@@ -601,7 +682,6 @@ export default function SignPdfPage() {
                           : "border border-transparent hover:border-slate-300"
                       }`}
                     >
-                      {/* Rendered Signature Graphic */}
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={sig.dataUrl}
@@ -609,12 +689,11 @@ export default function SignPdfPage() {
                         className="pointer-events-none h-full w-full object-contain"
                       />
 
-                      {/* Controls ONLY show when signature is selected */}
                       {isSelected && (
                         <>
                           <div className="absolute -top-6 left-1/2 -translate-x-1/2 flex items-center gap-1 rounded bg-slate-900 px-1.5 py-0.5 font-mono text-[9px] text-white shadow">
                             <Move className="h-2.5 w-2.5 text-rose-400" />
-                            <span>Drag to move</span>
+                            <span>Drag</span>
                           </div>
 
                           <button
@@ -626,7 +705,6 @@ export default function SignPdfPage() {
                             <Trash2 className="h-3 w-3" />
                           </button>
 
-                          {/* Resize Handle */}
                           <div
                             onPointerDown={(e) => handlePointerDownResize(sig.id, e)}
                             className="absolute -bottom-2 -right-2 h-4 w-4 cursor-se-resize rounded-full border-2 border-rose-600 bg-white shadow-md hover:scale-125 transition-transform"
@@ -639,7 +717,6 @@ export default function SignPdfPage() {
               </div>
             </div>
 
-            {/* Notifications */}
             {errorMessage && (
               <div className="flex items-start gap-2.5 rounded-xl border border-red-200 bg-red-50 p-3.5 text-xs text-red-700 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-400">
                 <AlertCircle className="h-4 w-4 shrink-0 text-red-600 mt-0.5" />
@@ -654,18 +731,17 @@ export default function SignPdfPage() {
               </div>
             )}
 
-            {/* Bottom Actions */}
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2 border-t border-slate-200 dark:border-slate-800">
               <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                {signatures.length > 0
-                  ? `${signatures.length} signature(s) placed across the document.`
-                  : "Add at least one signature to download."}
+                {signatures.length > 0 || watermarkText.trim()
+                  ? `${signatures.length} signature/stamp(s) ready to embed.`
+                  : "Add at least one signature, stamp, or watermark to download."}
               </span>
 
               <button
                 type="button"
                 onClick={handleSignDocument}
-                disabled={signatures.length === 0 || isSigning}
+                disabled={(signatures.length === 0 && !watermarkText.trim()) || isSigning}
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-rose-600 hover:bg-rose-500 px-6 py-2.5 text-sm font-semibold text-white shadow-md shadow-rose-600/20 disabled:opacity-40 transition-all"
               >
                 {isSigning ? (
@@ -676,7 +752,7 @@ export default function SignPdfPage() {
                 ) : (
                   <>
                     <Download className="h-4 w-4 text-white" />
-                    <span>Sign & Download PDF ({signatures.length})</span>
+                    <span>Sign & Download PDF</span>
                   </>
                 )}
               </button>
@@ -684,16 +760,14 @@ export default function SignPdfPage() {
           </div>
         )}
 
-        {/* ========================================================
-            SIGNATURE CREATOR MODAL
-        ======================================================== */}
+        {/* SIGNATURE CREATOR MODAL */}
         {isModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-2xs">
             <div className="relative w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-900 space-y-5">
               <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
                 <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
                   <PenTool className="h-4 w-4 text-rose-600" />
-                  <span>Create Signature</span>
+                  <span>Create Signature or Stamp</span>
                 </h3>
                 <button
                   type="button"
@@ -704,8 +778,8 @@ export default function SignPdfPage() {
                 </button>
               </div>
 
-              {/* Tabs & Colors */}
-              <div className="flex items-center justify-between">
+              {/* Tabs & Ink Colors */}
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center rounded-lg border border-slate-200 bg-slate-50 p-1 text-xs font-semibold dark:border-slate-800 dark:bg-slate-800">
                   <button
                     type="button"
@@ -731,30 +805,57 @@ export default function SignPdfPage() {
                     <Type className="h-3.5 w-3.5" />
                     <span>Type</span>
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("upload")}
+                    className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 transition-colors ${
+                      activeTab === "upload"
+                        ? "bg-white text-slate-900 shadow-2xs dark:bg-slate-900 dark:text-white"
+                        : "text-slate-600 dark:text-slate-400"
+                    }`}
+                  >
+                    <Upload className="h-3.5 w-3.5" />
+                    <span>Upload Image</span>
+                  </button>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-slate-500 font-medium">Ink:</span>
-                  <button
-                    type="button"
-                    onClick={() => setInkColor("#09090b")}
-                    className={`h-6 w-6 rounded-full border-2 bg-slate-950 transition-all ${
-                      inkColor === "#09090b" ? "border-rose-500 scale-110 shadow-sm" : "border-slate-300"
-                    }`}
-                    title="Black Ink"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setInkColor("#1d4ed8")}
-                    className={`h-6 w-6 rounded-full border-2 bg-blue-600 transition-all ${
-                      inkColor === "#1d4ed8" ? "border-rose-500 scale-110 shadow-sm" : "border-slate-300"
-                    }`}
-                    title="Blue Ink"
-                  />
-                </div>
+                {activeTab !== "upload" && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-slate-500 font-medium">Ink:</span>
+                    <button
+                      type="button"
+                      onClick={() => setInkColor("#09090b")}
+                      className={`h-6 w-6 rounded-full border-2 bg-slate-950 transition-all ${
+                        inkColor === "#09090b"
+                          ? "border-rose-500 scale-110 shadow-sm"
+                          : "border-slate-300"
+                      }`}
+                      title="Black Ink"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setInkColor("#1d4ed8")}
+                      className={`h-6 w-6 rounded-full border-2 bg-blue-600 transition-all ${
+                        inkColor === "#1d4ed8"
+                          ? "border-rose-500 scale-110 shadow-sm"
+                          : "border-slate-300"
+                      }`}
+                      title="Blue Ink"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setInkColor("#dc2626")}
+                      className={`h-6 w-6 rounded-full border-2 bg-red-600 transition-all ${
+                        inkColor === "#dc2626"
+                          ? "border-rose-500 scale-110 shadow-sm"
+                          : "border-slate-300"
+                      }`}
+                      title="Red Stamp Ink"
+                    />
+                  </div>
+                )}
               </div>
 
-              {/* DRAW CANVAS TAB */}
               {activeTab === "draw" && (
                 <div className="space-y-3">
                   <div className="relative rounded-xl border border-slate-200 bg-white shadow-inner overflow-hidden dark:border-slate-800">
@@ -793,12 +894,11 @@ export default function SignPdfPage() {
                 </div>
               )}
 
-              {/* TYPE TAB */}
               {activeTab === "type" && (
                 <div className="space-y-4">
                   <div>
                     <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
-                      Type your full name:
+                      Type your name or initials:
                     </label>
                     <input
                       type="text"
@@ -824,7 +924,43 @@ export default function SignPdfPage() {
                 </div>
               )}
 
-              {/* Footer */}
+              {activeTab === "upload" && (
+                <div className="space-y-4">
+                  <label className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 p-6 text-center cursor-pointer hover:border-rose-500 dark:border-slate-700 dark:bg-slate-800/50">
+                    <Upload className="h-6 w-6 text-rose-600 mb-2" />
+                    <span className="text-xs font-bold text-slate-800 dark:text-white">
+                      Upload transparent PNG signature or company stamp
+                    </span>
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      className="hidden"
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (!f) return;
+                        const reader = new FileReader();
+                        reader.onload = (ev) => {
+                          if (typeof ev.target?.result === "string") {
+                            setUploadedSigUrl(ev.target.result);
+                          }
+                        };
+                        reader.readAsDataURL(f);
+                      }}
+                    />
+                  </label>
+                  {uploadedSigUrl && (
+                    <div className="flex justify-center rounded-xl border border-slate-200 bg-white p-3">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={uploadedSigUrl}
+                        alt="Uploaded Signature Preview"
+                        className="max-h-24 object-contain"
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div className="flex items-center justify-end gap-3 pt-2 border-t border-slate-100 dark:border-slate-800">
                 <button
                   type="button"
@@ -840,7 +976,7 @@ export default function SignPdfPage() {
                   className="inline-flex items-center gap-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 px-5 py-2 text-xs font-bold text-white transition-all shadow-md shadow-rose-600/20"
                 >
                   <Check className="h-4 w-4" />
-                  <span>Place Signature</span>
+                  <span>Place & Save Signature</span>
                 </button>
               </div>
             </div>

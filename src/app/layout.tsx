@@ -3,7 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { LanguageProvider } from "@/context/LanguageContext";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ subsets: ["latin", "cyrillic"] });
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://pdftool.fenangplay.workers.dev";
 
@@ -17,10 +17,11 @@ export const metadata: Metadata = {
     template: "%s | PDFStudio",
   },
   description:
-    "Every PDF tool you need, all in one place. Merge, split, scan, sign, convert, and rotate PDFs with 100% client-side browser privacy. Your files never leave your device.",
+    "Every PDF tool you need, all in one place. Merge, split, compress, scan, sign, convert, and rotate PDFs with 100% client-side browser privacy. Your files never leave your device.",
   keywords: [
     "PDF tools",
     "free PDF merge",
+    "compress PDF under 100kb",
     "PDF scanner",
     "sign PDF online",
     "convert PDF to word",
@@ -28,21 +29,21 @@ export const metadata: Metadata = {
     "client-side PDF",
     "private PDF editor",
   ],
-  authors: [{ name: "DocForge Team" }],
-  creator: "DocForge",
+  authors: [{ name: "PDFStudio Team" }],
+  creator: "PDFStudio",
   openGraph: {
     type: "website",
     locale: "en_US",
     url: SITE_URL,
-    siteName: "DocForge",
-    title: "DocForge — Free, Fast & 100% Private PDF Tools",
+    siteName: "PDFStudio",
+    title: "PDFStudio — Free, Fast & 100% Private PDF Tools",
     description:
-      "All-in-one PDF suite that processes files directly in your browser. Zero cloud uploads, infinite file privacy.",
+      "All-in-one PDF suite that processes files directly in your browser. Zero cloud uploads, total file privacy.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "DocForge — Free & 100% Private PDF Tools",
-    description: "Scan, Sign, Merge, Split, and Convert PDFs client-side without servers.",
+    title: "PDFStudio — Free & 100% Private PDF Tools",
+    description: "Scan, Sign, Compress, Merge, Split, and Convert PDFs client-side without servers.",
   },
   robots: {
     index: true,
@@ -57,14 +58,6 @@ export const metadata: Metadata = {
   },
   alternates: {
     canonical: SITE_URL,
-    languages: {
-      "en-US": `${SITE_URL}`,
-      "es-ES": `${SITE_URL}`,
-      "fr-FR": `${SITE_URL}`,
-      "ru-RU": `${SITE_URL}`,
-      "ar-SA": `${SITE_URL}`,
-      "x-default": `${SITE_URL}`,
-    },
   },
 };
 
@@ -76,7 +69,7 @@ export default function RootLayout({
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "DocForge",
+    name: "PDFStudio",
     url: SITE_URL,
     applicationCategory: "BusinessApplication",
     operatingSystem: "All",
@@ -87,23 +80,24 @@ export default function RootLayout({
       priceCurrency: "USD",
     },
     featureList: [
-      "Mobile and Web Camera Document Scanner",
-      "Digital Electronic PDF Signing",
-      "PDF Merge and Split",
-      "Word and Excel to PDF Conversion",
-      "100% Client-Side Privacy Guarantee",
+      "Mobile and Web Camera Document Scanner with Auto-Edge Detection",
+      "Multi-Level PDF Compression (Extreme, Recommended, Lossless)",
+      "Digital Electronic PDF Signing, Stamps & Initials",
+      "PDF Merge, Visual Split, and Page Rotation",
+      "Universal Word, Excel, PowerPoint, Text, and Image to PDF Conversion",
+      "100% Client-Side Privacy Guarantee with Offline PWA Support",
     ],
   };
 
   return (
-    <html lang="en" className="light">
+    <html lang="en" className="light" suppressHydrationWarning>
       <head>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body className={`${inter.className} min-h-screen bg-white text-slate-900 antialiased`}>
+      <body className={`${inter.className} min-h-screen bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-100 antialiased`}>
         <LanguageProvider>{children}</LanguageProvider>
       </body>
     </html>

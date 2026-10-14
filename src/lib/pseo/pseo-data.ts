@@ -5,6 +5,8 @@ export type ToolType =
   | "rotate"
   | "sign"
   | "scan"
+  | "watermark"
+  | "sanitize"
   | "pdf-to-word"
   | "word-to-pdf"
   | "pdf-to-excel"
@@ -28,12 +30,18 @@ export interface PseoModifier {
   ru: string;
   ar: string;
   category: "use-case" | "platform" | "size" | "quality";
+  targetKb?: number;
+  compatibleTools?: ToolType[];
 }
 
 export interface PseoPageData {
   slug: string;
   locale: PseoLocale;
   toolType: ToolType;
+  baseSlug: string;
+  modifierId?: string;
+  modifierCategory?: PseoModifier["category"];
+  targetKb?: number;
   title: string;
   h1: string;
   metaDescription: string;
@@ -41,7 +49,8 @@ export interface PseoPageData {
   benefits: string[];
   steps: { title: string; desc: string }[];
   faqs: { q: string; a: string }[];
-  relatedSlugs: string[];
+  relatedSlugs: { href: string; label: string }[];
+  variationLinks: { href: string; label: string }[];
 }
 
 export const BASE_SITE_URL =
@@ -54,6 +63,42 @@ export const CORE_TOOLS: {
   names: Record<PseoLocale, string>;
   action: Record<PseoLocale, string>;
 }[] = [
+  {
+    type: "watermark",
+    baseSlug: "watermark-pdf",
+    names: {
+      en: "Watermark & Page Numbers PDF",
+      fr: "Filigrane et Numéros de Page PDF",
+      es: "Marca de Agua y Numerar PDF",
+      ru: "Водяной знак и нумерация PDF",
+      ar: "إضافة علامة مائية وترقيم صفحات PDF",
+    },
+    action: {
+      en: "stamp diagonal watermarks and page numbers onto PDF",
+      fr: "ajouter un filigrane et numéroter les pages d'un PDF",
+      es: "añadir marca de agua y numeración de páginas a un PDF",
+      ru: "добавить водяной знак и нумерацию страниц в PDF",
+      ar: "إضافة علامة مائية وترقيم الصفحات لملف PDF",
+    },
+  },
+  {
+    type: "sanitize",
+    baseSlug: "sanitize-pdf",
+    names: {
+      en: "Sanitize & Strip PDF Metadata",
+      fr: "Nettoyer et Supprimer les Métadonnées PDF",
+      es: "Limpiar y Eliminar Metadatos PDF",
+      ru: "Очистить метаданные PDF",
+      ar: "إزالة البيانات الوصفية وتنظيف PDF",
+    },
+    action: {
+      en: "remove hidden author, XMP, and timestamp metadata from PDF",
+      fr: "supprimer les métadonnées cachées et l'auteur d'un fichier PDF",
+      es: "eliminar metadatos ocultos y rastro de autor de un PDF",
+      ru: "удалить скрытые метаданные автора и истории из PDF",
+      ar: "إزالة البيانات الوصفية المخفية واسم المؤلف من ملف PDF",
+    },
+  },
   {
     type: "compress",
     baseSlug: "compress-pdf",
@@ -380,7 +425,7 @@ export const CORE_TOOLS: {
   },
 ];
 
-// 35+ Programmatic Intent Modifiers (High Search Volume)
+// Programmatic Intent Modifiers with Smart Tool Compatibility Filtering
 export const MODIFIERS: PseoModifier[] = [
   {
     id: "for-resumes",
@@ -525,6 +570,8 @@ export const MODIFIERS: PseoModifier[] = [
     ru: "до 100 КБ",
     ar: "إلى أقل من 100 كيلوبايت",
     category: "size",
+    targetKb: 100,
+    compatibleTools: ["compress", "scan", "jpg-to-pdf", "png-to-pdf", "word-to-pdf"],
   },
   {
     id: "under-200kb",
@@ -534,6 +581,8 @@ export const MODIFIERS: PseoModifier[] = [
     ru: "до 200 КБ",
     ar: "إلى أقل من 200 كيلوبايت",
     category: "size",
+    targetKb: 200,
+    compatibleTools: ["compress", "scan", "jpg-to-pdf", "png-to-pdf", "word-to-pdf"],
   },
   {
     id: "under-500kb",
@@ -543,6 +592,8 @@ export const MODIFIERS: PseoModifier[] = [
     ru: "до 500 КБ",
     ar: "إلى أقل من 500 كيلوبايت",
     category: "size",
+    targetKb: 500,
+    compatibleTools: ["compress", "scan", "jpg-to-pdf", "png-to-pdf", "word-to-pdf", "merge"],
   },
   {
     id: "under-1mb",
@@ -552,6 +603,8 @@ export const MODIFIERS: PseoModifier[] = [
     ru: "до 1 МБ",
     ar: "إلى أقل من 1 ميجابايت",
     category: "size",
+    targetKb: 1024,
+    compatibleTools: ["compress", "scan", "jpg-to-pdf", "png-to-pdf", "word-to-pdf", "merge"],
   },
   {
     id: "under-2mb",
@@ -561,6 +614,8 @@ export const MODIFIERS: PseoModifier[] = [
     ru: "до 2 МБ",
     ar: "إلى أقل من 2 ميجابايت",
     category: "size",
+    targetKb: 2048,
+    compatibleTools: ["compress", "scan", "jpg-to-pdf", "png-to-pdf", "word-to-pdf", "merge"],
   },
   {
     id: "on-mac",
@@ -642,6 +697,7 @@ export const MODIFIERS: PseoModifier[] = [
     ru: "с сохранением исходного качества",
     ar: "بجودة أصلية وبدون فقدان للتفاصيل",
     category: "quality",
+    compatibleTools: ["compress", "merge", "split", "rotate", "jpg-to-pdf", "png-to-pdf", "pdf-to-jpg", "pdf-to-png"],
   },
   {
     id: "editable-text",
@@ -651,6 +707,7 @@ export const MODIFIERS: PseoModifier[] = [
     ru: "с возможностью редактирования текста",
     ar: "مع إمكانية تعديل النصوص وتنسيقها",
     category: "quality",
+    compatibleTools: ["pdf-to-word", "pdf-to-excel", "pdf-to-powerpoint", "pdf-to-text"],
   },
   {
     id: "high-resolution-300dpi",
@@ -660,6 +717,7 @@ export const MODIFIERS: PseoModifier[] = [
     ru: "в высоком разрешении 300 DPI",
     ar: "بدقة فائقة 300 DPI للطباعة",
     category: "quality",
+    compatibleTools: ["scan", "pdf-to-jpg", "pdf-to-png", "jpg-to-pdf", "png-to-pdf"],
   },
   {
     id: "no-file-limit",
@@ -699,14 +757,24 @@ export const MODIFIERS: PseoModifier[] = [
   },
 ];
 
+export function isModifierCompatible(toolType: ToolType, mod: PseoModifier): boolean {
+  if (!mod.compatibleTools) return true;
+  return mod.compatibleTools.includes(toolType);
+}
+
 // Helper to generate slug strings
 export function buildPseoSlug(baseSlug: string, modifierId?: string): string {
   if (!modifierId) return baseSlug;
   return `${baseSlug}-${modifierId}`;
 }
 
-// Generate the complete programmatic dataset
+// Module-level memoization caches to prevent O(N^2) rebuilds during static export
+let _cachedPages: PseoPageData[] | null = null;
+let _cachedMap: Map<string, PseoPageData> | null = null;
+
 export function generateAllPseoPages(): PseoPageData[] {
+  if (_cachedPages) return _cachedPages;
+
   const pages: PseoPageData[] = [];
   const locales: PseoLocale[] = ["en", "fr", "es", "ru", "ar"];
 
@@ -716,15 +784,301 @@ export function generateAllPseoPages(): PseoPageData[] {
       const baseSlug = tool.baseSlug;
       pages.push(buildPageRecord(tool, undefined, locale, baseSlug));
 
-      // 2. Programmatic Modifier Pages
+      // 2. Compatible Programmatic Modifier Pages
       for (const mod of MODIFIERS) {
+        if (!isModifierCompatible(tool.type, mod)) continue;
         const slug = buildPseoSlug(tool.baseSlug, mod.id);
         pages.push(buildPageRecord(tool, mod, locale, slug));
       }
     }
   }
 
+  _cachedPages = pages;
   return pages;
+}
+
+export function getPseoPage(locale: PseoLocale, slug: string): PseoPageData | undefined {
+  if (!_cachedMap) {
+    const all = generateAllPseoPages();
+    _cachedMap = new Map<string, PseoPageData>();
+    for (const p of all) {
+      _cachedMap.set(`${p.locale}:${p.slug}`, p);
+    }
+  }
+  return _cachedMap.get(`${locale}:${slug}`);
+}
+
+function getLocalizedBenefits(
+  locale: PseoLocale,
+  toolName: string,
+  mod?: PseoModifier
+): string[] {
+  const modText = mod ? mod[locale] : "";
+
+  switch (locale) {
+    case "fr":
+      return [
+        `100% Local : Aucun fichier envoyé sur un serveur pour ${toolName.toLowerCase()}${modText ? ` ${modText}` : ""}`,
+        "Zéro Filigrane : Exportez des documents PDF propres, conformes à la norme ISO 32000-1",
+        "Multi-Plateforme : Compatible macOS, Windows, Linux, iPhone/iPad (Safari) et Android",
+        "Mode Hors Ligne : Le moteur WebAssembly et Canvas fonctionne même sans connexion Internet",
+      ];
+    case "es":
+      return [
+        `100% Privado en el Navegador: Procesamiento local para ${toolName.toLowerCase()}${modText ? ` ${modText}` : ""} sin subir archivos`,
+        "Sin Marcas de Agua: Genera documentos profesionales listos para entrega oficial",
+        "Multiplataforma: Funciona al instante en Windows, Mac, iOS Safari y teléfonos Android",
+        "Capacidad Sin Conexión: El motor WebAssembly procesa tus archivos en la memoria RAM local",
+      ];
+    case "ru":
+      return [
+        `100% в браузере: локальная обработка «${toolName}»${modText ? ` (${modText})` : ""} без загрузки на сервер`,
+        "Без водяных знаков: чистые профессиональные документы стандарта ISO 32000-1",
+        "Кроссплатформенность: работает на Windows, macOS, iPhone, iPad и Android без установки",
+        "Офлайн-режим: движок WebAssembly и HTML5 Canvas работает даже без интернета",
+      ];
+    case "ar":
+      return [
+        `معالجة محلية 100%: أداة ${toolName}${modText ? ` ${modText}` : ""} تعمل داخل متصفحك دون رفع أي ملفات`,
+        "بدون علامة مائية: تصدير مستندات رسمية نظيفة وجاهزة للطباعة أو الإرسال",
+        "متوافق مع جميع الأجهزة: يعمل فوراً على الحاسوب وهواتف iPhone و Android",
+        "يعمل بدون إنترنت: محرك WebAssembly يعالج صفحاتك مباشرة في الذاكرة المحلية",
+      ];
+    default:
+      return [
+        `100% Client-Side: Zero server uploads or cloud logs when you ${toolName.toLowerCase()}${modText ? ` ${modText}` : ""}`,
+        "No Watermarks: Export clean, ISO-compliant documents ready for official submission",
+        "Cross-Platform: Runs smoothly across macOS, Windows, iOS Safari, and Android Chrome",
+        "Offline Capable: WebAssembly & HTML5 Canvas engine runs even without an active connection",
+      ];
+  }
+}
+
+function getLocalizedSteps(
+  locale: PseoLocale,
+  toolName: string,
+  mod?: PseoModifier
+): { title: string; desc: string }[] {
+  const modText = mod ? ` ${mod[locale]}` : "";
+  switch (locale) {
+    case "fr":
+      return [
+        {
+          title: "1. Sélectionnez ou glissez votre fichier",
+          desc: `Déposez votre document dans la zone sécurisée pour lancer ${toolName}${modText} directement en mémoire locale.`,
+        },
+        {
+          title: "2. Ajustez les paramètres",
+          desc: mod?.targetKb
+            ? `Choisissez le mode de compression adapté pour atteindre moins de ${mod.targetKb} Ko tout en préservant la lisibilité.`
+            : "Prévisualisez les pages et configurez vos options en temps réel sans file d'attente.",
+        },
+        {
+          title: "3. Téléchargement instantané",
+          desc: "Enregistrez votre fichier finalisé directement sur votre appareil en un clic, sans filigrane.",
+        },
+      ];
+    case "es":
+      return [
+        {
+          title: "1. Selecciona o arrastra tu archivo",
+          desc: `Suelta tu documento en el área de trabajo para iniciar ${toolName}${modText} localmente en tu navegador.`,
+        },
+        {
+          title: "2. Configura las opciones",
+          desc: mod?.targetKb
+            ? `Ajusta el nivel de optimización para reducir el peso por debajo de ${mod.targetKb} KB manteniendo la nitidez.`
+            : "Previsualiza el documento y personaliza los ajustes en tiempo real sin esperas.",
+        },
+        {
+          title: "3. Descarga local inmediata",
+          desc: "Guarda el documento procesado directamente en tu dispositivo sin marcas de agua ni registros en la nube.",
+        },
+      ];
+    case "ru":
+      return [
+        {
+          title: "1. Выберите или перетащите файл",
+          desc: `Перетащите документ в рабочую область для запуска «${toolName}${modText}» прямо в оперативной памяти браузера.`,
+        },
+        {
+          title: "2. Настройте параметры",
+          desc: mod?.targetKb
+            ? `Выберите уровень сжатия для достижения размера менее ${mod.targetKb} КБ без потери чёткости текста.`
+            : "Проверьте предпросмотр страниц и настройте параметры в реальном времени без очередей.",
+        },
+        {
+          title: "3. Мгновенное скачивание",
+          desc: "Сохраните готовый файл сразу на ваше устройство без водяных знаков и ограничений.",
+        },
+      ];
+    case "ar":
+      return [
+        {
+          title: "1. اختر المستند أو اسحبه",
+          desc: `اسحب الملف وأفلته في المربع المخصص لبدء ${toolName}${modText} فوراً داخل ذاكرة المتصفح.`,
+        },
+        {
+          title: "2. اضبط الإعدادات والمعاينة",
+          desc: mod?.targetKb
+            ? `اختر مستوى الضغط المناسب لتقليل الحجم إلى أقل من ${mod.targetKb} كيلوبايت مع الحفاظ على وضوح النص.`
+            : "عاين الصفحات واضبط الخيارات المطلوبة بشكل مباشر وبدون أي انتظار.",
+        },
+        {
+          title: "3. تنزيل فوري على جهازك",
+          desc: "احصل على المستند النهائي بنقرة واحدة مباشرة على جهازك بدون أي علامة مائية.",
+        },
+      ];
+    default:
+      return [
+        {
+          title: "1. Select or Drop Your File",
+          desc: `Drag and drop your document into the workspace to start ${toolName}${modText} locally in browser memory.`,
+        },
+        {
+          title: "2. Configure & Preview Settings",
+          desc: mod?.targetKb
+            ? `Select your compression preset to hit your under-${mod.targetKb} KB target while keeping text razor-sharp.`
+            : "Preview pages and fine-tune your parameters with real-time visual feedback.",
+        },
+        {
+          title: "3. Instant Local Download",
+          desc: "Save the processed, watermark-free document straight to your device storage.",
+        },
+      ];
+  }
+}
+
+function getLocalizedFaqs(
+  locale: PseoLocale,
+  toolName: string,
+  actionText: string,
+  mod?: PseoModifier
+): { q: string; a: string }[] {
+  const modLabel = mod ? ` ${mod[locale]}` : "";
+
+  if (locale === "fr") {
+    return [
+      {
+        q: `Comment ${actionText}${modLabel} gratuitement et sans risque ?`,
+        a: `Grâce à notre moteur WebAssembly et HTML5 Canvas, l'outil ${toolName}${modLabel} s'exécute à 100% dans la mémoire vive (RAM) de votre navigateur. Aucun octet n'est envoyé vers un serveur distant.`,
+      },
+      {
+        q: mod?.targetKb
+          ? `Puis-je vraiment réduire mon PDF à moins de ${mod.targetKb} Ko ?`
+          : "Y a-t-il des limites sur la taille du fichier ou le nombre de pages ?",
+        a: mod?.targetKb
+          ? `Oui. Utilisez le mode « Compression Extrême » ou « Recommandée » pour ré-encoder les flux d'images internes et supprimer les métadonnées superflues afin de passer sous la barre des ${mod.targetKb} Ko.`
+          : "Aucune limite artificielle. Tant que votre appareil dispose de suffisamment de mémoire vive, vous pouvez traiter des documents volumineux sans blocage.",
+      },
+      {
+        q: "Mon document téléchargé contiendra-t-il un filigrane ?",
+        a: "Jamais. Tous les fichiers générés par PDFStudio sont propres, sans filigrane et prêts pour un usage professionnel, juridique ou académique.",
+      },
+      {
+        q: "Cet outil fonctionne-t-il sur Mac, Windows, iPhone et Android ?",
+        a: "Oui, l'interface s'adapte automatiquement à Safari (iOS/macOS), Chrome, Edge et Firefox sur ordinateur, tablette et smartphone.",
+      },
+    ];
+  }
+
+  if (locale === "es") {
+    return [
+      {
+        q: `¿Cómo puedo ${actionText}${modLabel} de forma gratuita y segura?`,
+        a: `La herramienta ${toolName}${modLabel} funciona 100% dentro de la memoria RAM de tu navegador mediante WebAssembly y HTML5 Canvas. Tus documentos nunca se suben a ningún servidor externo.`,
+      },
+      {
+        q: mod?.targetKb
+          ? `¿Cómo consigo que mi archivo pese menos de ${mod.targetKb} KB?`
+          : "¿Existen límites en el tamaño del archivo o número de páginas?",
+        a: mod?.targetKb
+          ? `Selecciona el nivel de compresión "Extrema" o "Recomendada" para optimizar las imágenes incrustadas y limpiar flujos redundantes hasta alcanzar menos de ${mod.targetKb} KB.`
+          : "No imponemos límites artificiales ni muros de pago. Puedes procesar documentos de cualquier tamaño según la memoria disponible en tu dispositivo.",
+      },
+      {
+        q: "¿Se añaden marcas de agua al documento exportado?",
+        a: "Nunca. Todos los archivos exportados están libres de marcas de agua y cumplen con el estándar oficial ISO 32000-1.",
+      },
+      {
+        q: "¿Puedo usar esta herramienta en el móvil o tablet?",
+        a: "Sí, es totalmente compatible con Safari en iPhone/iPad, Chrome en Android y cualquier navegador de escritorio en Windows o Mac.",
+      },
+    ];
+  }
+
+  if (locale === "ru") {
+    return [
+      {
+        q: `Насколько безопасно использовать инструмент «${toolName}${modLabel}»?`,
+        a: `Обработка полностью выполняется локально в оперативной памяти вашего устройства с помощью WebAssembly и HTML5 Canvas. Файлы никуда не загружаются и не сохраняются на серверах.`,
+      },
+      {
+        q: mod?.targetKb
+          ? `Как гарантированно уменьшить размер файла до ${mod.targetKb} КБ?`
+          : "Есть ли ограничения по размеру файла или количеству страниц?",
+        a: mod?.targetKb
+          ? `Выберите режим «Максимальное сжатие» или «Рекомендуемое» — алгоритм оптимизирует встроенные изображения и потоки объектов, чтобы уложиться в лимит ${mod.targetKb} КБ.`
+          : "Искусственных ограничений нет. Вы можете бесплатно обрабатывать многостраничные документы любого объёма, который поддерживает память вашего устройства.",
+      },
+      {
+        q: "Добавляются ли водяные знаки на готовый документ?",
+        a: "Нет. Все экспортируемые файлы полностью чистые, без логотипов и водяных знаков.",
+      },
+      {
+        q: "Работает ли инструмент на телефонах Android и iPhone?",
+        a: "Да, приложение полностью адаптировано для мобильных браузеров Safari (iOS), Chrome (Android) и настольных систем Windows и macOS.",
+      },
+    ];
+  }
+
+  if (locale === "ar") {
+    return [
+      {
+        q: `هل أداة ${toolName}${modLabel} آمنة ومجانية بالكامل؟`,
+        a: `نعم، تتم عملية ${actionText}${modLabel} محلياً بنسبة 100% داخل ذاكرة المتصفح باستخدام تقنيات WebAssembly و HTML5 Canvas دون رفع أي بايت إلى خوادم خارجية.`,
+      },
+      {
+        q: mod?.targetKb
+          ? `كيف يمكنني تقليل حجم الملف إلى أقل من ${mod.targetKb} كيلوبايت؟`
+          : "هل توجد قيود على حجم الملف أو عدد الصفحات؟",
+        a: mod?.targetKb
+          ? `اختر مستوى "ضغط أقصى" أو "موصى به" لإعادة تحسين الصور المدمجة وإزالة البيانات الزائدة للوصول إلى أقل من ${mod.targetKb} كيلوبايت مع الحفاظ على وضوح النص.`
+          : "لا توجد أي قيود اصطناعية؛ يمكنك معالجة الملفات الكبيرة ومتعددة الصفحات مجاناً طالما تتوفر ذاكرة كافية على جهازك.",
+      },
+      {
+        q: "هل يضيف الموقع علامات مائية على الملفات الناتجة؟",
+        a: "أبداً. جميع المستندات الناتجة نظيفة تماماً وبدون أي علامة مائية وجاهزة للتقديم الرسمي.",
+      },
+      {
+        q: "هل يمكن استخدام الأداة على الهواتف الذكية والأجهزة اللوحية؟",
+        a: "نعم، الأداة متوافقة بالكامل مع متصفحات Safari على iPhone و iPad ومتصفح Chrome على هواتف Android وأجهزة الحاسوب.",
+      },
+    ];
+  }
+
+  return [
+    {
+      q: `Is this ${toolName}${modLabel} tool completely free and private?`,
+      a: `Yes. Everything runs 100% locally inside your browser RAM using WebAssembly and HTML5 Canvas so you can ${actionText}${modLabel} with zero server uploads.`,
+    },
+    {
+      q: mod?.targetKb
+        ? `How does the tool reach the under-${mod.targetKb} KB file size target?`
+        : "Are there any file size or page count limitations?",
+      a: mod?.targetKb
+        ? `By combining metadata stripping, PDF object-stream packing, and configurable canvas DPI/JPEG re-encoding, you can reliably shrink documents toward your ${mod.targetKb} KB portal upload limit.`
+        : "There are no artificial paywalls or page limits. As long as your device has available memory, you can process large multi-page documents freely.",
+    },
+    {
+      q: "Will my downloaded document contain watermarks?",
+      a: "Never. All exported PDFs and Office documents are clean, watermark-free, and compliant with ISO 32000-1 standards.",
+    },
+    {
+      q: "Can I use this tool offline or on mobile devices?",
+      a: "Yes. It works natively on iOS Safari, Android Chrome, macOS, and Windows—and continues functioning offline once loaded.",
+    },
+  ];
 }
 
 function buildPageRecord(
@@ -738,113 +1092,64 @@ function buildPageRecord(
   const actionText = tool.action[locale];
 
   let title = `${toolName}${modLabel} — Free & 100% Private | PDFStudio`;
-  let h1 = `${toolName} ${modLabel}`.trim();
-  let metaDescription = `Free online tool to ${actionText} ${mod ? mod[locale] : ""}. 100% private client-side processing directly in your browser. Files never leave your device.`;
+  const h1 = `${toolName}${modLabel}`.trim();
+  let metaDescription = `Free online tool to ${actionText}${modLabel}. 100% private client-side processing directly in your browser. Files never leave your device.`;
 
   if (locale === "fr") {
-    title = `${toolName} ${modLabel} — Gratuit & 100% Privé | PDFStudio`;
-    metaDescription = `Outil en ligne gratuit pour ${actionText} ${mod ? mod[locale] : ""}. Traitement 100% local dans votre navigateur. Zéro fichier envoyé au serveur.`;
+    title = `${toolName}${modLabel} — Gratuit & 100% Privé | PDFStudio`;
+    metaDescription = `Outil en ligne gratuit pour ${actionText}${modLabel}. Traitement 100% local dans votre navigateur sans aucun envoi sur serveur.`;
   } else if (locale === "es") {
-    title = `${toolName} ${modLabel} — Gratis y 100% Privado | PDFStudio`;
-    metaDescription = `Herramienta en línea gratuita para ${actionText} ${mod ? mod[locale] : ""}. Procesamiento 100% local en tu navegador con total privacidad.`;
+    title = `${toolName}${modLabel} — Gratis y 100% Privado | PDFStudio`;
+    metaDescription = `Herramienta en línea gratuita para ${actionText}${modLabel}. Procesamiento 100% local en tu navegador con privacidad total.`;
   } else if (locale === "ru") {
-    title = `${toolName} ${modLabel} — Бесплатно и приватно | PDFStudio`;
-    metaDescription = `Бесплатный онлайн инструмент, чтобы ${actionText} ${mod ? mod[locale] : ""}. 100% локальная обработка в браузере без серверов.`;
+    title = `${toolName}${modLabel} — Бесплатно и приватно | PDFStudio`;
+    metaDescription = `Бесплатный онлайн-инструмент, чтобы ${actionText}${modLabel}. 100% локальная обработка в браузере без загрузки на сервер.`;
   } else if (locale === "ar") {
-    title = `${toolName} ${modLabel} — مجاني وخاص 100% | PDFStudio`;
-    metaDescription = `أداة مجانية للقيام بـ ${actionText} ${mod ? mod[locale] : ""}. معالجة آمنة محلياً 100% داخل المتصفح دون رفع أي ملفات.`;
+    title = `${toolName}${modLabel} — مجاني وخاص 100% | PDFStudio`;
+    metaDescription = `أداة مجانية للقيام بـ ${actionText}${modLabel}. معالجة آمنة محلياً 100% داخل المتصفح دون رفع أي ملفات.`;
   }
 
-  const benefits = [
-    locale === "ar"
-      ? "معالجة فورية داخل ذاكرة المتصفح دون انتظار أو طوابير"
-      : "100% Client-Side: Zero server uploads, zero logs, absolute confidentiality",
-    locale === "ar"
-      ? "بدون علامة مائية وبدون اشتراكات أو قيود على حجم الملفات"
-      : "No Watermarks: Export clean, professional documents ready for submission",
-    locale === "ar"
-      ? "يعمل على كافة الأجهزة (الهاتف، الحاسوب، الأجهزة اللوحية)"
-      : "Cross-Platform: Works smoothly across macOS, Windows, iOS, and Android",
-    locale === "ar"
-      ? "إمكانية العمل دون اتصال بالإنترنت بعد تحميل الصفحة"
-      : "Offline Capable: WebAssembly engine runs even without an active connection",
-  ];
+  const benefits = getLocalizedBenefits(locale, toolName, mod);
+  const steps = getLocalizedSteps(locale, toolName, mod);
+  const faqs = getLocalizedFaqs(locale, toolName, actionText, mod);
 
-  const steps = [
-    {
-      title: locale === "ar" ? "1. اختر المستند" : "1. Select or Drop File",
-      desc:
-        locale === "ar"
-          ? "اسحب الملف المطلوب وأفلته في المربع المخصص للمعالجة الفورية."
-          : "Drag and drop your file directly into the local browser viewport.",
-    },
-    {
-      title: locale === "ar" ? "2. اضبط الخيارات" : "2. Configure Settings",
-      desc:
-        locale === "ar"
-          ? "خصص الإعدادات المناسبة وفقاً لاحتياجاتك بدون أي تعقيد."
-          : "Preview and fine-tune your parameters with real-time feedback.",
-    },
-    {
-      title: locale === "ar" ? "3. تنزيل فوري" : "3. Instant Local Download",
-      desc:
-        locale === "ar"
-          ? "احصل على المستند المعالج بنقرة واحدة مباشرة من جهازك."
-          : "Save the processed document straight to your device storage.",
-    },
-  ];
-
-  const faqs = [
-    {
-      q:
-        locale === "ar"
-          ? `هل عملية ${toolName} آمنة ومجانية؟`
-          : `Is this ${toolName} tool completely free and secure?`,
-      a:
-        locale === "ar"
-          ? "نعم، كافة الأدوات مجانية بالكامل وتعمل داخل جهازك فقط دون رفع أي بيانات إلى خوادم سحابية."
-          : "Yes. Processing runs entirely inside your device RAM using WebAssembly and HTML5 Canvas. Zero bytes are uploaded to remote servers.",
-    },
-    {
-      q:
-        locale === "ar"
-          ? "هل توجد قيود على عدد الصفحات أو حجم الملف؟"
-          : "Are there any file size or page limitations?",
-      a:
-        locale === "ar"
-          ? "لا توجد قيود اصطناعية. يمكنك معالجة أي حجم يدعمه جهازك."
-          : "No artificial limits. As long as your device has sufficient memory, you can process large documents with ease.",
-    },
-    {
-      q:
-        locale === "ar"
-          ? "هل يضيف الموقع علامات مائية على الملفات الناتجة؟"
-          : "Will my downloaded document contain watermarks?",
-      a:
-        locale === "ar"
-          ? "أبداً. الملفات الناتجة تظل نظيفة ومهنية تماماً."
-          : "Never. All generated PDFs and documents are standard, watermark-free files.",
-    },
-    {
-      q:
-        locale === "ar"
-          ? "هل يمكن استخدام هذه الأداة على الهواتف الذكية؟"
-          : "Can I use this tool on mobile phones and tablets?",
-      a:
-        locale === "ar"
-          ? "نعم، متوافق بالكامل مع متصفحات هواتف Android و iPhone و iPad."
-          : "Yes, fully responsive on Safari iOS, Chrome Android, Edge, and modern desktop browsers.",
-    },
-  ];
+  const prefix = locale === "en" ? "" : `/${locale}`;
 
   const relatedSlugs = CORE_TOOLS.filter((t) => t.type !== tool.type)
-    .slice(0, 6)
-    .map((t) => (locale === "en" ? `/${t.baseSlug}` : `/${locale}/${t.baseSlug}`));
+    .slice(0, 8)
+    .map((t) => ({
+      href: `${prefix}/${t.baseSlug}`,
+      label: t.names[locale],
+    }));
+
+  // Build internal links to compatible modifier variations for this tool so zero pSEO pages are orphaned
+  const compatibleMods = MODIFIERS.filter((m) => isModifierCompatible(tool.type, m));
+  const variationLinks = [
+    ...(mod
+      ? [
+          {
+            href: `${prefix}/${tool.baseSlug}`,
+            label: toolName,
+          },
+        ]
+      : []),
+    ...compatibleMods
+      .filter((m) => m.id !== mod?.id)
+      .slice(0, 14)
+      .map((m) => ({
+        href: `${prefix}/${buildPseoSlug(tool.baseSlug, m.id)}`,
+        label: `${toolName} ${m[locale]}`,
+      })),
+  ];
 
   return {
     slug,
     locale,
     toolType: tool.type,
+    baseSlug: tool.baseSlug,
+    modifierId: mod?.id,
+    modifierCategory: mod?.category,
+    targetKb: mod?.targetKb,
     title,
     h1,
     metaDescription,
@@ -853,5 +1158,6 @@ function buildPageRecord(
     steps,
     faqs,
     relatedSlugs,
+    variationLinks,
   };
 }

@@ -1,10 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ToolLayout } from "@/components/tools/ToolLayout";
 import { FileDropzone } from "@/components/tools/FileDropzone";
-import { PDFDocument } from "pdf-lib";
-import { downloadBlob } from "@/lib/pdf/pdf-utils";
+import { compressPDFDocument, downloadBlob } from "@/lib/pdf/pdf-utils";
 import {
   FileText,
   Sliders,
@@ -14,6 +13,7 @@ import {
   CheckCircle2,
   AlertCircle,
   Zap,
+  Target,
 } from "lucide-react";
 
 type CompressionLevel = "recommended" | "extreme" | "low";
@@ -26,13 +26,26 @@ function formatBytes(bytes: number): string {
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
 }
 
-export default function CompressPdfPage() {
+interface CompressPdfPageProps {
+  targetKb?: number;
+}
+
+export default function CompressPdfPage({ targetKb }: CompressPdfPageProps = {}) {
   const [file, setFile] = useState<File | null>(null);
-  const [level, setLevel] = useState<CompressionLevel>("recommended");
+  const [level, setLevel] = useState<CompressionLevel>(
+    targetKb && targetKb <= 200 ? "extreme" : "recommended"
+  );
   const [isProcessing, setIsProcessing] = useState(false);
+  const [progressText, setProgressText] = useState<string>("");
   const [resultBytes, setResultBytes] = useState<Uint8Array | null>(null);
   const [savedRatio, setSavedRatio] = useState<number | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (targetKb && targetKb <= 200) {
+      setLevel("extreme");
+    }
+  }, [targetKb]);
 
   const handleFileSelected = (files: File[]) => {
     const selected = files[0];
@@ -48,6 +61,13 @@ export default function CompressPdfPage() {
     setResultBytes(null);
     setSavedRatio(null);
     setErrorMessage(null);
+    setProgressText("");
+  };
+
+  const handleLevelChange = (newLevel: CompressionLevel) => {
+    setLevel(newLevel);
+    setResultBytes(null);
+    setSavedRatio(null);
   };
 
   const handleCompress = async () => {
@@ -55,21 +75,18 @@ export default function CompressPdfPage() {
 
     setIsProcessing(true);
     setErrorMessage(null);
+    setProgressText("Analyzing PDF streams...");
 
     try {
-      const buffer = await file.arrayBuffer();
-      // Load and rebuild the PDF structure to clean duplicate streams and metadata
-      const pdfDoc = await PDFDocument.load(buffer, { ignoreEncryption: true });
+      const compressed = await compressPDFDocument(
+        file,
+        level,
+        targetKb,
+        (current, total) => {
+          setProgressText(`Optimizing page ${current} of ${total}...`);
+        }
+      );
 
-      // Clean metadata and object streams
-      pdfDoc.setTitle("");
-      pdfDoc.setAuthor("");
-      pdfDoc.setSubject("");
-      pdfDoc.setProducer("");
-      pdfDoc.setCreator("");
-
-      // Re-save with maximum object compression
-      const compressed = await pdfDoc.save({ useObjectStreams: true });
       setResultBytes(compressed);
 
       const ratio = Math.max(
@@ -82,6 +99,7 @@ export default function CompressPdfPage() {
       setErrorMessage(msg);
     } finally {
       setIsProcessing(false);
+      setProgressText("");
     }
   };
 
@@ -98,16 +116,26 @@ export default function CompressPdfPage() {
         {
           question: "How does client-side compression work?",
           answer:
-            "Our engine parses your PDF structure, purges redundant metadata, merges duplicate font streams, and compresses internal content streams without uploading any bytes to a remote server.",
+            "Our engine strips redundant metadata, packs internal PDF object streams, and downsamples embedded page rasters at configurable DPI and JPEG quality settings without uploading a single byte to a remote server.",
         },
         {
-          question: "Will image and text quality be affected?",
+          question: "Which compression level should I choose?",
           answer:
-            "Recommended compression maintains high text sharpness and vector clarity while trimming unnecessary file overhead.",
+            "Use 'Recommended' for everyday email and portal uploads (~40–70% reduction with crisp text), 'Extreme' when you must hit strict 100 KB–200 KB portal caps, or 'Low' for lossless metadata and stream cleanup.",
         },
       ]}
     >
       <div className="space-y-6">
+        {targetKb && (
+          <div className="flex items-center justify-between rounded-xl border border-rose-200 bg-rose-50/70 px-4 py-2.5 text-xs text-rose-800 dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-300">
+            <div className="flex items-center gap-2 font-semibold">
+              <Target className="h-4 w-4 text-rose-600 dark:text-rose-400" />
+              <span>Preset Active: Target File Size Under {targetKb} KB</span>
+            </div>
+            <span className="font-mono text-[11px] uppercase font-bold">Auto-Tuned</span>
+          </div>
+        )}
+
         {!file && (
           <FileDropzone
             accept="application/pdf,.pdf"
@@ -159,23 +187,23 @@ export default function CompressPdfPage() {
                   {
                     id: "extreme" as const,
                     title: "Extreme Compression",
-                    desc: "Smallest size, standard quality",
+                    desc: "Maximum size reduction (100 DPI raster)",
                   },
                   {
                     id: "recommended" as const,
                     title: "Recommended",
-                    desc: "Optimal balance of quality & size",
+                    desc: "Balanced clarity & size (~150 DPI)",
                   },
                   {
                     id: "low" as const,
-                    title: "Low Compression",
-                    desc: "High quality, slight reduction",
+                    title: "Lossless Stream",
+                    desc: "Original vectors, stripped metadata",
                   },
                 ].map((item) => (
                   <button
                     key={item.id}
                     type="button"
-                    onClick={() => setLevel(item.id)}
+                    onClick={() => handleLevelChange(item.id)}
                     className={`rounded-xl border p-4 text-left transition-all ${
                       level === item.id
                         ? "border-rose-500 bg-rose-50/60 ring-2 ring-rose-500/20 shadow-xs dark:border-rose-500 dark:bg-rose-950/40"
@@ -196,13 +224,13 @@ export default function CompressPdfPage() {
             {/* Result Stats */}
             {resultBytes && (
               <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-4 dark:border-emerald-900/50 dark:bg-emerald-950/30">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400 font-bold text-sm">
                     <CheckCircle2 className="h-4 w-4" />
                     <span>Compression Complete!</span>
                   </div>
                   <span className="font-mono text-xs font-bold text-emerald-700 dark:text-emerald-400">
-                    New Size: {formatBytes(resultBytes.length)} ({savedRatio}% smaller)
+                    New Size: {formatBytes(resultBytes.length)} ({savedRatio}% reduction)
                   </span>
                 </div>
               </div>
@@ -219,7 +247,7 @@ export default function CompressPdfPage() {
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2 border-t border-slate-200 dark:border-slate-800">
               <span className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5 font-medium">
                 <Zap className="h-3.5 w-3.5 text-amber-500" />
-                <span>Fast in-memory compression without file transmission.</span>
+                <span>{progressText || "Fast in-memory compression without file transmission."}</span>
               </span>
 
               {!resultBytes ? (
@@ -232,7 +260,7 @@ export default function CompressPdfPage() {
                   {isProcessing ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin text-white" />
-                      <span>Optimizing PDF...</span>
+                      <span>{progressText || "Optimizing PDF..."}</span>
                     </>
                   ) : (
                     <span>Compress PDF</span>

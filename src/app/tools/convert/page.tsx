@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ToolLayout } from "@/components/tools/ToolLayout";
 import { FileDropzone } from "@/components/tools/FileDropzone";
 import {
   wordToPDF,
   excelToPDF,
+  powerpointToPDF,
   textToPDF,
   pdfToWord,
   pdfToExcel,
@@ -13,6 +14,7 @@ import {
   pdfToText,
 } from "@/lib/pdf/universal-converter";
 import { imagesToPDF, downloadBlob } from "@/lib/pdf/pdf-utils";
+import { ToolType } from "@/lib/pseo/pseo-data";
 import {
   FileText,
   FileSpreadsheet,
@@ -37,7 +39,13 @@ interface ConversionOption {
   icon: React.ComponentType<{ className?: string }>;
 }
 
-export default function UniversalConverterPage() {
+interface UniversalConverterPageProps {
+  initialToolType?: ToolType;
+}
+
+export default function UniversalConverterPage({
+  initialToolType,
+}: UniversalConverterPageProps = {}) {
   const [file, setFile] = useState<File | null>(null);
   const [selectedFormat, setSelectedFormat] = useState<TargetFormat>("pdf");
   const [isConverting, setIsConverting] = useState(false);
@@ -45,13 +53,22 @@ export default function UniversalConverterPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (initialToolType === "pdf-to-word") setSelectedFormat("docx");
+    else if (initialToolType === "pdf-to-excel") setSelectedFormat("xlsx");
+    else if (initialToolType === "pdf-to-powerpoint") setSelectedFormat("pptx");
+    else if (initialToolType === "pdf-to-text") setSelectedFormat("txt");
+    else if (initialToolType) setSelectedFormat("pdf");
+  }, [initialToolType]);
+
   const getFileCategory = (
     fileName: string
-  ): "pdf" | "word" | "excel" | "text" | "image" | "unknown" => {
+  ): "pdf" | "word" | "excel" | "powerpoint" | "text" | "image" | "unknown" => {
     const ext = fileName.split(".").pop()?.toLowerCase();
     if (ext === "pdf") return "pdf";
     if (["docx", "doc"].includes(ext || "")) return "word";
     if (["xlsx", "xls", "csv"].includes(ext || "")) return "excel";
+    if (["pptx", "ppt"].includes(ext || "")) return "powerpoint";
     if (["txt", "md", "json", "rtf"].includes(ext || "")) return "text";
     if (["png", "jpg", "jpeg", "webp"].includes(ext || "")) return "image";
     return "unknown";
@@ -67,7 +84,10 @@ export default function UniversalConverterPage() {
 
     const cat = getFileCategory(selected.name);
     if (cat === "pdf") {
-      setSelectedFormat("docx");
+      if (initialToolType === "pdf-to-excel") setSelectedFormat("xlsx");
+      else if (initialToolType === "pdf-to-powerpoint") setSelectedFormat("pptx");
+      else if (initialToolType === "pdf-to-text") setSelectedFormat("txt");
+      else setSelectedFormat("docx");
     } else {
       setSelectedFormat("pdf");
     }
@@ -100,6 +120,9 @@ export default function UniversalConverterPage() {
           pdfBytes = await wordToPDF(file);
         } else if (category === "excel") {
           pdfBytes = await excelToPDF(file);
+        } else if (category === "powerpoint") {
+          setProgressStatus("Rendering PowerPoint slides to PDF...");
+          pdfBytes = await powerpointToPDF(file);
         } else if (category === "image") {
           pdfBytes = await imagesToPDF([file], {
             orientation: "portrait",
@@ -180,7 +203,7 @@ export default function UniversalConverterPage() {
       id: "pptx",
       label: "PowerPoint",
       ext: ".pptx",
-      desc: "Formatted slide deck presentation",
+      desc: "Formatted 16:9 slide deck presentation",
       icon: Presentation,
     },
     {
@@ -195,24 +218,21 @@ export default function UniversalConverterPage() {
   return (
     <ToolLayout
       title="Universal Document Converter"
-      description="Convert Word, Excel, PowerPoint, Text, and Images to and from PDF. All document parsing executes 100% locally in your browser."
+      description="Convert Word, Excel, PowerPoint, Text, and Images to and from PDF with full Unicode support. All parsing executes 100% locally in your browser."
     >
       <div className="space-y-6">
-        {/* Upload Dropzone */}
         {!file && (
           <FileDropzone
-            accept=".pdf,.docx,.doc,.xlsx,.xls,.txt,.md,.png,.jpg,.jpeg,.webp"
+            accept=".pdf,.docx,.doc,.xlsx,.xls,.csv,.pptx,.ppt,.txt,.md,.png,.jpg,.jpeg,.webp"
             multiple={false}
             onFilesSelected={handleFileSelected}
-            title="Drop any document or image here to convert"
-            description="Supports PDF, Word (.docx), Excel (.xlsx), Text (.txt), and Images. Files never leave your device."
+            title="Drop any document, presentation, spreadsheet, or image here"
+            description="Supports PDF, Word (.docx), Excel (.xlsx/.csv), PowerPoint (.pptx), Text (.txt/.md), and Images."
           />
         )}
 
-        {/* Selected Document Workspace (Light Theme) */}
         {file && (
           <div className="space-y-6 rounded-2xl border border-slate-200 bg-slate-50/60 p-5 sm:p-6 dark:border-slate-800 dark:bg-slate-900/60">
-            {/* File Info Header */}
             <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
               <div className="flex items-center gap-3 min-w-0">
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-rose-100 bg-rose-50 text-rose-600 dark:border-rose-900/40 dark:bg-rose-950/40 dark:text-rose-400">
@@ -243,14 +263,12 @@ export default function UniversalConverterPage() {
               </button>
             </div>
 
-            {/* Target Conversion Options */}
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
                 <Layers className="h-4 w-4 text-rose-600" />
                 <span>Select Target Output Format</span>
               </div>
 
-              {/* NON-PDF UPLOADED */}
               {!isPdf && (
                 <div className="rounded-xl border border-rose-200 bg-rose-50/50 p-4 flex items-center justify-between dark:border-rose-900/50 dark:bg-rose-950/30">
                   <div className="flex items-center gap-3">
@@ -262,7 +280,7 @@ export default function UniversalConverterPage() {
                         Portable Document Format (.pdf)
                       </h4>
                       <p className="text-xs text-slate-500 dark:text-slate-400">
-                        Compile into an optimized, standard PDF document
+                        Compile into a standard, Unicode-ready PDF document
                       </p>
                     </div>
                   </div>
@@ -272,7 +290,6 @@ export default function UniversalConverterPage() {
                 </div>
               )}
 
-              {/* PDF UPLOADED */}
               {isPdf && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {PDF_OPTIONS.map((opt) => {
@@ -320,7 +337,6 @@ export default function UniversalConverterPage() {
               )}
             </div>
 
-            {/* Error / Success Notifications */}
             {errorMessage && (
               <div className="flex items-start gap-2.5 rounded-xl border border-red-200 bg-red-50 p-3.5 text-xs text-red-700 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-400">
                 <AlertCircle className="h-4 w-4 shrink-0 text-red-600 mt-0.5" />
@@ -335,7 +351,6 @@ export default function UniversalConverterPage() {
               </div>
             )}
 
-            {/* Bottom Actions */}
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2 border-t border-slate-200 dark:border-slate-800">
               <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                 {progressStatus || "Ready to process in browser memory."}

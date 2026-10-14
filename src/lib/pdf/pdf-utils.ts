@@ -1,4 +1,191 @@
-import { PDFDocument } from "pdf-lib";
+import { PDFDocument, rgb, degrees, StandardFonts } from "pdf-lib";
+
+declare global {
+  interface Window {
+    pdfjsLib?: any;
+  }
+}
+
+let _pdfJsPromise: Promise<any> | null = null;
+
+/**
+ * Reliable singleton loader for PDF.js in browser memory (eliminates setTimeout race conditions).
+ */
+export async function loadPdfJs(): Promise<any> {
+  if (typeof window === "undefined") {
+    throw new Error("PDF rendering requires a browser environment.");
+  }
+  if (window.pdfjsLib) {
+    return window.pdfjsLib;
+  }
+  if (_pdfJsPromise) {
+    return _pdfJsPromise;
+  }
+
+  _pdfJsPromise = new Promise((resolve, reject) => {
+    const CDN_SCRIPT = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+    const CDN_WORKER = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+    const existing = document.querySelector(`script[src="${CDN_SCRIPT}"]`);
+    if (existing) {
+      if (window.pdfjsLib) {
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = CDN_WORKER;
+        resolve(window.pdfjsLib);
+        return;
+      }
+      existing.addEventListener("load", () => {
+        if (window.pdfjsLib) {
+          window.pdfjsLib.GlobalWorkerOptions.workerSrc = CDN_WORKER;
+          resolve(window.pdfjsLib);
+        } else {
+          reject(new Error("Failed to initialize PDF.js engine."));
+        }
+      });
+      existing.addEventListener("error", () => {
+        _pdfJsPromise = null;
+        reject(new Error("Could not load PDF rendering script."));
+      });
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = CDN_SCRIPT;
+    script.async = true;
+    script.onload = () => {
+      if (window.pdfjsLib) {
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = CDN_WORKER;
+        resolve(window.pdfjsLib);
+      } else {
+        _pdfJsPromise = null;
+        reject(new Error("PDF.js failed to attach to window."));
+      }
+    };
+    script.onerror = () => {
+      _pdfJsPromise = null;
+      reject(new Error("Network error while loading PDF engine."));
+    };
+    document.body.appendChild(script);
+  });
+
+  return _pdfJsPromise;
+}
+
+/**
+ * Multi-tier client-side PDF compressor that optimizes object streams AND downsamples page rasters
+ * when "recommended" or "extreme" compression (or a specific targetKb budget) is selected.
+ */
+export async function compressPDFDocument(
+  file: File,
+  level: "extreme" | "recommended" | "low",
+  targetKb?: number,
+  onProgress?: (current: number, total: number) => void
+): Promise<Uint8Array> {
+  const buffer = await file.arrayBuffer();
+  const originalDoc = await PDFDocument.load(buffer, { ignoreEncryption: true });
+
+  // Strip all redundant document metadata
+  originalDoc.setTitle("");
+  originalDoc.setAuthor("");
+  originalDoc.setSubject("");
+  originalDoc.setKeywords([]);
+  originalDoc.setProducer("");
+  originalDoc.setCreator("");
+
+  const streamCompressedBytes = await originalDoc.save({
+    useObjectStreams: true,
+    addDefaultPage: false,
+  });
+
+  // For "low" compression (if no strict KB cap), return lossless stream optimization if smaller than original
+  if (level === "low" && !targetKb) {
+    return streamCompressedBytes.length < file.size
+      ? streamCompressedBytes
+      : new Uint8Array(buffer);
+  }
+
+  // If stream compression already satisfies targetKb and saved >15%, return it immediately
+  if (
+    targetKb &&
+    streamCompressedBytes.length <= targetKb * 1024 &&
+    streamCompressedBytes.length < file.size * 0.85
+  ) {
+    return streamCompressedBytes;
+  }
+
+  // Perform canvas raster re-encoding via PDF.js for true size reduction on image/scanned PDFs
+  try {
+    const pdfjs = await loadPdfJs();
+    const pdf = await pdfjs.getDocument({ data: buffer.slice(0) }).promise;
+    const numPages = pdf.numPages;
+
+    // Choose scale & JPEG quality based on compression level and optional KB budget
+    let scale = level === "extreme" ? 1.0 : 1.4;
+    let quality = level === "extreme" ? 0.5 : 0.74;
+
+    if (targetKb) {
+      const targetBytesPerPage = (targetKb * 1024) / Math.max(1, numPages);
+      if (targetBytesPerPage < 35000) {
+        scale = 0.85;
+        quality = 0.42;
+      } else if (targetBytesPerPage < 75000) {
+        scale = 1.05;
+        quality = 0.55;
+      }
+    }
+
+    const rebuiltPdf = await PDFDocument.create();
+
+    for (let i = 1; i <= numPages; i++) {
+      onProgress?.(i, numPages);
+      const page = await pdf.getPage(i);
+      const baseViewport = page.getViewport({ scale: 1.0 });
+      const renderViewport = page.getViewport({ scale });
+
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.floor(renderViewport.width));
+      canvas.height = Math.max(1, Math.floor(renderViewport.height));
+      const ctx = canvas.getContext("2d");
+
+      if (ctx) {
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        await page.render({ canvasContext: ctx, viewport: renderViewport }).promise;
+
+        const blob = await new Promise<Blob | null>((res) =>
+          canvas.toBlob((b) => res(b), "image/jpeg", quality)
+        );
+
+        if (blob) {
+          const jpgBytes = await blob.arrayBuffer();
+          const jpgImage = await rebuiltPdf.embedJpg(jpgBytes);
+          const pdfPage = rebuiltPdf.addPage([baseViewport.width, baseViewport.height]);
+          pdfPage.drawImage(jpgImage, {
+            x: 0,
+            y: 0,
+            width: baseViewport.width,
+            height: baseViewport.height,
+          });
+        }
+      }
+    }
+
+    const rasterCompressedBytes = await rebuiltPdf.save({ useObjectStreams: true });
+
+    // Pick whichever representation achieved the smallest byte footprint
+    const candidates = [
+      new Uint8Array(buffer),
+      streamCompressedBytes,
+      rasterCompressedBytes,
+    ].sort((a, b) => a.length - b.length);
+
+    return candidates[0];
+  } catch {
+    // Fallback if PDF.js rasterization is unavailable
+    return streamCompressedBytes.length < file.size
+      ? streamCompressedBytes
+      : new Uint8Array(buffer);
+  }
+}
 
 /**
  * Merges multiple PDF File objects into a single PDF document client-side.
@@ -29,7 +216,7 @@ export async function mergePDFs(files: File[]): Promise<Uint8Array> {
     }
   }
 
-  return await mergedPdf.save();
+  return await mergedPdf.save({ useObjectStreams: true });
 }
 
 /**
@@ -51,7 +238,7 @@ export function downloadBlob(
   downloadLink.click();
 
   document.body.removeChild(downloadLink);
-  setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+  setTimeout(() => URL.revokeObjectURL(objectUrl), 1500);
 }
 
 /**
@@ -68,9 +255,11 @@ export async function canvasesToPDF(canvases: HTMLCanvasElement[]): Promise<Uint
   const availableHeight = A4_HEIGHT - MARGIN * 2;
 
   for (const canvas of canvases) {
-    const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
-    const response = await fetch(dataUrl);
-    const imageBytes = await response.arrayBuffer();
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob((b) => resolve(b), "image/jpeg", 0.92)
+    );
+    if (!blob) continue;
+    const imageBytes = await blob.arrayBuffer();
 
     const embeddedImage = await pdfDoc.embedJpg(imageBytes);
     const page = pdfDoc.addPage([A4_WIDTH, A4_HEIGHT]);
@@ -93,12 +282,11 @@ export async function canvasesToPDF(canvases: HTMLCanvasElement[]): Promise<Uint
     });
   }
 
-  return await pdfDoc.save();
+  return await pdfDoc.save({ useObjectStreams: true });
 }
 
 /**
  * Internal helper to decode and format an image into PDF-compatible bytes.
- * Handles WebP by auto-rasterizing to high-quality JPEG in-memory.
  */
 async function getImageEmbedData(
   pdfDoc: PDFDocument,
@@ -123,7 +311,6 @@ async function getImageEmbedData(
     }
   }
 
-  // Fallback for WebP and other formats via HTML5 Canvas
   return new Promise((resolve, reject) => {
     const img = new Image();
     const url = URL.createObjectURL(file);
@@ -138,6 +325,8 @@ async function getImageEmbedData(
         reject(new Error("Could not initialize canvas context for image conversion."));
         return;
       }
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(img, 0, 0);
 
       canvas.toBlob(
@@ -166,7 +355,6 @@ async function getImageEmbedData(
 
 /**
  * Converts a collection of image files into a single PDF document.
- * Supports zero-margin full-bleed rendering and 1:1 image fitting without empty borders.
  */
 export async function imagesToPDF(
   files: File[],
@@ -182,7 +370,6 @@ export async function imagesToPDF(
 
   const pdfDoc = await PDFDocument.create();
 
-  // Standard A4 points (72 DPI)
   const A4_PORTRAIT_W = 595.28;
   const A4_PORTRAIT_H = 841.89;
 
@@ -191,7 +378,6 @@ export async function imagesToPDF(
 
     if (options.pageSize === "fit") {
       if (options.margin === 0) {
-        // EXACT pixel match — 100% zero white space on any side
         const page = pdfDoc.addPage([image.width, image.height]);
         page.drawImage(image, {
           x: 0,
@@ -212,13 +398,11 @@ export async function imagesToPDF(
         });
       }
     } else {
-      // Standard A4 page
       const pageW = options.orientation === "portrait" ? A4_PORTRAIT_W : A4_PORTRAIT_H;
       const pageH = options.orientation === "portrait" ? A4_PORTRAIT_H : A4_PORTRAIT_W;
       const page = pdfDoc.addPage([pageW, pageH]);
 
       if (options.margin === 0) {
-        // Full Bleed: scale to cover entire sheet without leaving empty gaps
         const scale = Math.max(pageW / image.width, pageH / image.height);
         const drawW = image.width * scale;
         const drawH = image.height * scale;
@@ -233,7 +417,6 @@ export async function imagesToPDF(
           height: drawH,
         });
       } else {
-        // Contained within margins
         const availW = pageW - options.margin * 2;
         const availH = pageH - options.margin * 2;
 
@@ -254,7 +437,7 @@ export async function imagesToPDF(
     }
   }
 
-  return await pdfDoc.save();
+  return await pdfDoc.save({ useObjectStreams: true });
 }
 
 /**
@@ -328,13 +511,9 @@ export async function splitPDF(file: File, pageRangeStr: string): Promise<Uint8A
 
   copiedPages.forEach((page) => targetPdf.addPage(page));
 
-  return await targetPdf.save();
+  return await targetPdf.save({ useObjectStreams: true });
 }
 
-/**
- * Embeds a PNG signature into a target page of a PDF document at specific percentage coordinates.
- * Translates web coordinates (top-left origin) to PDF points (bottom-left origin).
- */
 export interface SignaturePlacement {
   pageNumber: number;
   signatureDataUrl: string;
@@ -347,15 +526,36 @@ export interface SignaturePlacement {
 }
 
 /**
- * Embeds multiple PNG signatures across any pages of a PDF in a single pass.
+ * Embeds multiple PNG signatures/stamps across any pages of a PDF in a single pass,
+ * plus optional diagonal watermark text.
  */
 export async function embedSignaturesIntoPDF(
   pdfFile: File,
-  signatures: SignaturePlacement[]
+  signatures: SignaturePlacement[],
+  watermarkText?: string
 ): Promise<Uint8Array> {
   const bytes = await pdfFile.arrayBuffer();
   const pdfDoc = await PDFDocument.load(bytes, { ignoreEncryption: false });
   const pages = pdfDoc.getPages();
+
+  if (watermarkText && watermarkText.trim()) {
+    const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+    const cleanWatermark = watermarkText.replace(/[^\x20-\x7E]/g, "").trim();
+    if (cleanWatermark) {
+      for (const page of pages) {
+        const { width, height } = page.getSize();
+        page.drawText(cleanWatermark, {
+          x: width * 0.18,
+          y: height * 0.45,
+          size: Math.min(width, height) * 0.08,
+          font,
+          color: rgb(0.85, 0.15, 0.25),
+          opacity: 0.16,
+          rotate: degrees(35),
+        });
+      }
+    }
+  }
 
   for (const sig of signatures) {
     const targetPageIndex = sig.pageNumber - 1;
@@ -386,12 +586,9 @@ export async function embedSignaturesIntoPDF(
     });
   }
 
-  return await pdfDoc.save();
+  return await pdfDoc.save({ useObjectStreams: true });
 }
 
-/**
- * Backward-compatible single signature embedder
- */
 export async function embedSignatureIntoPDF(
   pdfFile: File,
   pageNumber: number,

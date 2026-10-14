@@ -1,5 +1,6 @@
 import { PDFDocument, rgb, StandardFonts, PageSizes } from "pdf-lib";
-import { downloadBlob } from "./pdf-utils";
+import JSZip from "jszip";
+import { loadPdfJs } from "./pdf-utils";
 
 declare global {
   interface Window {
@@ -11,7 +12,6 @@ declare global {
   }
 }
 
-// Dynamic script loader for zero-configuration browser fallbacks
 async function ensureLibrary(url: string, globalKey: string): Promise<any> {
   if (typeof window === "undefined") return null;
   if ((window as any)[globalKey]) return (window as any)[globalKey];
@@ -33,15 +33,132 @@ async function ensureLibrary(url: string, globalKey: string): Promise<any> {
   });
 }
 
+/**
+ * Checks whether a string contains characters outside standard WinAnsi (e.g. Arabic, Cyrillic, CJK).
+ */
+function hasNonWinAnsiCharacters(text: string): boolean {
+  return /[^\x00-\xFF]/.test(text);
+}
+
+/**
+ * High-DPI HTML5 Canvas paginator for Unicode text (Arabic RTL, Cyrillic, CJK, Emojis)
+ * so pdf-lib never crashes on non-WinAnsi characters.
+ */
+async function unicodeTextToPDFViaCanvas(title: string, rawText: string): Promise<Uint8Array> {
+  const pdfDoc = await PDFDocument.create();
+  const A4_W = PageSizes.A4[0];
+  const A4_H = PageSizes.A4[1];
+  const SCALE = 2;
+  const canvasW = Math.round(A4_W * SCALE);
+  const canvasH = Math.round(A4_H * SCALE);
+  const margin = 45 * SCALE;
+  const maxLineW = canvasW - margin * 2;
+  const lineHeight = 18 * SCALE;
+
+  const isRTL = /[\u0600-\u06FF]/.test(rawText);
+
+  const measureCanvas = document.createElement("canvas");
+  const mCtx = measureCanvas.getContext("2d");
+  if (!mCtx) throw new Error("Canvas context unavailable for Unicode text rendering.");
+
+  const bodyFont = `${11 * SCALE}px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
+  const boldFont = `bold ${13 * SCALE}px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
+
+  const rawLines = rawText.split(/\r?\n/);
+  const wrappedLines: { text: string; isHeader: boolean }[] = [];
+
+  for (const rawLine of rawLines) {
+    if (rawLine.trim() === "") {
+      wrappedLines.push({ text: "", isHeader: false });
+      continue;
+    }
+    const isHeader = rawLine.startsWith("# ") || rawLine.startsWith("## ");
+    const cleanLine = rawLine.replace(/^#+\s*/, "");
+    mCtx.font = isHeader ? boldFont : bodyFont;
+
+    const words = cleanLine.split(" ");
+    let currentLine = "";
+
+    for (const word of words) {
+      const testLine = currentLine ? `${currentLine} ${word}` : word;
+      if (mCtx.measureText(testLine).width <= maxLineW) {
+        currentLine = testLine;
+      } else {
+        if (currentLine) wrappedLines.push({ text: currentLine, isHeader });
+        currentLine = word;
+      }
+    }
+    if (currentLine) {
+      wrappedLines.push({ text: currentLine, isHeader });
+    }
+  }
+
+  let lineCursor = 0;
+  let pageIndex = 0;
+
+  while (lineCursor < wrappedLines.length || pageIndex === 0) {
+    const pageCanvas = document.createElement("canvas");
+    pageCanvas.width = canvasW;
+    pageCanvas.height = canvasH;
+    const ctx = pageCanvas.getContext("2d")!;
+
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, canvasW, canvasH);
+    ctx.direction = isRTL ? "rtl" : "ltr";
+    ctx.textAlign = isRTL ? "right" : "left";
+    const textX = isRTL ? canvasW - margin : margin;
+
+    let y = margin + 20 * SCALE;
+
+    if (pageIndex === 0) {
+      ctx.font = `bold ${16 * SCALE}px system-ui, sans-serif`;
+      ctx.fillStyle = "#0f172a";
+      ctx.fillText(title, textX, y);
+      y += 28 * SCALE;
+    }
+
+    while (lineCursor < wrappedLines.length && y < canvasH - margin) {
+      const item = wrappedLines[lineCursor];
+      if (item.text.trim() !== "") {
+        ctx.font = item.isHeader ? boldFont : bodyFont;
+        ctx.fillStyle = item.isHeader ? "#0f172a" : "#1e293b";
+        ctx.fillText(item.text, textX, y);
+      }
+      y += lineHeight;
+      lineCursor++;
+    }
+
+    const blob = await new Promise<Blob | null>((res) =>
+      pageCanvas.toBlob((b) => res(b), "image/jpeg", 0.92)
+    );
+    if (blob) {
+      const bytes = await blob.arrayBuffer();
+      const jpg = await pdfDoc.embedJpg(bytes);
+      const page = pdfDoc.addPage(PageSizes.A4);
+      page.drawImage(jpg, { x: 0, y: 0, width: A4_W, height: A4_H });
+    }
+    pageIndex++;
+  }
+
+  return await pdfDoc.save({ useObjectStreams: true });
+}
+
 // ==========================================
 // 1. CONVERT TO PDF
 // ==========================================
 
 /**
  * Converts Plain Text or Markdown files into a cleanly paginated PDF document.
+ * Automatically switches to Unicode High-DPI Canvas rendering for Arabic, Cyrillic, or non-Latin scripts.
  */
 export async function textToPDF(file: File): Promise<Uint8Array> {
   const text = await file.text();
+  const cleanTitle = file.name.replace(/\.[^/.]+$/, "");
+
+  if (hasNonWinAnsiCharacters(text) || hasNonWinAnsiCharacters(cleanTitle)) {
+    return await unicodeTextToPDFViaCanvas(cleanTitle, text);
+  }
+
   const pdfDoc = await PDFDocument.create();
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
@@ -49,11 +166,10 @@ export async function textToPDF(file: File): Promise<Uint8Array> {
   const fontSize = 10.5;
   const lineHeight = 15;
   const margin = 45;
-  const pageWidth = PageSizes.A4[0]; // 595.28
-  const pageHeight = PageSizes.A4[1]; // 841.89
+  const pageWidth = PageSizes.A4[0];
+  const pageHeight = PageSizes.A4[1];
   const maxLineWidth = pageWidth - margin * 2;
 
-  // Split lines and handle word wrapping
   const rawLines = text.split(/\r?\n/);
   const wrappedLines: { text: string; isHeader: boolean }[] = [];
 
@@ -75,7 +191,7 @@ export async function textToPDF(file: File): Promise<Uint8Array> {
       if (testWidth <= maxLineWidth) {
         currentLine = testLine;
       } else {
-        wrappedLines.push({ text: currentLine, isHeader });
+        if (currentLine) wrappedLines.push({ text: currentLine, isHeader });
         currentLine = word;
       }
     }
@@ -84,12 +200,10 @@ export async function textToPDF(file: File): Promise<Uint8Array> {
     }
   }
 
-  // Draw lines onto A4 pages
   let currentPage = pdfDoc.addPage(PageSizes.A4);
   let y = pageHeight - margin;
 
-  // Header Title
-  currentPage.drawText(file.name.replace(/\.[^/.]+$/, ""), {
+  currentPage.drawText(cleanTitle, {
     x: margin,
     y,
     size: 16,
@@ -117,7 +231,7 @@ export async function textToPDF(file: File): Promise<Uint8Array> {
     y -= lineHeight;
   }
 
-  return await pdfDoc.save();
+  return await pdfDoc.save({ useObjectStreams: true });
 }
 
 /**
@@ -139,7 +253,6 @@ export async function wordToPDF(file: File): Promise<Uint8Array> {
   const arrayBuffer = await file.arrayBuffer();
   const { value: rawText } = await mammothLib.extractRawText({ arrayBuffer });
 
-  // Wrap extracted text into PDF pages
   const textFile = new File([rawText], file.name.replace(/\.docx?$/i, ".txt"), {
     type: "text/plain",
   });
@@ -147,7 +260,120 @@ export async function wordToPDF(file: File): Promise<Uint8Array> {
 }
 
 /**
- * Converts Microsoft Excel (.xlsx, .xls) files into formatted landscape PDF tables.
+ * Converts Microsoft PowerPoint (.pptx) decks into landscape 16:9 PDF slides client-side
+ * by parsing slide XML structures from the PPTX ZIP container.
+ */
+export async function powerpointToPDF(file: File): Promise<Uint8Array> {
+  const arrayBuffer = await file.arrayBuffer();
+  const zip = await JSZip.loadAsync(arrayBuffer);
+
+  const slideFiles = Object.keys(zip.files)
+    .filter((name) => /^ppt\/slides\/slide\d+\.xml$/i.test(name))
+    .sort((a, b) => {
+      const numA = parseInt(a.match(/slide(\d+)\.xml/i)?.[1] || "0", 10);
+      const numB = parseInt(b.match(/slide(\d+)\.xml/i)?.[1] || "0", 10);
+      return numA - numB;
+    });
+
+  if (slideFiles.length === 0) {
+    throw new Error("No valid PowerPoint slides were found in this file.");
+  }
+
+  const pdfDoc = await PDFDocument.create();
+  const SLIDE_W = 841.89; // Landscape A4 / 16:9 width
+  const SLIDE_H = 473.56;
+  const SCALE = 2;
+
+  for (let i = 0; i < slideFiles.length; i++) {
+    const xmlContent = await zip.files[slideFiles[i]].async("text");
+    const paragraphs: string[] = [];
+
+    const pMatches = xmlContent.match(/<a:p\b[^>]*>[\s\S]*?<\/a:p>/g) || [];
+    for (const pXml of pMatches) {
+      const tMatches = pXml.match(/<a:t\b[^>]*>([\s\S]*?)<\/a:t>/g) || [];
+      const line = tMatches
+        .map((t) =>
+          t
+            .replace(/<\/?a:t[^>]*>/g, "")
+            .replace(/&amp;/g, "&")
+            .replace(/&lt;/g, "<")
+            .replace(/&gt;/g, ">")
+            .replace(/&quot;/g, '"')
+            .replace(/&apos;/g, "'")
+        )
+        .join("");
+      if (line.trim()) {
+        paragraphs.push(line.trim());
+      }
+    }
+
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(SLIDE_W * SCALE);
+    canvas.height = Math.round(SLIDE_H * SCALE);
+    const ctx = canvas.getContext("2d")!;
+
+    // Clean slide background & accent header bar
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#e11d48";
+    ctx.fillRect(0, 0, canvas.width, 10 * SCALE);
+
+    // Slide number badge
+    ctx.font = `bold ${10 * SCALE}px monospace`;
+    ctx.fillStyle = "#94a3b8";
+    ctx.textAlign = "right";
+    ctx.fillText(`SLIDE ${i + 1} / ${slideFiles.length}`, canvas.width - 36 * SCALE, canvas.height - 22 * SCALE);
+
+    const isRTL = paragraphs.some((p) => /[\u0600-\u06FF]/.test(p));
+    ctx.direction = isRTL ? "rtl" : "ltr";
+    ctx.textAlign = isRTL ? "right" : "left";
+    const startX = isRTL ? canvas.width - 48 * SCALE : 48 * SCALE;
+    const maxW = canvas.width - 96 * SCALE;
+
+    let y = 58 * SCALE;
+    paragraphs.forEach((para, idx) => {
+      if (y > canvas.height - 45 * SCALE) return;
+      const isTitle = idx === 0;
+      ctx.font = isTitle
+        ? `bold ${22 * SCALE}px system-ui, sans-serif`
+        : `${13.5 * SCALE}px system-ui, sans-serif`;
+      ctx.fillStyle = isTitle ? "#0f172a" : "#334155";
+
+      const words = (isTitle ? para : `• ${para}`).split(" ");
+      let line = "";
+      for (const word of words) {
+        const test = line ? `${line} ${word}` : word;
+        if (ctx.measureText(test).width <= maxW) {
+          line = test;
+        } else {
+          ctx.fillText(line, startX, y);
+          y += (isTitle ? 28 : 20) * SCALE;
+          line = word;
+        }
+      }
+      if (line && y <= canvas.height - 40 * SCALE) {
+        ctx.fillText(line, startX, y);
+        y += (isTitle ? 34 : 24) * SCALE;
+      }
+    });
+
+    const blob = await new Promise<Blob | null>((res) =>
+      canvas.toBlob((b) => res(b), "image/jpeg", 0.92)
+    );
+    if (blob) {
+      const jpgBytes = await blob.arrayBuffer();
+      const jpg = await pdfDoc.embedJpg(jpgBytes);
+      const page = pdfDoc.addPage([SLIDE_W, SLIDE_H]);
+      page.drawImage(jpg, { x: 0, y: 0, width: SLIDE_W, height: SLIDE_H });
+    }
+  }
+
+  return await pdfDoc.save({ useObjectStreams: true });
+}
+
+/**
+ * Converts Microsoft Excel (.xlsx, .xls, .csv) files into formatted landscape PDF tables.
+ * Uses Unicode-safe rendering when non-Latin characters are present.
  */
 export async function excelToPDF(file: File): Promise<Uint8Array> {
   let xlsxLib = window.XLSX;
@@ -165,11 +391,38 @@ export async function excelToPDF(file: File): Promise<Uint8Array> {
   const arrayBuffer = await file.arrayBuffer();
   const workbook = xlsxLib.read(arrayBuffer, { type: "array" });
 
+  // Check if any cell contains Unicode characters outside WinAnsi
+  let containsUnicode = false;
+  for (const sheetName of workbook.SheetNames) {
+    if (hasNonWinAnsiCharacters(sheetName)) containsUnicode = true;
+    const rows: any[][] = xlsxLib.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1 });
+    for (const row of rows) {
+      if (Array.isArray(row) && row.some((c) => c !== undefined && hasNonWinAnsiCharacters(String(c)))) {
+        containsUnicode = true;
+        break;
+      }
+    }
+  }
+
+  if (containsUnicode) {
+    let textDump = "";
+    for (const sheetName of workbook.SheetNames) {
+      textDump += `# Sheet: ${sheetName}\n`;
+      const rows: any[][] = xlsxLib.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1 });
+      for (const row of rows) {
+        if (Array.isArray(row) && row.length > 0) {
+          textDump += row.map((c) => (c !== undefined ? String(c) : "")).join("  |  ") + "\n";
+        }
+      }
+      textDump += "\n";
+    }
+    return await unicodeTextToPDFViaCanvas(file.name.replace(/\.[^/.]+$/, ""), textDump);
+  }
+
   const pdfDoc = await PDFDocument.create();
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-  // Landscape A4 orientation
   const pageWidth = 841.89;
   const pageHeight = 595.28;
   const margin = 35;
@@ -182,7 +435,6 @@ export async function excelToPDF(file: File): Promise<Uint8Array> {
     let page = pdfDoc.addPage([pageWidth, pageHeight]);
     let y = pageHeight - margin;
 
-    // Sheet Name Title
     page.drawText(`Sheet: ${sheetName}`, {
       x: margin,
       y,
@@ -192,7 +444,6 @@ export async function excelToPDF(file: File): Promise<Uint8Array> {
     });
     y -= 25;
 
-    // Determine max columns
     const maxCols = Math.min(
       Math.max(...data.map((r) => (Array.isArray(r) ? r.length : 0))),
       8
@@ -211,7 +462,6 @@ export async function excelToPDF(file: File): Promise<Uint8Array> {
         y = pageHeight - margin;
       }
 
-      // Draw table row background
       if (rIdx === 0) {
         page.drawRectangle({
           x: margin,
@@ -239,7 +489,7 @@ export async function excelToPDF(file: File): Promise<Uint8Array> {
     }
   }
 
-  return await pdfDoc.save();
+  return await pdfDoc.save({ useObjectStreams: true });
 }
 
 // ==========================================
@@ -250,13 +500,7 @@ export async function excelToPDF(file: File): Promise<Uint8Array> {
  * Extracts raw textual content from all pages of a PDF document using PDF.js.
  */
 export async function pdfToText(file: File): Promise<string> {
-  const pdfjs =
-    window.pdfjsLib ||
-    (await ensureLibrary(
-      "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js",
-      "pdfjsLib"
-    ));
-
+  const pdfjs = await loadPdfJs();
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
   let fullText = "";
@@ -288,12 +532,7 @@ export async function pdfToWord(file: File): Promise<Blob> {
   }
 
   const { Document, Packer, Paragraph, TextRun, HeadingLevel } = docxLib;
-  const pdfjs =
-    window.pdfjsLib ||
-    (await ensureLibrary(
-      "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js",
-      "pdfjsLib"
-    ));
+  const pdfjs = await loadPdfJs();
 
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
@@ -311,7 +550,6 @@ export async function pdfToWord(file: File): Promise<Blob> {
       })
     );
 
-    // Group items into lines based on Y coordinates
     const items = content.items;
     let currentY: number | null = null;
     let lineBuffer: string[] = [];
@@ -366,13 +604,7 @@ export async function pdfToExcel(file: File): Promise<Blob> {
     }
   }
 
-  const pdfjs =
-    window.pdfjsLib ||
-    (await ensureLibrary(
-      "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js",
-      "pdfjsLib"
-    ));
-
+  const pdfjs = await loadPdfJs();
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
   const workbook = xlsxLib.utils.book_new();
@@ -398,7 +630,9 @@ export async function pdfToExcel(file: File): Promise<Blob> {
     }
     if (currentRow.length > 0) rows.push(currentRow);
 
-    const worksheet = xlsxLib.utils.aoa_to_sheet(rows.length > 0 ? rows : [["No tabular text detected"]]);
+    const worksheet = xlsxLib.utils.aoa_to_sheet(
+      rows.length > 0 ? rows : [["No tabular text detected"]]
+    );
     xlsxLib.utils.book_append_sheet(workbook, worksheet, `Page ${i}`);
   }
 
@@ -424,15 +658,9 @@ export async function pdfToPowerPoint(file: File): Promise<Blob> {
     }
   }
 
-  const pdfjs =
-    window.pdfjsLib ||
-    (await ensureLibrary(
-      "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js",
-      "pdfjsLib"
-    ));
-
+  const pdfjs = await loadPdfJs();
   const pptx = new PptxGen();
-  pptx.layout = "LAYOUT_WIDE"; // 16:9
+  pptx.layout = "LAYOUT_WIDE";
 
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
@@ -448,7 +676,7 @@ export async function pdfToPowerPoint(file: File): Promise<Blob> {
 
     if (ctx) {
       await page.render({ canvasContext: ctx, viewport }).promise;
-      const dataUrl = canvas.toDataURL("image/png");
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.88);
 
       const slide = pptx.addSlide();
       slide.addImage({

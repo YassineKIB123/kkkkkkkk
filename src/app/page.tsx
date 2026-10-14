@@ -27,6 +27,8 @@ import {
   Download,
   X,
   Laptop,
+  Stamp,
+  ShieldAlert,
 } from "lucide-react";
 import { AdBanner } from "@/components/ads/AdBanner";
 import { DICTIONARY, Language } from "@/lib/i18n/translations";
@@ -53,7 +55,7 @@ const HOMEPAGE_FAQS = [
   {
     question: "Can I use PDFStudio without an internet connection?",
     answer:
-      "Yes. Once this web app finishes loading in your browser, all WebAssembly modules and scripts are cached. You can disconnect your Wi-Fi and continue scanning, compressing, merging, and signing documents offline.",
+      "Yes. Once this web app finishes loading in your browser, our offline Service Worker caches the core scripts and assets. You can disconnect your Wi-Fi and continue scanning, compressing, merging, and signing documents offline.",
   },
   {
     question: "Do you add any watermark to my exported PDF documents?",
@@ -62,13 +64,32 @@ const HOMEPAGE_FAQS = [
   },
 ];
 
+const POPULAR_PSEO_LINKS = [
+  { href: "/compress-pdf-under-100kb", label: "Compress PDF Under 100 KB" },
+  { href: "/compress-pdf-under-200kb", label: "Compress PDF Under 200 KB" },
+  { href: "/compress-pdf-for-email", label: "Compress PDF for Email" },
+  { href: "/merge-pdf-for-contracts", label: "Merge PDF for Legal Contracts" },
+  { href: "/sign-pdf-for-contracts", label: "Sign PDF Contracts Online" },
+  { href: "/scan-pdf-for-invoices", label: "Scan Receipts & Invoices to PDF" },
+  { href: "/pdf-to-word-editable-text", label: "PDF to Editable Word DOCX" },
+  { href: "/pdf-to-excel-for-bank-statements", label: "Bank Statement PDF to Excel" },
+  { href: "/jpg-to-pdf-for-passports-and-visas", label: "JPG to PDF for Passport & Visa" },
+  { href: "/pdf-to-jpg-high-resolution-300dpi", label: "PDF to 300 DPI High-Res JPG" },
+  { href: "/split-pdf-for-court-filings", label: "Split PDF for Court E-Filing" },
+  { href: "/powerpoint-to-pdf-for-students", label: "PowerPoint PPTX to PDF" },
+];
+
 export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<CategoryFilter>("all");
-  const { language: selectedLanguage, setLanguage: setSelectedLanguage } = useLanguage();
+  const {
+    language: selectedLanguage,
+    setLanguage: setSelectedLanguage,
+    theme,
+    toggleTheme,
+  } = useLanguage();
   const [isLangOpen, setIsLangOpen] = useState(false);
   const [isMegaMenuOpen, setIsMegaMenuOpen] = useState(false);
-  const [theme, setTheme] = useState<"light" | "dark">("light");
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
 
   // PWA Install Prompt States
@@ -78,23 +99,7 @@ export default function HomePage() {
   const langDropdownRef = useRef<HTMLDivElement>(null);
   const megaMenuRef = useRef<HTMLDivElement>(null);
 
-  // Default strictly to Light Mode unless saved "dark"
   useEffect(() => {
-    const savedTheme = localStorage.getItem("theme") as "light" | "dark" | null;
-    if (savedTheme === "dark") {
-      setTheme("dark");
-      document.documentElement.classList.add("dark");
-    } else {
-      setTheme("light");
-      document.documentElement.classList.remove("dark");
-    }
-
-    const savedLang = localStorage.getItem("lang") as Language | null;
-    if (savedLang && DICTIONARY[savedLang]) {
-      setSelectedLanguage(savedLang);
-    }
-
-    // Capture PWA install event
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e);
@@ -104,7 +109,6 @@ export default function HomePage() {
     return () => window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
   }, []);
 
-  // Close dropdowns on outside click
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (langDropdownRef.current && !langDropdownRef.current.contains(e.target as Node)) {
@@ -118,21 +122,8 @@ export default function HomePage() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const toggleTheme = () => {
-    const nextTheme = theme === "light" ? "dark" : "light";
-    setTheme(nextTheme);
-    localStorage.setItem("theme", nextTheme);
-
-    if (nextTheme === "dark") {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  };
-
   const handleLanguageChange = (lang: Language) => {
     setSelectedLanguage(lang);
-    localStorage.setItem("lang", lang);
     setIsLangOpen(false);
   };
 
@@ -140,7 +131,6 @@ export default function HomePage() {
     setOpenFaqIndex(openFaqIndex === idx ? null : idx);
   };
 
-  // Trigger PWA Installation
   const handleInstallClick = async () => {
     if (deferredPrompt) {
       deferredPrompt.prompt();
@@ -172,8 +162,8 @@ export default function HomePage() {
       },
       {
         id: "compress",
-        title: "Compress PDF",
-        description: "Reduce PDF file size while maintaining document clarity.",
+        title: t.tools.compressTitle,
+        description: t.tools.compressDesc,
         href: "/tools/compress-pdf",
         formats: [".PDF"],
         category: "organize" as const,
@@ -245,18 +235,42 @@ export default function HomePage() {
         title: t.tools.imagesToPdfTitle,
         description: t.tools.imagesToPdfDesc,
         href: "/tools/images-to-pdf",
-        formats: [".JPG", ".PNG"],
+        formats: [".JPG", ".PNG", ".WEBP"],
         category: "convert" as const,
         icon: ImageIcon,
         iconBg: "bg-violet-50 border-violet-100 dark:bg-violet-950/40 dark:border-violet-900/50",
         iconColor: "text-violet-600 dark:text-violet-400",
       },
       {
+        id: "watermark",
+        title: "Watermark & Page Numbers",
+        description: "Stamp custom CONFIDENTIAL/DRAFT diagonal watermarks and 'Page X of Y' numbering.",
+        href: "/tools/watermark-pdf",
+        formats: [".PDF"],
+        category: "scan_edit" as const,
+        popular: false,
+        icon: Stamp,
+        iconBg: "bg-pink-50 border-pink-100 dark:bg-pink-950/40 dark:border-pink-900/50",
+        iconColor: "text-pink-600 dark:text-pink-400",
+      },
+      {
+        id: "sanitize",
+        title: "Sanitize PDF Metadata",
+        description: "Inspect and permanently purge hidden Author, Creator, XMP, and timestamp metadata.",
+        href: "/tools/sanitize-pdf",
+        formats: [".PDF"],
+        category: "scan_edit" as const,
+        popular: false,
+        icon: ShieldAlert,
+        iconBg: "bg-teal-50 border-teal-100 dark:bg-teal-950/40 dark:border-teal-900/50",
+        iconColor: "text-teal-600 dark:text-teal-400",
+      },
+      {
         id: "pdf-to-images",
         title: t.tools.pdfToImagesTitle,
         description: t.tools.pdfToImagesDesc,
         href: "/tools/pdf-to-images",
-        formats: [".PDF"],
+        formats: [".PDF", ".ZIP"],
         category: "convert" as const,
         icon: FileImage,
         iconBg: "bg-cyan-50 border-cyan-100 dark:bg-cyan-950/40 dark:border-cyan-900/50",
@@ -288,7 +302,6 @@ export default function HomePage() {
       {/* Top Navbar */}
       <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/95 dark:border-slate-800 dark:bg-slate-950/95 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          {/* Logo Branding */}
           <Link href="/" className="flex items-center gap-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-600 text-white shadow-xs shadow-rose-600/30">
               <Layers className="h-5 w-5" />
@@ -303,10 +316,9 @@ export default function HomePage() {
             </div>
           </Link>
 
-          {/* Navigation with Mega Menu */}
           <nav className="hidden md:flex items-center gap-5 text-xs font-semibold text-slate-600 dark:text-slate-300">
             <Link href="/tools/compress-pdf" className="hover:text-rose-600 transition-colors">
-              Compress PDF
+              {t.tools.compressTitle}
             </Link>
             <Link href="/tools/merge-pdf" className="hover:text-rose-600 transition-colors">
               {t.nav.merge}
@@ -315,7 +327,6 @@ export default function HomePage() {
               {t.nav.scan}
             </Link>
 
-            {/* "All PDF Tools ▾" Mega Menu Button */}
             <div className="relative" ref={megaMenuRef}>
               <button
                 type="button"
@@ -327,7 +338,7 @@ export default function HomePage() {
                 }`}
               >
                 <LayoutGrid className="h-3.5 w-3.5 text-rose-600" />
-                <span>All PDF Tools</span>
+                <span>{t.filters.all}</span>
                 <ChevronDown
                   className={`h-3 w-3 text-slate-400 transition-transform duration-200 ${
                     isMegaMenuOpen ? "rotate-180 text-rose-600" : ""
@@ -335,14 +346,12 @@ export default function HomePage() {
                 />
               </button>
 
-              {/* 3-Column Mega Menu Dropdown */}
               {isMegaMenuOpen && (
-                <div className="absolute left-1/2 -translate-x-1/2 mt-3 w-[660px] rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-900 z-50 animate-fadeIn">
+                <div className="absolute left-1/2 -translate-x-1/2 mt-3 w-[660px] rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-900 z-50">
                   <div className="grid grid-cols-3 gap-6">
-                    {/* Column 1: Organize */}
                     <div className="space-y-3">
                       <p className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                        Organize
+                        {t.footer.organize}
                       </p>
                       <div className="space-y-1">
                         <Link
@@ -351,7 +360,7 @@ export default function HomePage() {
                           className="flex items-center gap-2.5 rounded-lg p-2 text-slate-700 hover:bg-slate-50 hover:text-rose-600 dark:text-slate-300 dark:hover:bg-slate-800 transition-colors"
                         >
                           <Minimize2 className="h-4 w-4 text-orange-500" />
-                          <span className="font-semibold text-xs">Compress PDF</span>
+                          <span className="font-semibold text-xs">{t.tools.compressTitle}</span>
                         </Link>
                         <Link
                           href="/tools/merge-pdf"
@@ -359,7 +368,7 @@ export default function HomePage() {
                           className="flex items-center gap-2.5 rounded-lg p-2 text-slate-700 hover:bg-slate-50 hover:text-rose-600 dark:text-slate-300 dark:hover:bg-slate-800 transition-colors"
                         >
                           <Files className="h-4 w-4 text-red-500" />
-                          <span className="font-semibold text-xs">Merge PDF</span>
+                          <span className="font-semibold text-xs">{t.tools.mergeTitle}</span>
                         </Link>
                         <Link
                           href="/tools/split-pdf"
@@ -367,7 +376,7 @@ export default function HomePage() {
                           className="flex items-center gap-2.5 rounded-lg p-2 text-slate-700 hover:bg-slate-50 hover:text-rose-600 dark:text-slate-300 dark:hover:bg-slate-800 transition-colors"
                         >
                           <Split className="h-4 w-4 text-blue-500" />
-                          <span className="font-semibold text-xs">Split PDF</span>
+                          <span className="font-semibold text-xs">{t.tools.splitTitle}</span>
                         </Link>
                         <Link
                           href="/tools/rotate-pdf"
@@ -375,15 +384,14 @@ export default function HomePage() {
                           className="flex items-center gap-2.5 rounded-lg p-2 text-slate-700 hover:bg-slate-50 hover:text-rose-600 dark:text-slate-300 dark:hover:bg-slate-800 transition-colors"
                         >
                           <RotateCw className="h-4 w-4 text-amber-500" />
-                          <span className="font-semibold text-xs">Rotate PDF</span>
+                          <span className="font-semibold text-xs">{t.tools.rotateTitle}</span>
                         </Link>
                       </div>
                     </div>
 
-                    {/* Column 2: Convert */}
                     <div className="space-y-3">
                       <p className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                        Convert
+                        {t.footer.convert}
                       </p>
                       <div className="space-y-1">
                         <Link
@@ -392,7 +400,7 @@ export default function HomePage() {
                           className="flex items-center gap-2.5 rounded-lg p-2 text-slate-700 hover:bg-slate-50 hover:text-rose-600 dark:text-slate-300 dark:hover:bg-slate-800 transition-colors"
                         >
                           <RefreshCw className="h-4 w-4 text-indigo-500" />
-                          <span className="font-semibold text-xs">Universal Converter</span>
+                          <span className="font-semibold text-xs">{t.tools.convertTitle}</span>
                         </Link>
                         <Link
                           href="/tools/images-to-pdf"
@@ -400,7 +408,7 @@ export default function HomePage() {
                           className="flex items-center gap-2.5 rounded-lg p-2 text-slate-700 hover:bg-slate-50 hover:text-rose-600 dark:text-slate-300 dark:hover:bg-slate-800 transition-colors"
                         >
                           <ImageIcon className="h-4 w-4 text-violet-500" />
-                          <span className="font-semibold text-xs">Images to PDF</span>
+                          <span className="font-semibold text-xs">{t.tools.imagesToPdfTitle}</span>
                         </Link>
                         <Link
                           href="/tools/pdf-to-images"
@@ -408,15 +416,14 @@ export default function HomePage() {
                           className="flex items-center gap-2.5 rounded-lg p-2 text-slate-700 hover:bg-slate-50 hover:text-rose-600 dark:text-slate-300 dark:hover:bg-slate-800 transition-colors"
                         >
                           <FileImage className="h-4 w-4 text-cyan-500" />
-                          <span className="font-semibold text-xs">PDF to Images</span>
+                          <span className="font-semibold text-xs">{t.tools.pdfToImagesTitle}</span>
                         </Link>
                       </div>
                     </div>
 
-                    {/* Column 3: Edit & Scan */}
                     <div className="space-y-3">
                       <p className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                        Edit & Scan
+                        {t.footer.editScan}
                       </p>
                       <div className="space-y-1">
                         <Link
@@ -425,7 +432,7 @@ export default function HomePage() {
                           className="flex items-center gap-2.5 rounded-lg p-2 text-slate-700 hover:bg-slate-50 hover:text-rose-600 dark:text-slate-300 dark:hover:bg-slate-800 transition-colors"
                         >
                           <Camera className="h-4 w-4 text-rose-500" />
-                          <span className="font-semibold text-xs">Scan to PDF</span>
+                          <span className="font-semibold text-xs">{t.tools.scanTitle}</span>
                         </Link>
                         <Link
                           href="/tools/sign-pdf"
@@ -433,7 +440,7 @@ export default function HomePage() {
                           className="flex items-center gap-2.5 rounded-lg p-2 text-slate-700 hover:bg-slate-50 hover:text-rose-600 dark:text-slate-300 dark:hover:bg-slate-800 transition-colors"
                         >
                           <PenLine className="h-4 w-4 text-emerald-500" />
-                          <span className="font-semibold text-xs">Sign PDF</span>
+                          <span className="font-semibold text-xs">{t.tools.signTitle}</span>
                         </Link>
                       </div>
                     </div>
@@ -445,7 +452,6 @@ export default function HomePage() {
 
           {/* Right Controls */}
           <div className="flex items-center gap-2.5">
-            {/* Install App CTA Button */}
             <button
               type="button"
               onClick={handleInstallClick}
@@ -455,7 +461,6 @@ export default function HomePage() {
               <span>Install App</span>
             </button>
 
-            {/* Theme Toggle Button */}
             <button
               type="button"
               onClick={toggleTheme}
@@ -469,7 +474,6 @@ export default function HomePage() {
               )}
             </button>
 
-            {/* Search Input */}
             <div className="relative hidden lg:block w-44">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
               <input
@@ -481,7 +485,6 @@ export default function HomePage() {
               />
             </div>
 
-            {/* Language Selector Dropdown */}
             <div className="relative" ref={langDropdownRef}>
               <button
                 type="button"
@@ -536,7 +539,6 @@ export default function HomePage() {
             {t.hero.subtitle}
           </p>
 
-          {/* Universal Live Search Input */}
           <div className="pt-4 max-w-xl mx-auto">
             <div className="relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -550,7 +552,6 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Category Filter Pills */}
           <div className="flex flex-wrap items-center justify-center gap-2 pt-4">
             <button
               type="button"
@@ -585,7 +586,7 @@ export default function HomePage() {
                   : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
               }`}
             >
-              {t.filters.scan_edit} (2)
+              {t.filters.scan_edit} (4)
             </button>
 
             <button
@@ -813,6 +814,28 @@ export default function HomePage() {
             </div>
           </div>
         </section>
+
+        {/* PSEO INTERNAL LINKING HUB ON HOMEPAGE */}
+        <section className="mt-12 rounded-2xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
+          <div className="flex items-center gap-2 mb-4">
+            <Sparkles className="h-4 w-4 text-rose-600" />
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              Popular Document Workflows & Presets
+            </h3>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {POPULAR_PSEO_LINKS.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50/70 px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-rose-400 hover:bg-white hover:text-rose-600 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300 transition-colors"
+              >
+                <span>{item.label}</span>
+                <ArrowRight className="h-3 w-3 text-slate-400" />
+              </Link>
+            ))}
+          </div>
+        </section>
       </main>
 
       {/* FOOTER */}
@@ -838,11 +861,11 @@ export default function HomePage() {
                 {t.footer.organize}
               </p>
               <ul className="space-y-2">
-                <li><Link href="/tools/compress-pdf" className="hover:text-rose-600">Compress PDF</Link></li>
-                <li><Link href="/tools/merge-pdf" className="hover:text-rose-600">{t.nav.merge}</Link></li>
-                <li><Link href="/tools/split-pdf" className="hover:text-rose-600">{t.nav.split}</Link></li>
-                <li><Link href="/tools/rotate-pdf" className="hover:text-rose-600">{t.tools.rotateTitle}</Link></li>
-                <li><Link href="/tools/images-to-pdf" className="hover:text-rose-600">{t.tools.imagesToPdfTitle}</Link></li>
+                <li><Link href="/compress-pdf" className="hover:text-rose-600">{t.tools.compressTitle}</Link></li>
+                <li><Link href="/merge-pdf" className="hover:text-rose-600">{t.nav.merge}</Link></li>
+                <li><Link href="/split-pdf" className="hover:text-rose-600">{t.nav.split}</Link></li>
+                <li><Link href="/rotate-pdf" className="hover:text-rose-600">{t.tools.rotateTitle}</Link></li>
+                <li><Link href="/jpg-to-pdf" className="hover:text-rose-600">{t.tools.imagesToPdfTitle}</Link></li>
               </ul>
             </div>
 
@@ -851,10 +874,11 @@ export default function HomePage() {
                 {t.footer.convert}
               </p>
               <ul className="space-y-2">
-                <li><Link href="/tools/convert" className="hover:text-rose-600">{t.tools.convertTitle}</Link></li>
-                <li><Link href="/tools/convert" className="hover:text-rose-600">PDF to Word</Link></li>
-                <li><Link href="/tools/convert" className="hover:text-rose-600">Excel to PDF</Link></li>
-                <li><Link href="/tools/convert" className="hover:text-rose-600">PDF to PowerPoint</Link></li>
+                <li><Link href="/pdf-to-word" className="hover:text-rose-600">PDF to Word</Link></li>
+                <li><Link href="/word-to-pdf" className="hover:text-rose-600">Word to PDF</Link></li>
+                <li><Link href="/pdf-to-excel" className="hover:text-rose-600">PDF to Excel</Link></li>
+                <li><Link href="/excel-to-pdf" className="hover:text-rose-600">Excel to PDF</Link></li>
+                <li><Link href="/pdf-to-powerpoint" className="hover:text-rose-600">PDF to PowerPoint</Link></li>
               </ul>
             </div>
 
@@ -863,10 +887,10 @@ export default function HomePage() {
                 {t.footer.editScan}
               </p>
               <ul className="space-y-2">
-                <li><Link href="/tools/scan" className="hover:text-rose-600">{t.nav.scan}</Link></li>
-                <li><Link href="/tools/sign-pdf" className="hover:text-rose-600">{t.tools.signTitle}</Link></li>
-                <li><Link href="/tools/convert" className="hover:text-rose-600">Extract Text</Link></li>
-                <li><Link href="/tools/images-to-pdf" className="hover:text-rose-600">JPG to PDF</Link></li>
+                <li><Link href="/scan-pdf" className="hover:text-rose-600">{t.nav.scan}</Link></li>
+                <li><Link href="/sign-pdf" className="hover:text-rose-600">{t.tools.signTitle}</Link></li>
+                <li><Link href="/pdf-to-text" className="hover:text-rose-600">PDF to Text</Link></li>
+                <li><Link href="/pdf-to-jpg" className="hover:text-rose-600">PDF to JPG</Link></li>
               </ul>
             </div>
           </div>
@@ -927,7 +951,8 @@ export default function HomePage() {
               <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-850">
                 <p className="font-bold text-slate-900 dark:text-white mb-0.5">Mobile (Safari / Chrome iOS & Android):</p>
                 <p className="text-slate-500 dark:text-slate-400">
-                  Tap the <span className="font-semibold text-rose-600">Share</span> button, then tap <span className="font-semibold text-rose-600">&ldquo;Add to Home Screen&rdquo;</span>.
+                  Tap the <span className="font-semibold text-rose-600">Share</span> button, then tap{" "}
+                  <span className="font-semibold text-rose-600">&ldquo;Add to Home Screen&rdquo;</span>.
                 </p>
               </div>
             </div>

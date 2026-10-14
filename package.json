@@ -1,6 +1,6 @@
 {
-  "name": "kkkkkkkk",
-  "version": "0.1.0",
+  "name": "pdfstudio",
+  "version": "0.2.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -12,7 +12,6 @@
   "dependencies": {
     "clsx": "^2.1.1",
     "docx": "^9.11.0",
-    "framer-motion": "^14.2.0",
     "jszip": "^3.10.2",
     "lucide-react": "^1.56.0",
     "mammoth": "^1.13.0",

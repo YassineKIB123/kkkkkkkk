@@ -27,10 +27,21 @@ import {
   X,
   Laptop,
 } from "lucide-react";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, createContext, useContext } from "react";
 import { AdBanner } from "@/components/ads/AdBanner";
 import { useLanguage } from "@/context/LanguageContext";
 import { Language } from "@/lib/i18n/translations";
+
+// Context to prevent nested duplicate headers/footers when tools are embedded inside pSEO pages
+const EmbeddedToolContext = createContext<boolean>(false);
+
+export function EmbeddedToolProvider({ children }: { children: React.ReactNode }) {
+  return (
+    <EmbeddedToolContext.Provider value={true}>
+      {children}
+    </EmbeddedToolContext.Provider>
+  );
+}
 
 interface FAQItem {
   question: string;
@@ -42,6 +53,7 @@ interface ToolLayoutProps {
   description: string;
   children: React.ReactNode;
   faqs?: FAQItem[];
+  hideSeoMeta?: boolean;
 }
 
 export function ToolLayout({
@@ -49,40 +61,36 @@ export function ToolLayout({
   description,
   children,
   faqs,
+  hideSeoMeta = false,
 }: ToolLayoutProps) {
-  const { language, setLanguage, t, isRTL } = useLanguage();
+  const isEmbedded = useContext(EmbeddedToolContext);
+  const { language, setLanguage, t, isRTL, theme, toggleTheme } = useLanguage();
 
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
   const [isLangOpen, setIsLangOpen] = useState(false);
   const [isMegaMenuOpen, setIsMegaMenuOpen] = useState(false);
-  const [theme, setTheme] = useState<"light" | "dark">("light");
   const [searchQuery, setSearchQuery] = useState("");
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showInstallHelp, setShowInstallHelp] = useState(false);
 
   const langDropdownRef = useRef<HTMLDivElement>(null);
   const megaMenuRef = useRef<HTMLDivElement>(null);
+  const searchDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem("theme") as "light" | "dark" | null;
-    if (savedTheme === "dark") {
-      setTheme("dark");
-      document.documentElement.classList.add("dark");
-    } else {
-      setTheme("light");
-      document.documentElement.classList.remove("dark");
-    }
-
+    if (isEmbedded) return;
     const handleBeforeInstall = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e);
     };
     window.addEventListener("beforeinstallprompt", handleBeforeInstall);
     return () => window.removeEventListener("beforeinstallprompt", handleBeforeInstall);
-  }, []);
+  }, [isEmbedded]);
 
   useEffect(() => {
+    if (isEmbedded) return;
     const handleClickOutside = (e: MouseEvent) => {
       if (langDropdownRef.current && !langDropdownRef.current.contains(e.target as Node)) {
         setIsLangOpen(false);
@@ -90,21 +98,18 @@ export function ToolLayout({
       if (megaMenuRef.current && !megaMenuRef.current.contains(e.target as Node)) {
         setIsMegaMenuOpen(false);
       }
+      if (searchDropdownRef.current && !searchDropdownRef.current.contains(e.target as Node)) {
+        setIsSearchOpen(false);
+      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  }, [isEmbedded]);
 
-  const toggleTheme = () => {
-    const next = theme === "light" ? "dark" : "light";
-    setTheme(next);
-    localStorage.setItem("theme", next);
-    if (next === "dark") {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  };
+  // If rendered inside a pSEO page via PseoToolRenderer, render ONLY the interactive workspace
+  if (isEmbedded) {
+    return <div className="w-full">{children}</div>;
+  }
 
   const handleInstallClick = async () => {
     if (deferredPrompt) {
@@ -115,6 +120,28 @@ export function ToolLayout({
       setShowInstallHelp(true);
     }
   };
+
+  const quickTools = [
+    { label: t.tools.compressTitle, href: "/tools/compress-pdf", keywords: "compress shrink reduce size kb mb" },
+    { label: t.tools.mergeTitle, href: "/tools/merge-pdf", keywords: "merge combine join pdfs" },
+    { label: t.tools.splitTitle, href: "/tools/split-pdf", keywords: "split extract separate pages" },
+    { label: t.tools.rotateTitle, href: "/tools/rotate-pdf", keywords: "rotate orientation turn pages" },
+    { label: t.tools.signTitle, href: "/tools/sign-pdf", keywords: "sign signature stamp initials" },
+    { label: t.tools.scanTitle, href: "/tools/scan", keywords: "scan camera crop perspective ocr" },
+    { label: t.tools.convertTitle, href: "/tools/convert", keywords: "convert word docx excel xlsx pptx text" },
+    { label: t.tools.imagesToPdfTitle, href: "/tools/images-to-pdf", keywords: "jpg png webp images to pdf" },
+    { label: t.tools.pdfToImagesTitle, href: "/tools/pdf-to-images", keywords: "pdf to jpg png images zip" },
+    { label: "Watermark & Page Numbers", href: "/tools/watermark-pdf", keywords: "watermark page numbers stamp confidential draft" },
+    { label: "Sanitize PDF Metadata", href: "/tools/sanitize-pdf", keywords: "sanitize metadata remove author privacy clean" },
+  ];
+
+  const matchingSearchTools = searchQuery.trim()
+    ? quickTools.filter(
+        (item) =>
+          item.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          item.keywords.includes(searchQuery.toLowerCase())
+      )
+    : [];
 
   const defaultFaqs: FAQItem[] = [
     {
@@ -138,14 +165,17 @@ export function ToolLayout({
       dir={isRTL ? "rtl" : "ltr"}
       className="min-h-screen bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-100 selection:bg-rose-100 selection:text-rose-900 flex flex-col justify-between transition-colors duration-200"
     >
-      {/* Dynamic SEO Meta */}
-      <title>{`${title} — Free & 100% Private Online Tool | PDFStudio`}</title>
-      <meta name="description" content={description} />
-      <meta property="og:title" content={`${title} — PDFStudio`} />
-      <meta property="og:description" content={description} />
+      {!hideSeoMeta && (
+        <>
+          <title>{`${title} — Free & 100% Private Online Tool | PDFStudio`}</title>
+          <meta name="description" content={description} />
+          <meta property="og:title" content={`${title} — PDFStudio`} />
+          <meta property="og:description" content={description} />
+        </>
+      )}
 
       <div>
-        {/* Identical Top Navbar */}
+        {/* Top Navbar */}
         <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/95 dark:border-slate-800 dark:bg-slate-950/95 backdrop-blur-md">
           <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
             <Link href="/" className="flex items-center gap-2.5">
@@ -164,7 +194,7 @@ export function ToolLayout({
 
             <nav className="hidden md:flex items-center gap-5 text-xs font-semibold text-slate-600 dark:text-slate-300">
               <Link href="/tools/compress-pdf" className="hover:text-rose-600 transition-colors">
-                Compress PDF
+                {t.tools.compressTitle}
               </Link>
               <Link href="/tools/merge-pdf" className="hover:text-rose-600 transition-colors">
                 {t.nav.merge}
@@ -185,7 +215,7 @@ export function ToolLayout({
                   }`}
                 >
                   <LayoutGrid className="h-3.5 w-3.5 text-rose-600" />
-                  <span>All PDF Tools</span>
+                  <span>{t.filters.all}</span>
                   <ChevronDown
                     className={`h-3 w-3 text-slate-400 transition-transform duration-200 ${
                       isMegaMenuOpen ? "rotate-180 text-rose-600" : ""
@@ -194,7 +224,7 @@ export function ToolLayout({
                 </button>
 
                 {isMegaMenuOpen && (
-                  <div className="absolute left-1/2 -translate-x-1/2 mt-3 w-[660px] rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-900 z-50 animate-fadeIn">
+                  <div className="absolute left-1/2 -translate-x-1/2 mt-3 w-[660px] rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-900 z-50">
                     <div className="grid grid-cols-3 gap-6">
                       <div className="space-y-3">
                         <p className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
@@ -207,7 +237,7 @@ export function ToolLayout({
                             className="flex items-center gap-2.5 rounded-lg p-2 text-slate-700 hover:bg-slate-50 hover:text-rose-600 dark:text-slate-300 dark:hover:bg-slate-800 transition-colors"
                           >
                             <Minimize2 className="h-4 w-4 text-orange-500" />
-                            <span className="font-semibold text-xs">Compress PDF</span>
+                            <span className="font-semibold text-xs">{t.tools.compressTitle}</span>
                           </Link>
                           <Link
                             href="/tools/merge-pdf"
@@ -320,15 +350,38 @@ export function ToolLayout({
                 )}
               </button>
 
-              <div className="relative hidden lg:block w-44">
+              {/* Live Quick-Jump Navbar Search */}
+              <div className="relative hidden lg:block w-48" ref={searchDropdownRef}>
                 <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
                 <input
                   type="text"
                   placeholder={t.nav.searchPlaceholder}
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onFocus={() => setIsSearchOpen(true)}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setIsSearchOpen(true);
+                  }}
                   className="w-full rounded-lg border border-slate-200 bg-slate-50 pl-8 pr-3 py-1.5 text-xs text-slate-900 placeholder-slate-400 focus:border-rose-500 focus:bg-white focus:outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-white dark:placeholder-slate-500"
                 />
+                {isSearchOpen && matchingSearchTools.length > 0 && (
+                  <div className="absolute right-0 mt-1.5 w-60 rounded-xl border border-slate-200 bg-white py-1.5 shadow-xl dark:border-slate-800 dark:bg-slate-900 z-50">
+                    {matchingSearchTools.map((item) => (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        onClick={() => {
+                          setIsSearchOpen(false);
+                          setSearchQuery("");
+                        }}
+                        className="flex items-center justify-between px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-rose-50 hover:text-rose-600 dark:text-slate-200 dark:hover:bg-slate-800 transition-colors"
+                      >
+                        <span>{item.label}</span>
+                        <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
+                      </Link>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Language Selector Dropdown */}
@@ -345,7 +398,7 @@ export function ToolLayout({
 
                 {isLangOpen && (
                   <div className="absolute right-0 mt-1.5 w-32 rounded-xl border border-slate-200 bg-white py-1.5 shadow-lg dark:border-slate-800 dark:bg-slate-900 z-50">
-                    {(["EN", "FR", "ES", "RU", "AR"] as const).map((lang) => (
+                    {(["EN", "FR", "ES", "RU", "AR"] as const).map((lang: Language) => (
                       <button
                         key={lang}
                         type="button"
@@ -401,24 +454,35 @@ export function ToolLayout({
                 type="button"
                 onClick={() => {
                   if (typeof navigator !== "undefined" && navigator.share) {
-                    navigator.share({
-                      title: `${title} - PDFStudio`,
-                      text: "100% private client-side PDF tool with zero cloud uploads.",
-                      url: window.location.href,
-                    }).catch(() => {});
-                  } else {
+                    navigator
+                      .share({
+                        title: `${title} - PDFStudio`,
+                        text: "100% private client-side PDF tool with zero cloud uploads.",
+                        url: window.location.href,
+                      })
+                      .catch(() => {});
+                  } else if (typeof navigator !== "undefined") {
                     navigator.clipboard.writeText(window.location.href);
-                    alert("Link copied! Share it with a colleague.");
                   }
                 }}
                 className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-2xs"
               >
-                <span>{language === "FR" ? "Partager" : language === "ES" ? "Compartir" : language === "AR" ? "مشاركة" : "Share Tool"}</span>
+                <span>
+                  {language === "FR"
+                    ? "Partager"
+                    : language === "ES"
+                      ? "Compartir"
+                      : language === "RU"
+                        ? "Поделиться"
+                        : language === "AR"
+                          ? "مشاركة"
+                          : "Share Tool"}
+                </span>
               </button>
 
               <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 dark:border-emerald-900/50 dark:bg-emerald-950/40 px-3.5 py-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400 shadow-2xs">
                 <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                <span>100% Client-Side Privacy</span>
+                <span>{t.trust.zeroUploads}</span>
               </div>
             </div>
           </section>
@@ -435,7 +499,15 @@ export function ToolLayout({
           {/* 3-Step Guide */}
           <section className="mt-12 rounded-2xl border border-slate-200 bg-slate-50/60 p-6 sm:p-8 dark:border-slate-800 dark:bg-slate-900/40">
             <h2 className="text-base font-bold text-slate-900 dark:text-white mb-6">
-              {language === "FR" ? "Comment utiliser cet outil en 3 étapes simples" : language === "ES" ? "Cómo usar esta herramienta en 3 simples pasos" : language === "AR" ? "كيفية استخدام هذه الأداة في 3 خطوات بسيطة" : "How to use this tool in 3 simple steps"}
+              {language === "FR"
+                ? "Comment utiliser cet outil en 3 étapes simples"
+                : language === "ES"
+                  ? "Cómo usar esta herramienta en 3 simples pasos"
+                  : language === "RU"
+                    ? "Как использовать инструмент за 3 простых шага"
+                    : language === "AR"
+                      ? "كيفية استخدام هذه الأداة في 3 خطوات بسيطة"
+                      : "How to use this tool in 3 simple steps"}
             </h2>
 
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
@@ -443,7 +515,9 @@ export function ToolLayout({
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-50 text-rose-600 border border-rose-100 dark:bg-rose-950/40 dark:border-rose-900/50 dark:text-rose-400 font-bold">
                   <Upload className="h-5 w-5" />
                 </div>
-                <h3 className="text-sm font-semibold text-slate-900 dark:text-white">1. Select Document</h3>
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
+                  1. {t.trust.zeroUploads}
+                </h3>
                 <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
                   {t.trust.zeroUploadsDesc}
                 </p>
@@ -453,7 +527,9 @@ export function ToolLayout({
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600 border border-blue-100 dark:bg-blue-950/40 dark:border-blue-900/50 dark:text-blue-400 font-bold">
                   <Cpu className="h-5 w-5" />
                 </div>
-                <h3 className="text-sm font-semibold text-slate-900 dark:text-white">2. Configure & Process</h3>
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
+                  2. {t.trust.speed}
+                </h3>
                 <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
                   {t.trust.speedDesc}
                 </p>
@@ -463,7 +539,9 @@ export function ToolLayout({
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 dark:bg-emerald-950/40 dark:border-emerald-900/50 dark:text-emerald-400 font-bold">
                   <Download className="h-5 w-5" />
                 </div>
-                <h3 className="text-sm font-semibold text-slate-900 dark:text-white">3. Instant Download</h3>
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
+                  3. {t.trust.portability}
+                </h3>
                 <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
                   {t.trust.portabilityDesc}
                 </p>
@@ -476,7 +554,15 @@ export function ToolLayout({
             <div className="flex items-center gap-2 mb-6">
               <HelpCircle className="h-5 w-5 text-slate-700 dark:text-slate-300" />
               <h2 className="text-base font-bold text-slate-900 dark:text-white">
-                Frequently Asked Questions
+                {language === "FR"
+                  ? "Questions Fréquentes (FAQ)"
+                  : language === "ES"
+                    ? "Preguntas Frecuentes"
+                    : language === "RU"
+                      ? "Часто задаваемые вопросы"
+                      : language === "AR"
+                        ? "الأسئلة الشائعة"
+                        : "Frequently Asked Questions"}
               </h2>
             </div>
 
@@ -510,7 +596,7 @@ export function ToolLayout({
         </main>
       </div>
 
-      {/* Identical 4-Column Footer */}
+      {/* 4-Column Footer */}
       <footer className="mt-16 border-t border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900 py-12 text-xs text-slate-600 dark:text-slate-400">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5">
@@ -533,11 +619,11 @@ export function ToolLayout({
                 {t.footer.organize}
               </p>
               <ul className="space-y-2">
-                <li><Link href="/tools/compress-pdf" className="hover:text-rose-600">Compress PDF</Link></li>
-                <li><Link href="/tools/merge-pdf" className="hover:text-rose-600">{t.nav.merge}</Link></li>
-                <li><Link href="/tools/split-pdf" className="hover:text-rose-600">{t.nav.split}</Link></li>
-                <li><Link href="/tools/rotate-pdf" className="hover:text-rose-600">{t.tools.rotateTitle}</Link></li>
-                <li><Link href="/tools/images-to-pdf" className="hover:text-rose-600">{t.tools.imagesToPdfTitle}</Link></li>
+                <li><Link href="/compress-pdf" className="hover:text-rose-600">{t.tools.compressTitle}</Link></li>
+                <li><Link href="/merge-pdf" className="hover:text-rose-600">{t.nav.merge}</Link></li>
+                <li><Link href="/split-pdf" className="hover:text-rose-600">{t.nav.split}</Link></li>
+                <li><Link href="/rotate-pdf" className="hover:text-rose-600">{t.tools.rotateTitle}</Link></li>
+                <li><Link href="/jpg-to-pdf" className="hover:text-rose-600">{t.tools.imagesToPdfTitle}</Link></li>
               </ul>
             </div>
 
@@ -546,10 +632,11 @@ export function ToolLayout({
                 {t.footer.convert}
               </p>
               <ul className="space-y-2">
-                <li><Link href="/tools/convert" className="hover:text-rose-600">{t.tools.convertTitle}</Link></li>
-                <li><Link href="/tools/convert" className="hover:text-rose-600">PDF to Word</Link></li>
-                <li><Link href="/tools/convert" className="hover:text-rose-600">Excel to PDF</Link></li>
-                <li><Link href="/tools/convert" className="hover:text-rose-600">PDF to PowerPoint</Link></li>
+                <li><Link href="/pdf-to-word" className="hover:text-rose-600">PDF to Word</Link></li>
+                <li><Link href="/word-to-pdf" className="hover:text-rose-600">Word to PDF</Link></li>
+                <li><Link href="/pdf-to-excel" className="hover:text-rose-600">PDF to Excel</Link></li>
+                <li><Link href="/excel-to-pdf" className="hover:text-rose-600">Excel to PDF</Link></li>
+                <li><Link href="/pdf-to-powerpoint" className="hover:text-rose-600">PDF to PowerPoint</Link></li>
               </ul>
             </div>
 
@@ -558,10 +645,10 @@ export function ToolLayout({
                 {t.footer.editScan}
               </p>
               <ul className="space-y-2">
-                <li><Link href="/tools/scan" className="hover:text-rose-600">{t.nav.scan}</Link></li>
-                <li><Link href="/tools/sign-pdf" className="hover:text-rose-600">{t.tools.signTitle}</Link></li>
-                <li><Link href="/tools/convert" className="hover:text-rose-600">Extract Text</Link></li>
-                <li><Link href="/tools/images-to-pdf" className="hover:text-rose-600">JPG to PDF</Link></li>
+                <li><Link href="/scan-pdf" className="hover:text-rose-600">{t.nav.scan}</Link></li>
+                <li><Link href="/sign-pdf" className="hover:text-rose-600">{t.tools.signTitle}</Link></li>
+                <li><Link href="/pdf-to-text" className="hover:text-rose-600">PDF to Text</Link></li>
+                <li><Link href="/pdf-to-jpg" className="hover:text-rose-600">PDF to JPG</Link></li>
               </ul>
             </div>
           </div>
@@ -622,7 +709,8 @@ export function ToolLayout({
               <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-850">
                 <p className="font-bold text-slate-900 dark:text-white mb-0.5">Mobile (Safari / Chrome iOS & Android):</p>
                 <p className="text-slate-500 dark:text-slate-400">
-                  Tap the <span className="font-semibold text-rose-600">Share</span> button, then tap <span className="font-semibold text-rose-600">&ldquo;Add to Home Screen&rdquo;</span>.
+                  Tap the <span className="font-semibold text-rose-600">Share</span> button, then tap{" "}
+                  <span className="font-semibold text-rose-600">&ldquo;Add to Home Screen&rdquo;</span>.
                 </p>
               </div>
             </div>

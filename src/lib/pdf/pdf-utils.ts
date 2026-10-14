@@ -335,6 +335,63 @@ export async function splitPDF(file: File, pageRangeStr: string): Promise<Uint8A
  * Embeds a PNG signature into a target page of a PDF document at specific percentage coordinates.
  * Translates web coordinates (top-left origin) to PDF points (bottom-left origin).
  */
+export interface SignaturePlacement {
+  pageNumber: number;
+  signatureDataUrl: string;
+  position: {
+    xPercent: number;
+    yPercent: number;
+    widthPercent: number;
+    heightPercent: number;
+  };
+}
+
+/**
+ * Embeds multiple PNG signatures across any pages of a PDF in a single pass.
+ */
+export async function embedSignaturesIntoPDF(
+  pdfFile: File,
+  signatures: SignaturePlacement[]
+): Promise<Uint8Array> {
+  const bytes = await pdfFile.arrayBuffer();
+  const pdfDoc = await PDFDocument.load(bytes, { ignoreEncryption: false });
+  const pages = pdfDoc.getPages();
+
+  for (const sig of signatures) {
+    const targetPageIndex = sig.pageNumber - 1;
+    if (targetPageIndex < 0 || targetPageIndex >= pages.length) continue;
+
+    const page = pages[targetPageIndex];
+    const { width: pageWidth, height: pageHeight } = page.getSize();
+
+    const response = await fetch(sig.signatureDataUrl);
+    const signatureBytes = await response.arrayBuffer();
+    const signatureImage = await pdfDoc.embedPng(signatureBytes);
+
+    const xRatio = sig.position.xPercent > 1 ? sig.position.xPercent / 100 : sig.position.xPercent;
+    const yRatio = sig.position.yPercent > 1 ? sig.position.yPercent / 100 : sig.position.yPercent;
+    const wRatio = sig.position.widthPercent > 1 ? sig.position.widthPercent / 100 : sig.position.widthPercent;
+    const hRatio = sig.position.heightPercent > 1 ? sig.position.heightPercent / 100 : sig.position.heightPercent;
+
+    const drawWidth = wRatio * pageWidth;
+    const drawHeight = hRatio * pageHeight;
+    const drawX = xRatio * pageWidth;
+    const drawY = pageHeight - (yRatio + hRatio) * pageHeight;
+
+    page.drawImage(signatureImage, {
+      x: drawX,
+      y: drawY,
+      width: drawWidth,
+      height: drawHeight,
+    });
+  }
+
+  return await pdfDoc.save();
+}
+
+/**
+ * Backward-compatible single signature embedder
+ */
 export async function embedSignatureIntoPDF(
   pdfFile: File,
   pageNumber: number,
@@ -346,45 +403,7 @@ export async function embedSignatureIntoPDF(
     heightPercent: number;
   }
 ): Promise<Uint8Array> {
-  const bytes = await pdfFile.arrayBuffer();
-  const pdfDoc = await PDFDocument.load(bytes, { ignoreEncryption: false });
-
-  const pages = pdfDoc.getPages();
-  const targetPageIndex = pageNumber - 1;
-
-  if (targetPageIndex < 0 || targetPageIndex >= pages.length) {
-    throw new Error(`Page ${pageNumber} does not exist in the document.`);
-  }
-
-  const page = pages[targetPageIndex];
-  const { width: pageWidth, height: pageHeight } = page.getSize();
-
-  // Load and embed the PNG signature
-  const response = await fetch(signatureDataUrl);
-  const signatureBytes = await response.arrayBuffer();
-  const signatureImage = await pdfDoc.embedPng(signatureBytes);
-
-  // Normalize percentages (supports 0-1 or 0-100)
-  const xRatio = position.xPercent > 1 ? position.xPercent / 100 : position.xPercent;
-  const yRatio = position.yPercent > 1 ? position.yPercent / 100 : position.yPercent;
-  const wRatio =
-    position.widthPercent > 1 ? position.widthPercent / 100 : position.widthPercent;
-  const hRatio =
-    position.heightPercent > 1 ? position.heightPercent / 100 : position.heightPercent;
-
-  // Convert to PDF points
-  const drawWidth = wRatio * pageWidth;
-  const drawHeight = hRatio * pageHeight;
-  const drawX = xRatio * pageWidth;
-  // Invert Y coordinate: PDF origin (0,0) is bottom-left
-  const drawY = pageHeight - (yRatio + hRatio) * pageHeight;
-
-  page.drawImage(signatureImage, {
-    x: drawX,
-    y: drawY,
-    width: drawWidth,
-    height: drawHeight,
-  });
-
-  return await pdfDoc.save();
+  return embedSignaturesIntoPDF(pdfFile, [
+    { pageNumber, signatureDataUrl, position },
+  ]);
 }

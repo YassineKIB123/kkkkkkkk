@@ -8,6 +8,16 @@ const __dirname = path.dirname(__filename);
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://pdftool.fenangplay.workers.dev";
 const URLS_PER_SITEMAP = 500;
 const PUBLIC_DIR = path.join(__dirname, "..", "public");
+const ROOT_DIR = path.join(__dirname, "..");
+
+// Clean up any stale legacy root-level app/components/lib folders that conflict with src/app in Next.js
+for (const legacyDir of ["app", "components", "lib"]) {
+  const fullLegacyPath = path.join(ROOT_DIR, legacyDir);
+  if (fs.existsSync(fullLegacyPath)) {
+    console.log(`Removing legacy root directory "${legacyDir}/" (project uses src/${legacyDir}/)...`);
+    fs.rmSync(fullLegacyPath, { recursive: true, force: true });
+  }
+}
 
 if (!fs.existsSync(PUBLIC_DIR)) {
   fs.mkdirSync(PUBLIC_DIR, { recursive: true });

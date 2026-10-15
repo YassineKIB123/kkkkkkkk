@@ -55,7 +55,7 @@ export interface PseoPageData {
 }
 
 export const BASE_SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL || "https://pdftool.fenangplay.workers.dev";
+  process.env.NEXT_PUBLIC_SITE_URL || "https://iknowapdf.lol";
 
 // 18 Core Tool Definitions
 export const CORE_TOOLS: {

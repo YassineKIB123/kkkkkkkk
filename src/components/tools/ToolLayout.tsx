@@ -185,7 +185,7 @@ export function ToolLayout({
               </div>
               <div className="flex flex-col">
                 <span className="text-lg font-black tracking-tight text-slate-900 dark:text-white leading-tight">
-                  PDF<span className="text-rose-600">Studio</span>
+                  iKnowA<span className="text-rose-600">PDF</span>
                 </span>
                 <span className="text-[9px] font-bold tracking-widest uppercase text-slate-400 dark:text-slate-500">
                   All-in-One Suite

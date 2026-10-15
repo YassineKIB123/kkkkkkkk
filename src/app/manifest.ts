@@ -4,8 +4,8 @@ export const dynamic = "force-static";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "PDFStudio — 100% Private PDF Suite",
-    short_name: "PDFStudio",
+    name: "iKnowAPDF — 100% Private PDF Suite",
+    short_name: "iKnowAPDF",
     description: "Free, fast, and 100% private client-side PDF tools. Files never leave your device.",
     start_url: "/",
     display: "standalone",

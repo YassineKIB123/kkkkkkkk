@@ -5,7 +5,7 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://pdftool.fenangplay.workers.dev";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://iknowapdf.lol";
 const URLS_PER_SITEMAP = 500;
 const PUBLIC_DIR = path.join(__dirname, "..", "public");
 const ROOT_DIR = path.join(__dirname, "..");

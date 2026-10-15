@@ -34,7 +34,7 @@ export default function ContactPage() {
           <section className="space-y-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
             <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <Globe className="h-4 w-4 text-rose-600" />
-              <span>About PDFStudio</span>
+              <span>About iKnowAPDF</span>
             </h2>
             <p>
               <strong>PDFStudio</strong> was built with a simple mission: to provide fast, studio-quality PDF editing, compression, signing, scanning, and conversion tools that run <strong>100% locally in your browser</strong>—without forcing you to upload sensitive documents to unknown cloud servers or pay expensive monthly subscriptions.

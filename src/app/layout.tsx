@@ -7,7 +7,7 @@ import { LanguageProvider } from "@/context/LanguageContext";
 const inter = Inter({ subsets: ["latin", "cyrillic"] });
 
 const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL || "https://pdftool.fenangplay.workers.dev";
+  process.env.NEXT_PUBLIC_SITE_URL || "https://iknowapdf.lol";
 const ADSENSE_ID = process.env.NEXT_PUBLIC_ADSENSE_ID || "";
 
 export const metadata: Metadata = {

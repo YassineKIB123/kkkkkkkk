@@ -16,8 +16,8 @@ export const metadata: Metadata = {
     google: "TX_b_Rg1BBdC31WpXrXvxkBgRWD0LJ2tilIg3Iw9CV0",
   },
   title: {
-    default: "PDFStudio — Free, Fast & 100% Private PDF Tools",
-    template: "%s | PDFStudio",
+    default: "iKnowAPDF — Free, Fast & 100% Private PDF Tools",
+    template: "%s | iKnowAPDF",
   },
   description:
     "Every PDF tool you need, all in one place. Edit, merge, split, compress, scan, sign, convert, and rotate PDFs with 100% client-side browser privacy. Your files never leave your device.",
@@ -33,20 +33,20 @@ export const metadata: Metadata = {
     "client-side PDF",
     "private PDF editor",
   ],
-  authors: [{ name: "PDFStudio Team" }],
-  creator: "PDFStudio",
+  authors: [{ name: "iKnowAPDF Team" }],
+  creator: "iKnowAPDF",
   openGraph: {
     type: "website",
     locale: "en_US",
     url: SITE_URL,
-    siteName: "PDFStudio",
-    title: "PDFStudio — Free, Fast & 100% Private PDF Tools",
+    siteName: "iKnowAPDF",
+    title: "iKnowAPDF — Free, Fast & 100% Private PDF Tools",
     description:
       "All-in-one PDF suite that processes files directly in your browser. Zero cloud uploads, total file privacy.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "PDFStudio — Free & 100% Private PDF Tools",
+    title: "iKnowAPDF — Free & 100% Private PDF Tools",
     description:
       "Edit, Scan, Sign, Compress, Merge, Split, and Convert PDFs client-side without servers.",
   },
@@ -62,7 +62,7 @@ export const metadata: Metadata = {
     },
   },
   alternates: {
-    canonical: SITE_URL,
+    canonical: "./",
   },
 };
 
@@ -74,7 +74,7 @@ export default function RootLayout({
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: "PDFStudio",
+    name: "iKnowAPDF",
     url: SITE_URL,
     applicationCategory: "BusinessApplication",
     operatingSystem: "All",

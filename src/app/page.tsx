@@ -70,7 +70,7 @@ const HOMEPAGE_FAQS = [
       "Unlike traditional online converters that cap free users at 10 MB or 20 pages, our client-side architecture has no artificial paywalls or limits. As long as your computer or smartphone has sufficient memory, you can process files of any size.",
   },
   {
-    question: "Can I use PDFStudio without an internet connection?",
+    question: "Can I use iKnowAPDF without an internet connection?",
     answer:
       "Yes. Once this web app finishes loading in your browser, our offline Service Worker caches the core scripts and assets. You can disconnect your Wi-Fi and continue scanning, compressing, merging, and signing documents offline.",
   },
@@ -1113,7 +1113,7 @@ export default function HomePage() {
 
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-between border-t border-slate-200 dark:border-slate-800 pt-6 gap-4 text-slate-500">
             <div className="flex flex-wrap items-center gap-4">
-              <p>PDFStudio &copy; 2026. {t.footer.rights}</p>
+              <p>iKnowAPDF &copy; 2026. {t.footer.rights}</p>
               <Link href="/privacy" className="hover:text-rose-600 underline-offset-4 hover:underline">Privacy Policy</Link>
               <Link href="/terms" className="hover:text-rose-600 underline-offset-4 hover:underline">Terms of Service</Link>
               <Link href="/contact" className="hover:text-rose-600 underline-offset-4 hover:underline">Contact</Link>
@@ -1146,7 +1146,7 @@ export default function HomePage() {
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
               <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-white text-base">
                 <Laptop className="h-5 w-5 text-rose-600" />
-                <span>Install PDFStudio App</span>
+                <span>Install iKnowAPDF App</span>
               </div>
               <button
                 type="button"
@@ -1158,7 +1158,7 @@ export default function HomePage() {
             </div>
 
             <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-              PDFStudio runs 100% locally on your computer or phone with offline access. To install:
+              iKnowAPDF runs 100% locally on your computer or phone with offline access. To install:
             </p>
 
             <div className="space-y-2.5 text-xs">

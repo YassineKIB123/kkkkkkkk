@@ -707,6 +707,7 @@ export const MODIFIERS: PseoModifier[] = [
     ru: "без водяных знаков и логотипов",
     ar: "بدون علامة مائية نهائياً",
     category: "quality",
+    compatibleTools: ["edit", "compress", "merge", "split", "rotate", "sign", "scan", "pdf-to-word", "word-to-pdf", "jpg-to-pdf", "png-to-pdf"],
   },
   {
     id: "lossless-quality",
@@ -992,7 +993,7 @@ function getLocalizedFaqs(
       },
       {
         q: "Mon document téléchargé contiendra-t-il un filigrane ?",
-        a: "Jamais. Tous les fichiers générés par PDFStudio sont propres, sans filigrane et prêts pour un usage professionnel, juridique ou académique.",
+        a: "Jamais. Tous les fichiers générés par iKnowAPDF sont propres, sans filigrane et prêts pour un usage professionnel, juridique ou académique.",
       },
       {
         q: "Cet outil fonctionne-t-il sur Mac, Windows, iPhone et Android ?",
@@ -1110,21 +1111,21 @@ function buildPageRecord(
   const modLabel = mod ? ` ${mod[locale]}` : "";
   const actionText = tool.action[locale];
 
-  let title = `${toolName}${modLabel} — Free & 100% Private | PDFStudio`;
+  let title = `${toolName}${modLabel} — Free & 100% Private | iKnowAPDF`;
   const h1 = `${toolName}${modLabel}`.trim();
   let metaDescription = `Free online tool to ${actionText}${modLabel}. 100% private client-side processing directly in your browser. Files never leave your device.`;
 
   if (locale === "fr") {
-    title = `${toolName}${modLabel} — Gratuit & 100% Privé | PDFStudio`;
+    title = `${toolName}${modLabel} — Gratuit & 100% Privé | iKnowAPDF`;
     metaDescription = `Outil en ligne gratuit pour ${actionText}${modLabel}. Traitement 100% local dans votre navigateur sans aucun envoi sur serveur.`;
   } else if (locale === "es") {
-    title = `${toolName}${modLabel} — Gratis y 100% Privado | PDFStudio`;
+    title = `${toolName}${modLabel} — Gratis y 100% Privado | iKnowAPDF`;
     metaDescription = `Herramienta en línea gratuita para ${actionText}${modLabel}. Procesamiento 100% local en tu navegador con privacidad total.`;
   } else if (locale === "ru") {
-    title = `${toolName}${modLabel} — Бесплатно и приватно | PDFStudio`;
+    title = `${toolName}${modLabel} — Бесплатно и приватно | iKnowAPDF`;
     metaDescription = `Бесплатный онлайн-инструмент, чтобы ${actionText}${modLabel}. 100% локальная обработка в браузере без загрузки на сервер.`;
   } else if (locale === "ar") {
-    title = `${toolName}${modLabel} — مجاني وخاص 100% | PDFStudio`;
+    title = `${toolName}${modLabel} — مجاني وخاص 100% | iKnowAPDF`;
     metaDescription = `أداة مجانية للقيام بـ ${actionText}${modLabel}. معالجة آمنة محلياً 100% داخل المتصفح دون رفع أي ملفات.`;
   }
 

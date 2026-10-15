@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   ChevronRight,
   ShieldCheck,
@@ -26,13 +27,15 @@ import {
   PenLine,
   X,
   Laptop,
+  CheckCircle2,
+  Lock,
+  Zap,
 } from "lucide-react";
 import React, { useState, useEffect, useRef, createContext, useContext } from "react";
 import { AdBanner } from "@/components/ads/AdBanner";
 import { useLanguage } from "@/context/LanguageContext";
 import { Language } from "@/lib/i18n/translations";
 
-// Context to prevent nested duplicate headers/footers when tools are embedded inside pSEO pages
 const EmbeddedToolContext = createContext<boolean>(false);
 
 export function EmbeddedToolProvider({ children }: { children: React.ReactNode }) {
@@ -64,9 +67,10 @@ export function ToolLayout({
   hideSeoMeta = false,
 }: ToolLayoutProps) {
   const isEmbedded = useContext(EmbeddedToolContext);
+  const pathname = usePathname() || "";
   const { language, setLanguage, t, isRTL, theme, toggleTheme } = useLanguage();
 
-  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
+  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
   const [isLangOpen, setIsLangOpen] = useState(false);
   const [isMegaMenuOpen, setIsMegaMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -106,7 +110,6 @@ export function ToolLayout({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isEmbedded]);
 
-  // If rendered inside a pSEO page via PseoToolRenderer, render ONLY the interactive workspace
   if (isEmbedded) {
     return <div className="w-full">{children}</div>;
   }
@@ -120,6 +123,8 @@ export function ToolLayout({
       setShowInstallHelp(true);
     }
   };
+
+  const canonicalUrl = `https://iknowapdf.lol${pathname === "/" ? "" : pathname}`;
 
   const quickTools = [
     { label: t.tools.compressTitle, href: "/tools/compress-pdf", keywords: "compress shrink reduce size kb mb" },
@@ -146,20 +151,31 @@ export function ToolLayout({
 
   const defaultFaqs: FAQItem[] = [
     {
-      question: t.trust.zeroUploads,
-      answer: t.trust.zeroUploadsDesc,
+      question: `How does the ${title} tool process my files without uploading them?`,
+      answer: `Unlike traditional cloud converters that upload your private PDFs to remote servers, iKnowAPDF executes ${title} 100% locally inside your web browser using WebAssembly, PDF.js, and HTML5 Canvas APIs. Your document never leaves your computer or phone.`,
     },
     {
-      question: t.trust.speed,
-      answer: t.trust.speedDesc,
+      question: `Is ${title} completely free and free of watermarks?`,
+      answer: `Yes. You can use ${title} as many times as you need without creating an account, subscribing to a plan, or dealing with watermarks on your exported documents.`,
     },
     {
-      question: t.trust.privacy,
-      answer: t.trust.privacyDesc,
+      question: "Is it safe to process confidential contracts, tax forms, or medical records?",
+      answer:
+        "Yes. Because zero bytes are transmitted over the internet, your sensitive bank statements, legal contracts, IDs, and medical records remain strictly in your device's local RAM and are immediately cleared when you close the tab.",
+    },
+    {
+      question: "Are there any file size or page count limits?",
+      answer:
+        "We do not impose artificial paywalls, daily queues, or page limits. As long as your device browser has available memory, you can process multi-page PDF documents of any size.",
+    },
+    {
+      question: "Which devices and browsers are supported?",
+      answer:
+        "iKnowAPDF works seamlessly across Windows, macOS, Linux, Chromebook, iPhone/iPad (iOS Safari), and Android (Chrome) without installing any desktop software or browser plugins.",
     },
   ];
 
-  const activeFaqs = faqs || defaultFaqs;
+  const activeFaqs = faqs && faqs.length >= 4 ? faqs : [...(faqs || []), ...defaultFaqs].slice(0, 5);
 
   return (
     <div
@@ -168,10 +184,12 @@ export function ToolLayout({
     >
       {!hideSeoMeta && (
         <>
-          <title>{`${title} — Free & 100% Private Online Tool | PDFStudio`}</title>
+          <title>{`${title} — Free & 100% Private Online Tool | iKnowAPDF`}</title>
           <meta name="description" content={description} />
-          <meta property="og:title" content={`${title} — PDFStudio`} />
+          <link rel="canonical" href={canonicalUrl} />
+          <meta property="og:title" content={`${title} — iKnowAPDF`} />
           <meta property="og:description" content={description} />
+          <meta property="og:url" content={canonicalUrl} />
         </>
       )}
 
@@ -194,7 +212,9 @@ export function ToolLayout({
             </Link>
 
             <nav className="hidden md:flex items-center gap-5 text-xs font-semibold text-slate-600 dark:text-slate-300">
-              <Link href="/tools/edit-pdf" className="hover:text-rose-600 transition-colors font-bold text-rose-600 dark:text-rose-400">Edit PDF Text</Link>
+              <Link href="/tools/edit-pdf" className="hover:text-rose-600 transition-colors font-bold text-rose-600 dark:text-rose-400">
+                Edit PDF Text
+              </Link>
               <Link href="/tools/compress-pdf" className="hover:text-rose-600 transition-colors">
                 {t.tools.compressTitle}
               </Link>
@@ -205,7 +225,6 @@ export function ToolLayout({
                 {t.nav.scan}
               </Link>
 
-              {/* All PDF Tools Mega Menu */}
               <div className="relative" ref={megaMenuRef}>
                 <button
                   type="button"
@@ -352,7 +371,6 @@ export function ToolLayout({
                 )}
               </button>
 
-              {/* Live Quick-Jump Navbar Search */}
               <div className="relative hidden lg:block w-48" ref={searchDropdownRef}>
                 <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
                 <input
@@ -386,7 +404,6 @@ export function ToolLayout({
                 )}
               </div>
 
-              {/* Language Selector Dropdown */}
               <div className="relative" ref={langDropdownRef}>
                 <button
                   type="button"
@@ -458,7 +475,7 @@ export function ToolLayout({
                   if (typeof navigator !== "undefined" && navigator.share) {
                     navigator
                       .share({
-                        title: `${title} - PDFStudio`,
+                        title: `${title} - iKnowAPDF`,
                         text: "100% private client-side PDF tool with zero cloud uploads.",
                         url: window.location.href,
                       })
@@ -469,17 +486,7 @@ export function ToolLayout({
                 }}
                 className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-2xs"
               >
-                <span>
-                  {language === "FR"
-                    ? "Partager"
-                    : language === "ES"
-                      ? "Compartir"
-                      : language === "RU"
-                        ? "Поделиться"
-                        : language === "AR"
-                          ? "مشاركة"
-                          : "Share Tool"}
-                </span>
+                <span>Share Tool</span>
               </button>
 
               <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 dark:border-emerald-900/50 dark:bg-emerald-950/40 px-3.5 py-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400 shadow-2xs">
@@ -498,18 +505,10 @@ export function ToolLayout({
             <AdBanner format="leaderboard" />
           </div>
 
-          {/* 3-Step Guide */}
+          {/* 3-Step How It Works Guide */}
           <section className="mt-12 rounded-2xl border border-slate-200 bg-slate-50/60 p-6 sm:p-8 dark:border-slate-800 dark:bg-slate-900/40">
-            <h2 className="text-base font-bold text-slate-900 dark:text-white mb-6">
-              {language === "FR"
-                ? "Comment utiliser cet outil en 3 étapes simples"
-                : language === "ES"
-                  ? "Cómo usar esta herramienta en 3 simples pasos"
-                  : language === "RU"
-                    ? "Как использовать инструмент за 3 простых шага"
-                    : language === "AR"
-                      ? "كيفية استخدام هذه الأداة في 3 خطوات بسيطة"
-                      : "How to use this tool in 3 simple steps"}
+            <h2 className="text-lg font-extrabold text-slate-900 dark:text-white mb-6">
+              How to Use {title} in 3 Simple Steps
             </h2>
 
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
@@ -517,11 +516,11 @@ export function ToolLayout({
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-50 text-rose-600 border border-rose-100 dark:bg-rose-950/40 dark:border-rose-900/50 dark:text-rose-400 font-bold">
                   <Upload className="h-5 w-5" />
                 </div>
-                <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
-                  1. {t.trust.zeroUploads}
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                  1. Select or Drop Your Document
                 </h3>
                 <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                  {t.trust.zeroUploadsDesc}
+                  Drag and drop your file into the workspace above or click to browse from your device. Your file is loaded directly into local browser memory without uploading to any remote server.
                 </p>
               </div>
 
@@ -529,11 +528,11 @@ export function ToolLayout({
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600 border border-blue-100 dark:bg-blue-950/40 dark:border-blue-900/50 dark:text-blue-400 font-bold">
                   <Cpu className="h-5 w-5" />
                 </div>
-                <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
-                  2. {t.trust.speed}
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                  2. Customize & Preview Live
                 </h3>
                 <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                  {t.trust.speedDesc}
+                  Configure your options, inspect pages in real time, and apply edits or optimizations instantaneously using our client-side WebAssembly and HTML5 Canvas engine.
                 </p>
               </div>
 
@@ -541,11 +540,55 @@ export function ToolLayout({
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 dark:bg-emerald-950/40 dark:border-emerald-900/50 dark:text-emerald-400 font-bold">
                   <Download className="h-5 w-5" />
                 </div>
-                <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
-                  3. {t.trust.portability}
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                  3. Instant Watermark-Free Download
                 </h3>
                 <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                  {t.trust.portabilityDesc}
+                  Export your finished, ISO-compliant document straight to your computer or smartphone storage with zero watermarks, zero sign-ups, and zero cloud retention.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          {/* Key Features & Client-Side Security Overview (Rich Editorial Content for SEO & AdSense) */}
+          <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-6 sm:p-8 shadow-2xs dark:border-slate-800 dark:bg-slate-900/50 space-y-6">
+            <div className="space-y-2">
+              <h2 className="text-lg font-extrabold text-slate-900 dark:text-white">
+                Why Process Your Documents with iKnowAPDF&apos;s {title}?
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                Most online PDF utilities upload your private files to remote cloud servers, placing sensitive tax returns, legal contracts, bank statements, and personal IDs at risk of third-party storage or data breaches. <strong>iKnowAPDF</strong> eliminates cloud uploads entirely by running the full document processing pipeline inside your browser&apos;s sandboxed memory.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+              <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-950 space-y-1.5">
+                <div className="flex items-center gap-2 text-xs font-bold text-slate-900 dark:text-white">
+                  <Lock className="h-4 w-4 text-rose-600" />
+                  <span>100% Local RAM Execution</span>
+                </div>
+                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                  Every byte of your file stays on your device. Closing or refreshing your browser tab immediately purges the document buffer from memory.
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-950 space-y-1.5">
+                <div className="flex items-center gap-2 text-xs font-bold text-slate-900 dark:text-white">
+                  <Zap className="h-4 w-4 text-amber-500" />
+                  <span>Zero Upload & Download Wait</span>
+                </div>
+                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                  Because files never travel across the internet to a server queue, even large multi-page PDF documents are processed in seconds.
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-950 space-y-1.5">
+                <div className="flex items-center gap-2 text-xs font-bold text-slate-900 dark:text-white">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                  <span>Studio-Grade Output Fidelity</span>
+                </div>
+                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                  Built on ISO 32000-1 compliant PDF-Lib and PDF.js engines to preserve sharp vector typography, page geometry, and layout structure.
                 </p>
               </div>
             </div>
@@ -554,17 +597,9 @@ export function ToolLayout({
           {/* FAQ Accordion */}
           <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-6 sm:p-8 shadow-2xs dark:border-slate-800 dark:bg-slate-900/50">
             <div className="flex items-center gap-2 mb-6">
-              <HelpCircle className="h-5 w-5 text-slate-700 dark:text-slate-300" />
-              <h2 className="text-base font-bold text-slate-900 dark:text-white">
-                {language === "FR"
-                  ? "Questions Fréquentes (FAQ)"
-                  : language === "ES"
-                    ? "Preguntas Frecuentes"
-                    : language === "RU"
-                      ? "Часто задаваемые вопросы"
-                      : language === "AR"
-                        ? "الأسئلة الشائعة"
-                        : "Frequently Asked Questions"}
+              <HelpCircle className="h-5 w-5 text-rose-600" />
+              <h2 className="text-lg font-extrabold text-slate-900 dark:text-white">
+                Frequently Asked Questions — {title}
               </h2>
             </div>
 
@@ -598,7 +633,7 @@ export function ToolLayout({
         </main>
       </div>
 
-      {/* 4-Column Footer */}
+      {/* Consistent 4-Column Footer */}
       <footer className="mt-16 border-t border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900 py-12 text-xs text-slate-600 dark:text-slate-400">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5">
@@ -608,7 +643,7 @@ export function ToolLayout({
                   <Layers className="h-4 w-4" />
                 </div>
                 <span className="text-base font-black tracking-tight text-slate-900 dark:text-white">
-                  PDF<span className="text-rose-600">Studio</span>
+                  iKnowA<span className="text-rose-600">PDF</span>
                 </span>
               </div>
               <p className="text-slate-500 dark:text-slate-400 max-w-sm leading-relaxed">
@@ -621,11 +656,11 @@ export function ToolLayout({
                 {t.footer.organize}
               </p>
               <ul className="space-y-2">
-                <li><Link href="/compress-pdf" className="hover:text-rose-600">{t.tools.compressTitle}</Link></li>
-                <li><Link href="/merge-pdf" className="hover:text-rose-600">{t.nav.merge}</Link></li>
-                <li><Link href="/split-pdf" className="hover:text-rose-600">{t.nav.split}</Link></li>
-                <li><Link href="/rotate-pdf" className="hover:text-rose-600">{t.tools.rotateTitle}</Link></li>
-                <li><Link href="/jpg-to-pdf" className="hover:text-rose-600">{t.tools.imagesToPdfTitle}</Link></li>
+                <li><Link href="/tools/compress-pdf" className="hover:text-rose-600">{t.tools.compressTitle}</Link></li>
+                <li><Link href="/tools/merge-pdf" className="hover:text-rose-600">{t.nav.merge}</Link></li>
+                <li><Link href="/tools/split-pdf" className="hover:text-rose-600">{t.nav.split}</Link></li>
+                <li><Link href="/tools/rotate-pdf" className="hover:text-rose-600">{t.tools.rotateTitle}</Link></li>
+                <li><Link href="/tools/watermark-pdf" className="hover:text-rose-600">Watermark & Page Numbers</Link></li>
               </ul>
             </div>
 
@@ -634,11 +669,9 @@ export function ToolLayout({
                 {t.footer.convert}
               </p>
               <ul className="space-y-2">
-                <li><Link href="/pdf-to-word" className="hover:text-rose-600">PDF to Word</Link></li>
-                <li><Link href="/word-to-pdf" className="hover:text-rose-600">Word to PDF</Link></li>
-                <li><Link href="/pdf-to-excel" className="hover:text-rose-600">PDF to Excel</Link></li>
-                <li><Link href="/excel-to-pdf" className="hover:text-rose-600">Excel to PDF</Link></li>
-                <li><Link href="/pdf-to-powerpoint" className="hover:text-rose-600">PDF to PowerPoint</Link></li>
+                <li><Link href="/tools/convert" className="hover:text-rose-600">{t.tools.convertTitle}</Link></li>
+                <li><Link href="/tools/images-to-pdf" className="hover:text-rose-600">{t.tools.imagesToPdfTitle}</Link></li>
+                <li><Link href="/tools/pdf-to-images" className="hover:text-rose-600">{t.tools.pdfToImagesTitle}</Link></li>
               </ul>
             </div>
 
@@ -647,21 +680,20 @@ export function ToolLayout({
                 {t.footer.editScan}
               </p>
               <ul className="space-y-2">
-                <li><Link href="/edit-pdf" className="hover:text-rose-600 font-semibold">Edit PDF Text</Link></li>
-                <li><Link href="/scan-pdf" className="hover:text-rose-600">{t.nav.scan}</Link></li>
-                <li><Link href="/sign-pdf" className="hover:text-rose-600">{t.tools.signTitle}</Link></li>
-                <li><Link href="/pdf-to-text" className="hover:text-rose-600">PDF to Text</Link></li>
-                <li><Link href="/pdf-to-jpg" className="hover:text-rose-600">PDF to JPG</Link></li>
+                <li><Link href="/tools/edit-pdf" className="hover:text-rose-600 font-semibold">Edit PDF Text</Link></li>
+                <li><Link href="/tools/scan" className="hover:text-rose-600">{t.nav.scan}</Link></li>
+                <li><Link href="/tools/sign-pdf" className="hover:text-rose-600">{t.tools.signTitle}</Link></li>
+                <li><Link href="/tools/sanitize-pdf" className="hover:text-rose-600">Sanitize PDF Metadata</Link></li>
               </ul>
             </div>
           </div>
 
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-between border-t border-slate-200 dark:border-slate-800 pt-6 gap-4 text-slate-500">
             <div className="flex flex-wrap items-center gap-4">
-              <p>PDFStudio &copy; 2026. {t.footer.rights}</p>
+              <p>iKnowAPDF &copy; 2026. {t.footer.rights}</p>
+              <Link href="/contact" className="hover:text-rose-600 underline-offset-4 hover:underline">About & Contact Us</Link>
               <Link href="/privacy" className="hover:text-rose-600 underline-offset-4 hover:underline">Privacy Policy</Link>
               <Link href="/terms" className="hover:text-rose-600 underline-offset-4 hover:underline">Terms of Service</Link>
-              <Link href="/contact" className="hover:text-rose-600 underline-offset-4 hover:underline">Contact</Link>
             </div>
 
             <div className="flex items-center gap-1.5 font-medium">
@@ -691,7 +723,7 @@ export function ToolLayout({
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
               <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-white text-base">
                 <Laptop className="h-5 w-5 text-rose-600" />
-                <span>Install PDFStudio App</span>
+                <span>Install iKnowAPDF App</span>
               </div>
               <button
                 type="button"
@@ -703,7 +735,7 @@ export function ToolLayout({
             </div>
 
             <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-              PDFStudio runs 100% locally on your computer or phone with offline access. To install:
+              iKnowAPDF runs 100% locally on your computer or phone with offline access. To install:
             </p>
 
             <div className="space-y-2.5 text-xs">

@@ -53,7 +53,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       title: page.title,
       description: page.metaDescription,
       url,
-      siteName: "PDFStudio",
+      siteName: "iKnowAPDF",
     },
   };
 }

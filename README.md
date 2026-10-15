@@ -1,6 +1,6 @@
-# PDFStudio (`pdftool`) — 100% Client-Side PDF Suite & Programmatic SEO Engine
+# iKnowAPDF (`pdftool`) — 100% Client-Side PDF Suite & Programmatic SEO Engine
 
-PDFStudio is a privacy-first, 100% client-side PDF toolkit built with **Next.js 16 (Static Export)**, **Tailwind CSS v4**, `pdf-lib`, `pdfjs-dist`, and **Cloudflare Workers Static Assets**. Every document operation runs locally inside the user's browser memory with zero server uploads.
+iKnowAPDF is a privacy-first, 100% client-side PDF toolkit built with **Next.js 16 (Static Export)**, **Tailwind CSS v4**, `pdf-lib`, `pdfjs-dist`, and **Cloudflare Workers Static Assets**. Every document operation runs locally inside the user's browser memory with zero server uploads.
 
 ## Core Tools Included
 

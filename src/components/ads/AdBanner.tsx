@@ -21,7 +21,7 @@ export function AdBanner({
   slotId,
   showPlaceholder = false,
 }: AdBannerProps) {
-  const adsenseId = process.env.NEXT_PUBLIC_ADSENSE_ID;
+  const adsenseId = process.env.NEXT_PUBLIC_ADSENSE_ID || "ca-pub-5152878593494077";
   const pushedRef = useRef(false);
 
   useEffect(() => {

@@ -8,7 +8,7 @@ const inter = Inter({ subsets: ["latin", "cyrillic"] });
 
 const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL || "https://iknowapdf.lol";
-const ADSENSE_ID = process.env.NEXT_PUBLIC_ADSENSE_ID || "";
+const ADSENSE_ID = process.env.NEXT_PUBLIC_ADSENSE_ID || "ca-pub-5152878593494077";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

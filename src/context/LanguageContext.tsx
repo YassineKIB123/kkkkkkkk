@@ -22,35 +22,55 @@ const LanguageContext = createContext<LanguageContextType>({
 });
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguageState] = useState<Language>("EN");
-  const [theme, setThemeState] = useState<"light" | "dark">("light");
+  const [language, setLanguageState] = useState<Language>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("lang") as Language | null;
+        if (saved && DICTIONARY[saved]) return saved;
+      } catch {}
+    }
+    return "EN";
+  });
+  const [theme, setThemeState] = useState<"light" | "dark">(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const savedTheme = localStorage.getItem("theme") as "light" | "dark" | null;
+        if (savedTheme === "dark") return "dark";
+      } catch {}
+    }
+    return "light";
+  });
+
+  // Client hydration sync from localStorage
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("lang") as Language | null;
+      if (saved && DICTIONARY[saved] && saved !== language) {
+        setLanguageState(saved);
+      }
+      const savedTheme = localStorage.getItem("theme") as "light" | "dark" | null;
+      if (savedTheme && (savedTheme === "dark" || savedTheme === "light") && savedTheme !== theme) {
+        setThemeState(savedTheme);
+      }
+    } catch {}
+  }, []);
 
   useEffect(() => {
-    const saved = localStorage.getItem("lang") as Language | null;
-    if (saved && DICTIONARY[saved]) {
-      setLanguageState(saved);
-      document.documentElement.dir = saved === "AR" ? "rtl" : "ltr";
-      document.documentElement.lang = saved.toLowerCase();
-    }
-
-    const savedTheme = localStorage.getItem("theme") as "light" | "dark" | null;
-    if (savedTheme === "dark") {
-      setThemeState("dark");
-      document.documentElement.classList.add("dark");
-    } else {
-      setThemeState("light");
-      document.documentElement.classList.remove("dark");
-    }
+    document.documentElement.dir = language === "AR" ? "rtl" : "ltr";
+    document.documentElement.lang = language.toLowerCase();
+    document.documentElement.classList.toggle("dark", theme === "dark");
 
     // Register Offline PWA Service Worker
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("/sw.js").catch(() => {});
     }
-  }, []);
+  }, [language, theme]);
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);
-    localStorage.setItem("lang", lang);
+    try {
+      localStorage.setItem("lang", lang);
+    } catch {}
     document.documentElement.dir = lang === "AR" ? "rtl" : "ltr";
     document.documentElement.lang = lang.toLowerCase();
   };
@@ -58,7 +78,9 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const toggleTheme = () => {
     const next = theme === "light" ? "dark" : "light";
     setThemeState(next);
-    localStorage.setItem("theme", next);
+    try {
+      localStorage.setItem("theme", next);
+    } catch {}
     if (next === "dark") {
       document.documentElement.classList.add("dark");
     } else {

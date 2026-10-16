@@ -2,6 +2,7 @@
 
 import React from "react";
 import { FileText, Trash2, ArrowUp, ArrowDown } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface FileListPreviewProps {
   files: File[];
@@ -25,15 +26,63 @@ export function FileListPreview({
   onMoveUp,
   onMoveDown,
 }: FileListPreviewProps) {
+  const { language, t } = useLanguage();
+
   if (files.length === 0) return null;
 
   const totalSize = files.reduce((acc, file) => acc + file.size, 0);
 
+  const selectedFilesLabel =
+    language === "AR"
+      ? `الملفات المحددة (${files.length})`
+      : language === "FR"
+        ? `Fichiers sélectionnés (${files.length})`
+        : language === "ES"
+          ? `Archivos seleccionados (${files.length})`
+          : language === "RU"
+            ? `Выбранные файлы (${files.length})`
+            : `Selected Files (${files.length})`;
+
+  const totalLabel =
+    language === "AR"
+      ? "الإجمالي:"
+      : language === "FR"
+        ? "Total :"
+        : language === "ES"
+          ? "Total:"
+          : language === "RU"
+            ? "Всего:"
+            : "Total:";
+
+  const moveUpLabel =
+    language === "AR"
+      ? "تحريك لأعلى"
+      : language === "FR"
+        ? "Monter"
+        : language === "ES"
+          ? "Subir"
+          : language === "RU"
+            ? "Переместить вверх"
+            : "Move up";
+
+  const moveDownLabel =
+    language === "AR"
+      ? "تحريك لأسفل"
+      : language === "FR"
+        ? "Descendre"
+        : language === "ES"
+          ? "Bajar"
+          : language === "RU"
+            ? "Переместить вниз"
+            : "Move down";
+
+  const removeLabel = t.common.remove;
+
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between text-xs font-semibold text-slate-500 dark:text-slate-400 px-1">
-        <span>Selected Files ({files.length})</span>
-        <span className="font-mono">Total: {formatBytes(totalSize)}</span>
+        <span>{selectedFilesLabel}</span>
+        <span className="font-mono">{totalLabel} {formatBytes(totalSize)}</span>
       </div>
 
       <div className="space-y-2">
@@ -67,7 +116,7 @@ export function FileListPreview({
                   type="button"
                   onClick={() => onMoveUp(idx)}
                   disabled={idx === 0}
-                  title="Move up"
+                  title={moveUpLabel}
                   className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-white disabled:opacity-30 transition-colors"
                 >
                   <ArrowUp className="h-4 w-4" />
@@ -79,7 +128,7 @@ export function FileListPreview({
                   type="button"
                   onClick={() => onMoveDown(idx)}
                   disabled={idx === files.length - 1}
-                  title="Move down"
+                  title={moveDownLabel}
                   className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-white disabled:opacity-30 transition-colors"
                 >
                   <ArrowDown className="h-4 w-4" />
@@ -89,7 +138,7 @@ export function FileListPreview({
               <button
                 type="button"
                 onClick={() => onRemove(idx)}
-                title="Remove file"
+                title={removeLabel}
                 className="rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/40 dark:hover:text-red-400 transition-colors ml-1"
               >
                 <Trash2 className="h-4 w-4" />

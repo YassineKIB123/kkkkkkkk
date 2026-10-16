@@ -5,6 +5,7 @@ import { ToolLayout } from "@/components/tools/ToolLayout";
 import { FileDropzone } from "@/components/tools/FileDropzone";
 import { FileListPreview } from "@/components/tools/FileListPreview";
 import { mergePDFs, downloadBlob } from "@/lib/pdf/pdf-utils";
+import { useLanguage } from "@/context/LanguageContext";
 import {
   Combine,
   Loader2,
@@ -14,6 +15,7 @@ import {
 } from "lucide-react";
 
 export default function MergePdfPage() {
+  const { t, language } = useLanguage();
   const [files, setFiles] = useState<File[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -71,7 +73,9 @@ export default function MergePdfPage() {
 
       downloadBlob(mergedBytes, outputFilename);
       setSuccessMessage(
-        `Success! Downloaded "${outputFilename}" with ${files.length} documents merged.`
+        language === "AR"
+          ? `تم بنجاح! تم تحميل "${outputFilename}" بعد دمج ${files.length} مستندات.`
+          : `Success! Downloaded "${outputFilename}" with ${files.length} documents merged.`
       );
     } catch (err: unknown) {
       const message =
@@ -86,42 +90,15 @@ export default function MergePdfPage() {
 
   return (
     <ToolLayout
+      toolId="merge"
       title="Merge PDF Documents Online"
       description="Combine multiple PDF files into a single organized document in seconds. Reorder files freely with 100% client-side browser privacy and zero server uploads."
-      faqs={[
-        {
-          question: "How do I merge multiple PDF files into one document?",
-          answer:
-            "Drop two or more PDF files into the workspace above, use the up and down arrows to arrange your exact document order, and click 'Merge PDFs' to instantly compile and download your combined PDF.",
-        },
-        {
-          question: "Are my confidential PDF contracts uploaded to a cloud server?",
-          answer:
-            "Never. iKnowAPDF merges your documents 100% locally inside your web browser memory using WebAssembly. Your tax records, legal agreements, and bank statements never leave your device.",
-        },
-        {
-          question: "Does merging PDFs reduce image or text quality?",
-          answer:
-            "No. Our merger copies the exact native vector streams, embedded fonts, and high-resolution images from each source PDF into a new container without re-compressing or degrading quality.",
-        },
-        {
-          question: "Is there a limit on how many PDF files I can combine?",
-          answer:
-            "There are no artificial paywalls, daily task limits, or watermarks. You can combine as many PDF files and pages as your device's available memory supports.",
-        },
-      ]}
     >
       <div className="space-y-6">
         <FileDropzone
           accept="application/pdf,.pdf"
           multiple={true}
           onFilesSelected={handleFilesSelected}
-          title={
-            files.length > 0
-              ? "Add more PDF documents"
-              : "Drop PDF documents here to merge"
-          }
-          description="Select 2 or more PDF files. You can drop them together or add them one by one."
         />
 
         {files.length > 0 && (
@@ -129,10 +106,10 @@ export default function MergePdfPage() {
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
               <div>
                 <h2 className="text-base font-bold text-slate-900 dark:text-white">
-                  Document Queue
+                  {t.toolUi.merge.queueTitle}
                 </h2>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Files are merged from top to bottom. Use the arrows to reorder.
+                  {t.toolUi.merge.queueDesc}
                 </p>
               </div>
 
@@ -143,7 +120,7 @@ export default function MergePdfPage() {
                 className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 px-3 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 disabled:opacity-50 transition-colors"
               >
                 <Trash2 className="h-3.5 w-3.5" />
-                <span>Clear All</span>
+                <span>{t.toolUi.merge.clearAll}</span>
               </button>
             </div>
 
@@ -171,8 +148,8 @@ export default function MergePdfPage() {
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2 border-t border-slate-200 dark:border-slate-800">
               <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                 {files.length < 2
-                  ? `Add at least ${2 - files.length} more PDF to enable merging.`
-                  : `Ready to merge ${files.length} PDFs into one file.`}
+                  ? t.toolUi.merge.addMorePrompt.replace("{n}", String(2 - files.length))
+                  : t.toolUi.merge.readyPrompt.replace("{n}", String(files.length))}
               </span>
 
               <button
@@ -184,12 +161,12 @@ export default function MergePdfPage() {
                 {isProcessing ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin text-white" />
-                    <span>Merging Documents...</span>
+                    <span>{t.toolUi.merge.merging}</span>
                   </>
                 ) : (
                   <>
                     <Combine className="h-4 w-4 text-white" />
-                    <span>Merge {files.length} PDFs</span>
+                    <span>{t.toolUi.merge.mergeBtn} ({files.length})</span>
                   </>
                 )}
               </button>

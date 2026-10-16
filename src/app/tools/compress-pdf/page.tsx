@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { ToolLayout } from "@/components/tools/ToolLayout";
 import { FileDropzone } from "@/components/tools/FileDropzone";
 import { compressPDFDocument, downloadBlob } from "@/lib/pdf/pdf-utils";
+import { useLanguage } from "@/context/LanguageContext";
 import {
   FileText,
   Sliders,
@@ -31,6 +32,7 @@ interface CompressPdfPageProps {
 }
 
 export default function CompressPdfPage({ targetKb }: CompressPdfPageProps = {}) {
+  const { t, language } = useLanguage();
   const [file, setFile] = useState<File | null>(null);
   const [level, setLevel] = useState<CompressionLevel>(
     targetKb && targetKb <= 200 ? "extreme" : "recommended"
@@ -40,12 +42,6 @@ export default function CompressPdfPage({ targetKb }: CompressPdfPageProps = {})
   const [resultBytes, setResultBytes] = useState<Uint8Array | null>(null);
   const [savedRatio, setSavedRatio] = useState<number | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (targetKb && targetKb <= 200) {
-      setLevel("extreme");
-    }
-  }, [targetKb]);
 
   const handleFileSelected = (files: File[]) => {
     const selected = files[0];
@@ -75,7 +71,7 @@ export default function CompressPdfPage({ targetKb }: CompressPdfPageProps = {})
 
     setIsProcessing(true);
     setErrorMessage(null);
-    setProgressText("Analyzing PDF streams...");
+    setProgressText(t.toolUi.compress.analyzing);
 
     try {
       const compressed = await compressPDFDocument(
@@ -83,7 +79,17 @@ export default function CompressPdfPage({ targetKb }: CompressPdfPageProps = {})
         level,
         targetKb,
         (current, total) => {
-          setProgressText(`Optimizing page ${current} of ${total}...`);
+          setProgressText(
+            language === "AR"
+              ? `جاري تحسين الصفحة ${current} من ${total}...`
+              : language === "FR"
+                ? `Optimisation de la page ${current} sur ${total}...`
+                : language === "ES"
+                  ? `Optimizando página ${current} de ${total}...`
+                  : language === "RU"
+                    ? `Оптимизация страницы ${current} из ${total}...`
+                    : `Optimizing page ${current} of ${total}...`
+          );
         }
       );
 
@@ -108,29 +114,40 @@ export default function CompressPdfPage({ targetKb }: CompressPdfPageProps = {})
     downloadBlob(resultBytes, `compressed_${file.name}`);
   };
 
+  const compressionOptions = [
+    {
+      id: "recommended" as const,
+      title: t.toolUi.compress.recommended,
+      desc: t.toolUi.compress.recommendedDesc,
+    },
+    {
+      id: "extreme" as const,
+      title: t.toolUi.compress.extreme,
+      desc: t.toolUi.compress.extremeDesc,
+    },
+    {
+      id: "low" as const,
+      title: t.toolUi.compress.lossless,
+      desc: t.toolUi.compress.losslessDesc,
+    },
+  ];
+
   return (
     <ToolLayout
+      toolId="compress"
       title="Compress PDF"
       description="Reduce PDF file size while maintaining document fidelity. All compression runs 100% inside your browser."
-      faqs={[
-        {
-          question: "How does client-side compression work?",
-          answer:
-            "Our engine strips redundant metadata, packs internal PDF object streams, and downsamples embedded page rasters at configurable DPI and JPEG quality settings without uploading a single byte to a remote server.",
-        },
-        {
-          question: "Which compression level should I choose?",
-          answer:
-            "Use 'Recommended' for everyday email and portal uploads (~40–70% reduction with crisp text), 'Extreme' when you must hit strict 100 KB–200 KB portal caps, or 'Low' for lossless metadata and stream cleanup.",
-        },
-      ]}
     >
       <div className="space-y-6">
         {targetKb && (
           <div className="flex items-center justify-between rounded-xl border border-rose-200 bg-rose-50/70 px-4 py-2.5 text-xs text-rose-800 dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-300">
             <div className="flex items-center gap-2 font-semibold">
               <Target className="h-4 w-4 text-rose-600 dark:text-rose-400" />
-              <span>Preset Active: Target File Size Under {targetKb} KB</span>
+              <span>
+                {language === "AR"
+                  ? `الهدف النشط: حجم الملف أقل من ${targetKb} كيلوبايت`
+                  : `Preset Active: Target File Size Under ${targetKb} KB`}
+              </span>
             </div>
             <span className="font-mono text-[11px] uppercase font-bold">Auto-Tuned</span>
           </div>
@@ -141,8 +158,6 @@ export default function CompressPdfPage({ targetKb }: CompressPdfPageProps = {})
             accept="application/pdf,.pdf"
             multiple={false}
             onFilesSelected={handleFileSelected}
-            title="Drop a PDF file to compress"
-            description="Select a PDF to reduce its file size locally in your browser memory."
           />
         )}
 
@@ -159,7 +174,7 @@ export default function CompressPdfPage({ targetKb }: CompressPdfPageProps = {})
                     {file.name}
                   </p>
                   <p className="font-mono text-xs text-slate-500 dark:text-slate-400">
-                    Original Size: {formatBytes(file.size)}
+                    {t.common.originalSize}: {formatBytes(file.size)}
                   </p>
                 </div>
               </div>
@@ -171,7 +186,7 @@ export default function CompressPdfPage({ targetKb }: CompressPdfPageProps = {})
                 className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 transition-colors"
               >
                 <Trash2 className="h-3.5 w-3.5" />
-                <span>Remove</span>
+                <span>{t.common.remove}</span>
               </button>
             </div>
 
@@ -179,32 +194,26 @@ export default function CompressPdfPage({ targetKb }: CompressPdfPageProps = {})
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
                 <Sliders className="h-4 w-4 text-rose-600" />
-                <span>Compression Level</span>
+                <span>
+                  {language === "AR"
+                    ? "مستوى الضغط"
+                    : language === "FR"
+                      ? "Niveau de compression"
+                      : language === "ES"
+                        ? "Nivel de compresión"
+                        : language === "RU"
+                          ? "Уровень сжатия"
+                          : "Compression Level"}
+                </span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {[
-                  {
-                    id: "extreme" as const,
-                    title: "Extreme Compression",
-                    desc: "Maximum size reduction (100 DPI raster)",
-                  },
-                  {
-                    id: "recommended" as const,
-                    title: "Recommended",
-                    desc: "Balanced clarity & size (~150 DPI)",
-                  },
-                  {
-                    id: "low" as const,
-                    title: "Lossless Stream",
-                    desc: "Original vectors, stripped metadata",
-                  },
-                ].map((item) => (
+                {compressionOptions.map((item) => (
                   <button
                     key={item.id}
                     type="button"
                     onClick={() => handleLevelChange(item.id)}
-                    className={`rounded-xl border p-4 text-left transition-all ${
+                    className={`rounded-xl border p-4 text-left rtl:text-right transition-all ${
                       level === item.id
                         ? "border-rose-500 bg-rose-50/60 ring-2 ring-rose-500/20 shadow-xs dark:border-rose-500 dark:bg-rose-950/40"
                         : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900"
@@ -227,10 +236,20 @@ export default function CompressPdfPage({ targetKb }: CompressPdfPageProps = {})
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400 font-bold text-sm">
                     <CheckCircle2 className="h-4 w-4" />
-                    <span>Compression Complete!</span>
+                    <span>
+                      {language === "AR"
+                        ? "اكتمل الضغط بنجاح!"
+                        : language === "FR"
+                          ? "Compression terminée !"
+                          : language === "ES"
+                            ? "¡Compresión completada!"
+                            : language === "RU"
+                              ? "Сжатие завершено!"
+                              : "Compression Complete!"}
+                    </span>
                   </div>
                   <span className="font-mono text-xs font-bold text-emerald-700 dark:text-emerald-400">
-                    New Size: {formatBytes(resultBytes.length)} ({savedRatio}% reduction)
+                    {t.common.compressedSize}: {formatBytes(resultBytes.length)} ({t.common.reduction}: {savedRatio}%)
                   </span>
                 </div>
               </div>
@@ -247,7 +266,7 @@ export default function CompressPdfPage({ targetKb }: CompressPdfPageProps = {})
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2 border-t border-slate-200 dark:border-slate-800">
               <span className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5 font-medium">
                 <Zap className="h-3.5 w-3.5 text-amber-500" />
-                <span>{progressText || "Fast in-memory compression without file transmission."}</span>
+                <span>{progressText || t.dropzone.processedLocally}</span>
               </span>
 
               {!resultBytes ? (
@@ -260,10 +279,10 @@ export default function CompressPdfPage({ targetKb }: CompressPdfPageProps = {})
                   {isProcessing ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin text-white" />
-                      <span>{progressText || "Optimizing PDF..."}</span>
+                      <span>{progressText || t.common.processing}</span>
                     </>
                   ) : (
-                    <span>Compress PDF</span>
+                    <span>{t.toolUi.compress.compressBtn}</span>
                   )}
                 </button>
               ) : (
@@ -273,7 +292,7 @@ export default function CompressPdfPage({ targetKb }: CompressPdfPageProps = {})
                   className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 px-6 py-2.5 text-sm font-semibold text-white shadow-md shadow-emerald-600/20 transition-all"
                 >
                   <Download className="h-4 w-4 text-white" />
-                  <span>Download Compressed PDF</span>
+                  <span>{t.toolUi.compress.downloadBtn}</span>
                 </button>
               )}
             </div>

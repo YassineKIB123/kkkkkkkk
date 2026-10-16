@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { ToolLayout } from "@/components/tools/ToolLayout";
 import { FileDropzone } from "@/components/tools/FileDropzone";
+import { useLanguage } from "@/context/LanguageContext";
 import { downloadBlob, loadPdfJs } from "@/lib/pdf/pdf-utils";
 import { PDFDocument, degrees } from "pdf-lib";
 import {
@@ -23,6 +24,7 @@ interface PageThumbnail {
 }
 
 export default function RotatePdfPage() {
+  const { t, language } = useLanguage();
   const [file, setFile] = useState<File | null>(null);
   const [thumbnails, setThumbnails] = useState<PageThumbnail[]>([]);
   const [rotations, setRotations] = useState<number[]>([]);
@@ -149,7 +151,7 @@ export default function RotatePdfPage() {
   };
 
   return (
-    <ToolLayout
+    <ToolLayout toolId="rotate"
       title="Rotate PDF Pages Permanently"
       description="Fix upside-down or sideways scanned PDF pages individually or rotate your entire document at once—100% locally in your browser."
       faqs={[
@@ -176,8 +178,6 @@ export default function RotatePdfPage() {
             accept="application/pdf,.pdf"
             multiple={false}
             onFilesSelected={handleFileSelected}
-            title="Drop a PDF document here to rotate"
-            description="Select a single PDF file. Preview all pages and change orientation on demand."
           />
         )}
 
@@ -214,7 +214,7 @@ export default function RotatePdfPage() {
                   className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 transition-colors"
                 >
                   <RotateCw className="h-3.5 w-3.5 text-rose-600" />
-                  <span>Rotate All +90°</span>
+                  <span>{t.toolUi.rotate.rotateAll}</span>
                 </button>
 
                 <button
@@ -223,7 +223,7 @@ export default function RotatePdfPage() {
                   className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 px-3 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 transition-colors"
                 >
                   <RefreshCw className="h-3.5 w-3.5" />
-                  <span>Reset</span>
+                  <span>{t.common.clear}</span>
                 </button>
 
                 <button
@@ -232,7 +232,7 @@ export default function RotatePdfPage() {
                   className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 px-3 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 transition-colors"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
-                  <span>Remove</span>
+                  <span>{t.common.remove}</span>
                 </button>
               </div>
             </div>
@@ -314,12 +314,12 @@ export default function RotatePdfPage() {
                 {isProcessing ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin text-white" />
-                    <span>Applying Rotations...</span>
+                    <span>{t.toolUi.rotate.rotating}</span>
                   </>
                 ) : (
                   <>
                     <Download className="h-4 w-4 text-white" />
-                    <span>Save & Download PDF</span>
+                    <span>{t.toolUi.rotate.rotateBtn}</span>
                   </>
                 )}
               </button>

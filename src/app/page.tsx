@@ -40,6 +40,11 @@ import { useLanguage } from "@/context/LanguageContext";
 
 type CategoryFilter = "all" | "popular" | "scan_edit" | "organize" | "convert";
 
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
+}
+
 declare global {
   interface Window {
     __pdfStudioPendingFiles?: File[] | null;
@@ -116,7 +121,7 @@ export default function HomePage() {
   const toolsSectionRef = useRef<HTMLDivElement>(null);
 
   // PWA Install Prompt States
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showInstallHelp, setShowInstallHelp] = useState(false);
 
   const langDropdownRef = useRef<HTMLDivElement>(null);
@@ -125,7 +130,7 @@ export default function HomePage() {
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
-      setDeferredPrompt(e);
+      setDeferredPrompt(e as BeforeInstallPromptEvent);
     };
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
@@ -949,16 +954,14 @@ export default function HomePage() {
         <section className="mt-16 rounded-2xl border border-slate-200 bg-white p-6 sm:p-10 shadow-xs dark:border-slate-800 dark:bg-slate-900">
           <div className="flex items-center gap-2.5 mb-2">
             <HelpCircle className="h-6 w-6 text-rose-600" />
-            <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">
-              Frequently Asked Questions
-            </h2>
+            <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">{t.faq?.homepageHeading || "Frequently Asked Questions"}</h2>
           </div>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mb-8">
             Everything you need to know about our privacy-first, client-side PDF tools.
           </p>
 
           <div className="divide-y divide-slate-100 dark:divide-slate-800">
-            {HOMEPAGE_FAQS.map((faq, idx) => {
+            {(t.faq?.homepageFaqs || HOMEPAGE_FAQS).map((faq, idx) => {
               const isOpen = openFaqIndex === idx;
               return (
                 <div key={idx} className="py-4">
@@ -1062,7 +1065,7 @@ export default function HomePage() {
                   <Layers className="h-4 w-4" />
                 </div>
                 <span className="text-base font-black tracking-tight text-slate-900 dark:text-white">
-                  PDF<span className="text-rose-600">Studio</span>
+                  iKnowA<span className="text-rose-600">PDF</span>
                 </span>
               </div>
               <p className="text-slate-500 dark:text-slate-400 max-w-sm leading-relaxed">
@@ -1075,10 +1078,10 @@ export default function HomePage() {
                 {t.footer.organize}
               </p>
               <ul className="space-y-2">
-                <li><Link href="/compress-pdf" className="hover:text-rose-600">{t.tools.compressTitle}</Link></li>
-                <li><Link href="/merge-pdf" className="hover:text-rose-600">{t.nav.merge}</Link></li>
-                <li><Link href="/split-pdf" className="hover:text-rose-600">{t.nav.split}</Link></li>
-                <li><Link href="/rotate-pdf" className="hover:text-rose-600">{t.tools.rotateTitle}</Link></li>
+                <li><Link href="/tools/compress-pdf" className="hover:text-rose-600">{t.tools.compressTitle}</Link></li>
+                <li><Link href="/tools/merge-pdf" className="hover:text-rose-600">{t.nav.merge}</Link></li>
+                <li><Link href="/tools/split-pdf" className="hover:text-rose-600">{t.nav.split}</Link></li>
+                <li><Link href="/tools/rotate-pdf" className="hover:text-rose-600">{t.tools.rotateTitle}</Link></li>
                 <li><Link href="/jpg-to-pdf" className="hover:text-rose-600">{t.tools.imagesToPdfTitle}</Link></li>
               </ul>
             </div>
@@ -1102,8 +1105,8 @@ export default function HomePage() {
               </p>
               <ul className="space-y-2">
                 <li><Link href="/tools/edit-pdf" className="hover:text-rose-600 font-semibold">Edit PDF Text</Link></li>
-                <li><Link href="/scan-pdf" className="hover:text-rose-600">{t.nav.scan}</Link></li>
-                <li><Link href="/sign-pdf" className="hover:text-rose-600">{t.tools.signTitle}</Link></li>
+                <li><Link href="/tools/scan" className="hover:text-rose-600">{t.nav.scan}</Link></li>
+                <li><Link href="/tools/sign-pdf" className="hover:text-rose-600">{t.tools.signTitle}</Link></li>
                 <li><Link href="/pdf-to-text" className="hover:text-rose-600">PDF to Text</Link></li>
                 <li><Link href="/pdf-to-jpg" className="hover:text-rose-600">PDF to JPG</Link></li>
               </ul>
@@ -1113,9 +1116,10 @@ export default function HomePage() {
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-between border-t border-slate-200 dark:border-slate-800 pt-6 gap-4 text-slate-500">
             <div className="flex flex-wrap items-center gap-4">
               <p>iKnowAPDF &copy; 2026. {t.footer.rights}</p>
-              <Link href="/privacy" className="hover:text-rose-600 underline-offset-4 hover:underline">Privacy Policy</Link>
-              <Link href="/terms" className="hover:text-rose-600 underline-offset-4 hover:underline">Terms of Service</Link>
-              <Link href="/contact" className="hover:text-rose-600 underline-offset-4 hover:underline">Contact</Link>
+              <Link href="/about" className="hover:text-rose-600 underline-offset-4 hover:underline">{t.common.about}</Link>
+              <Link href="/privacy" className="hover:text-rose-600 underline-offset-4 hover:underline">{t.common.privacy}</Link>
+              <Link href="/terms" className="hover:text-rose-600 underline-offset-4 hover:underline">{t.common.terms}</Link>
+              <Link href="/contact" className="hover:text-rose-600 underline-offset-4 hover:underline">{t.common.contact}</Link>
             </div>
 
             <div className="flex items-center gap-1.5 font-medium">
@@ -1145,7 +1149,7 @@ export default function HomePage() {
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
               <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-white text-base">
                 <Laptop className="h-5 w-5 text-rose-600" />
-                <span>Install iKnowAPDF App</span>
+                <span>{t.common.installModalTitle}</span>
               </div>
               <button
                 type="button"
@@ -1156,16 +1160,11 @@ export default function HomePage() {
               </button>
             </div>
 
-            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-              iKnowAPDF runs 100% locally on your computer or phone with offline access. To install:
-            </p>
+            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">{t.common.installModalDesc}</p>
 
             <div className="space-y-2.5 text-xs">
               <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-850">
-                <p className="font-bold text-slate-900 dark:text-white mb-0.5">Desktop (Chrome / Edge / Brave):</p>
-                <p className="text-slate-500 dark:text-slate-400">
-                  Click the install monitor icon directly inside your browser address bar on the right.
-                </p>
+                <p className="font-bold text-slate-900 dark:text-white mb-0.5">{t.common.installDesktop}</p><p className="text-slate-500 dark:text-slate-400">{t.common.installDesktopDesc}</p>
               </div>
 
               <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-850">
@@ -1177,13 +1176,7 @@ export default function HomePage() {
               </div>
             </div>
 
-            <button
-              type="button"
-              onClick={() => setShowInstallHelp(false)}
-              className="w-full rounded-xl bg-rose-600 hover:bg-rose-500 py-2.5 text-xs font-bold text-white transition-colors"
-            >
-              Got it!
-            </button>
+            <button type="button" onClick={() => setShowInstallHelp(false)} className="w-full rounded-xl bg-rose-600 hover:bg-rose-500 py-2.5 text-xs font-bold text-white transition-colors">{t.common.gotIt}</button>
           </div>
         </div>
       )}

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { ToolLayout } from "@/components/tools/ToolLayout";
 import { FileDropzone } from "@/components/tools/FileDropzone";
+import { useLanguage } from "@/context/LanguageContext";
 import { downloadBlob, loadPdfJs } from "@/lib/pdf/pdf-utils";
 import JSZip from "jszip";
 import {
@@ -30,6 +31,7 @@ interface PdfToImagesPageProps {
 export default function PdfToImagesPage({
   initialFormat = "png",
 }: PdfToImagesPageProps = {}) {
+  const { t, language } = useLanguage();
   const [file, setFile] = useState<File | null>(null);
   const [format, setFormat] = useState<"png" | "jpeg">(initialFormat);
   const [resolution, setResolution] = useState<number>(2.0);
@@ -40,10 +42,6 @@ export default function PdfToImagesPage({
   const [isZipping, setIsZipping] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-
-  useEffect(() => {
-    setFormat(initialFormat);
-  }, [initialFormat]);
 
   useEffect(() => {
     return () => {
@@ -171,7 +169,7 @@ export default function PdfToImagesPage({
   };
 
   return (
-    <ToolLayout
+    <ToolLayout toolId="pdfToImages"
       title="PDF to Images"
       description="Convert every page of your PDF into high-resolution PNG or JPG images. Download single pages or all pages packaged as a ZIP file."
       faqs={[
@@ -193,8 +191,6 @@ export default function PdfToImagesPage({
             accept="application/pdf,.pdf"
             multiple={false}
             onFilesSelected={handleFileSelected}
-            title="Drop a PDF document to convert into images"
-            description="Select any PDF file. Every page is rendered client-side with zero server uploads."
           />
         )}
 
@@ -230,7 +226,7 @@ export default function PdfToImagesPage({
                 className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 transition-colors"
               >
                 <Trash2 className="h-3.5 w-3.5" />
-                <span>Remove</span>
+                <span>{t.common.remove}</span>
               </button>
             </div>
 
@@ -238,7 +234,7 @@ export default function PdfToImagesPage({
               <div className="space-y-2">
                 <label className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                   <FileText className="h-3.5 w-3.5 text-rose-600" />
-                  <span>Image Format</span>
+                  <span>{t.toolUi.pdfToImages.format}</span>
                 </label>
                 <div className="grid grid-cols-2 gap-2">
                   <button
@@ -344,7 +340,7 @@ export default function PdfToImagesPage({
                       className="w-full inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 transition-colors"
                     >
                       <Download className="h-3.5 w-3.5" />
-                      <span>Download</span>
+                      <span>{t.common.download}</span>
                     </button>
                   </div>
                 ))}
@@ -365,12 +361,12 @@ export default function PdfToImagesPage({
                 {isZipping ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin text-white" />
-                    <span>Packaging ZIP Archive...</span>
+                    <span>{t.toolUi.pdfToImages.converting}</span>
                   </>
                 ) : (
                   <>
                     <Archive className="h-4 w-4 text-white" />
-                    <span>Download All as ZIP ({pages.length} Pages)</span>
+                    <span>{t.toolUi.pdfToImages.downloadZip} ({pages.length})</span>
                   </>
                 )}
               </button>

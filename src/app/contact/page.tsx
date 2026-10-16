@@ -1,18 +1,28 @@
-"use client";
-
 import React from "react";
+import type { Metadata } from "next";
 import Link from "next/link";
-import { Mail, ArrowLeft, ShieldCheck, Globe, Cpu, Lock } from "lucide-react";
+import { Mail, ArrowLeft, ShieldCheck, Globe, Cpu } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Contact Support & Inquiries",
+  description:
+    "Get in touch with the iKnowAPDF support team for technical help, bug reports, feature requests, and partnership inquiries.",
+  alternates: {
+    canonical: "https://iknowapdf.lol/contact",
+  },
+  openGraph: {
+    title: "Contact iKnowAPDF Support",
+    description:
+      "Get support for iKnowAPDF's 100% private client-side PDF tools. Direct email response within 24–48 hours.",
+    url: "https://iknowapdf.lol/contact",
+    siteName: "iKnowAPDF",
+    type: "website",
+  },
+};
 
 export default function ContactPage() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 py-12 px-4 sm:px-6 lg:px-8">
-      <title>About Us & Contact Support | iKnowAPDF</title>
-      <meta
-        name="description"
-        content="Learn how iKnowAPDF processes your PDF documents 100% locally in your browser with zero cloud uploads, and contact our support team."
-      />
-      <link rel="canonical" href="https://iknowapdf.lol/contact" />
       <div className="mx-auto max-w-3xl space-y-8">
         <Link
           href="/"
@@ -84,15 +94,19 @@ export default function ContactPage() {
                 Direct Email Support
               </p>
               <a
-                href="mailto:cabronejizzy@gmail.com"
+                href="mailto:support@iknowapdf.lol"
                 className="text-sm font-bold text-rose-600 hover:underline"
               >
-                cabronejizzy@gmail.com
+                support@iknowapdf.lol
               </a>
             </div>
           </section>
 
+          
           <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex flex-wrap gap-5 text-xs font-semibold text-slate-500">
+            <Link href="/about" className="hover:text-rose-600 underline">
+              About Us
+            </Link>
             <Link href="/privacy" className="hover:text-rose-600 underline">
               Privacy Policy
             </Link>

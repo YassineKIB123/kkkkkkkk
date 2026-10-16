@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { ToolLayout } from "@/components/tools/ToolLayout";
 import { FileDropzone } from "@/components/tools/FileDropzone";
+import { useLanguage } from "@/context/LanguageContext";
 import { FileListPreview } from "@/components/tools/FileListPreview";
 import { imagesToPDF, downloadBlob } from "@/lib/pdf/pdf-utils";
 import {
@@ -24,6 +25,7 @@ interface ImageMeta {
 }
 
 export default function ImagesToPdfPage() {
+  const { t, language } = useLanguage();
   const [files, setFiles] = useState<File[]>([]);
   const [imageMetas, setImageMetas] = useState<ImageMeta[]>([]);
   const [previewIndex, setPreviewIndex] = useState<number>(0);
@@ -173,14 +175,14 @@ export default function ImagesToPdfPage() {
   };
 
   return (
-    <ToolLayout
+    <ToolLayout toolId="imagesToPdf"
       title="Convert Images to PDF — JPG, PNG & WebP to PDF"
       description="Combine JPG, PNG, and WebP photos into a clean PDF document with live sheet preview, custom A4 or Fit-to-Image sizing, and zero-margin options."
       faqs={[
         {
           question: "How do I combine multiple JPG or PNG images into one PDF?",
           answer:
-            "Drop all your images into the upload box, reorder them using the sequence arrows, choose your preferred page size (Standard A4 or Fit Image Size) and orientation, and click 'Convert Images to PDF'.",
+            "Drop all your images into the upload box, reorder them using the sequence arrows, choose your preferred page size ({t.toolUi.imagesToPdf.standardA4} or {t.toolUi.imagesToPdf.fitImage}) and orientation, and click 'Convert Images to PDF'.",
         },
         {
           question: "Can I create a borderless PDF with no white margins?",
@@ -199,12 +201,6 @@ export default function ImagesToPdfPage() {
           accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
           multiple={true}
           onFilesSelected={handleFilesSelected}
-          title={
-            files.length > 0
-              ? "Add more images to this document"
-              : "Drop image files here to convert"
-          }
-          description="Supports JPG, PNG, and WebP. Drop multiple photos or paste images with Ctrl+V."
         />
 
         {files.length > 0 && (
@@ -388,7 +384,7 @@ export default function ImagesToPdfPage() {
                 className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 px-3 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 disabled:opacity-50 transition-colors"
               >
                 <Trash2 className="h-3.5 w-3.5" />
-                <span>Clear All</span>
+                <span>{t.common.clearAll}</span>
               </button>
             </div>
 
@@ -427,12 +423,12 @@ export default function ImagesToPdfPage() {
                 {isConverting ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin text-white" />
-                    <span>Generating PDF...</span>
+                    <span>{t.toolUi.imagesToPdf.converting}</span>
                   </>
                 ) : (
                   <>
                     <Images className="h-4 w-4 text-white" />
-                    <span>Convert {files.length} Images to PDF</span>
+                    <span>{t.toolUi.imagesToPdf.convertBtn} ({files.length})</span>
                   </>
                 )}
               </button>

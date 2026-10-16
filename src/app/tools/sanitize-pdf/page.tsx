@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { ToolLayout } from "@/components/tools/ToolLayout";
 import { FileDropzone } from "@/components/tools/FileDropzone";
+import { useLanguage } from "@/context/LanguageContext";
 import { downloadBlob } from "@/lib/pdf/pdf-utils";
 import { PDFDocument } from "pdf-lib";
 import {
@@ -29,6 +30,7 @@ interface PdfMetadataSnapshot {
 }
 
 export default function SanitizePdfPage() {
+  const { t, language } = useLanguage();
   const [file, setFile] = useState<File | null>(null);
   const [meta, setMeta] = useState<PdfMetadataSnapshot | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -98,7 +100,7 @@ export default function SanitizePdfPage() {
   };
 
   return (
-    <ToolLayout
+    <ToolLayout toolId="sanitize"
       title="Sanitize PDF & Remove Hidden Metadata Online"
       description="Inspect and permanently strip hidden Author names, Creator software, Producer tags, XMP streams, and modification timestamps from sensitive PDF files."
       faqs={[
@@ -125,8 +127,6 @@ export default function SanitizePdfPage() {
             accept="application/pdf,.pdf"
             multiple={false}
             onFilesSelected={handleFileSelected}
-            title="Drop a PDF file to inspect & strip hidden metadata"
-            description="Ideal for legal filings, anonymous whistleblowing, medical records, and resumes."
           />
         )}
 
@@ -158,7 +158,7 @@ export default function SanitizePdfPage() {
                 className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
               >
                 <Trash2 className="h-3.5 w-3.5" />
-                <span>Remove</span>
+                <span>{t.common.remove}</span>
               </button>
             </div>
 
@@ -223,12 +223,12 @@ export default function SanitizePdfPage() {
                 {isProcessing ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin text-white" />
-                    <span>Sanitizing PDF...</span>
+                    <span>{t.toolUi.sanitize.sanitizing}</span>
                   </>
                 ) : (
                   <>
                     <Download className="h-4 w-4 text-white" />
-                    <span>Purge Metadata & Download Clean PDF</span>
+                    <span>{t.toolUi.sanitize.sanitizeBtn}</span>
                   </>
                 )}
               </button>

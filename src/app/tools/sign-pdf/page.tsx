@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { ToolLayout } from "@/components/tools/ToolLayout";
 import { FileDropzone } from "@/components/tools/FileDropzone";
+import { useLanguage } from "@/context/LanguageContext";
 import {
   embedSignaturesIntoPDF,
   downloadBlob,
@@ -49,14 +50,18 @@ interface PlacedSignature {
 const SAVED_SIG_STORAGE_KEY = "pdfstudio_saved_signature_v1";
 
 export default function SignPdfPage() {
+  const { t, language } = useLanguage();
   const [file, setFile] = useState<File | null>(null);
   const [totalPages, setTotalPages] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState<number>(1);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [pdfDocProxy, setPdfDocProxy] = useState<any>(null);
 
   const [signatures, setSignatures] = useState<PlacedSignature[]>([]);
   const [selectedSigId, setSelectedSigId] = useState<string | null>(null);
-  const [savedSigDataUrl, setSavedSigDataUrl] = useState<string | null>(null);
+  const [savedSigDataUrl, setSavedSigDataUrl] = useState<string | null>(() =>
+    typeof window !== "undefined" ? localStorage.getItem(SAVED_SIG_STORAGE_KEY) : null
+  );
   const [watermarkText, setWatermarkText] = useState<string>("");
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -89,11 +94,6 @@ export default function SignPdfPage() {
   const drawHistoryRef = useRef<ImageData[]>([]);
   const isDrawingRef = useRef(false);
   const pointsRef = useRef<{ x: number; y: number }[]>([]);
-
-  useEffect(() => {
-    const saved = localStorage.getItem(SAVED_SIG_STORAGE_KEY);
-    if (saved) setSavedSigDataUrl(saved);
-  }, []);
 
   const handleFileSelected = async (files: File[]) => {
     const selected = files[0];
@@ -498,7 +498,7 @@ export default function SignPdfPage() {
   const currentPageSignatures = signatures.filter((s) => s.pageNumber === currentPage);
 
   return (
-    <ToolLayout
+    <ToolLayout toolId="sign"
       title="Sign PDF Online — Electronic Signature & Stamps"
       description="Draw, type, or upload your signature, place date stamps and checkmarks, and sign PDF contracts 100% privately in your browser."
       faqs={[
@@ -529,8 +529,6 @@ export default function SignPdfPage() {
             accept="application/pdf,.pdf"
             multiple={false}
             onFilesSelected={handleFileSelected}
-            title="Drop a PDF document to sign"
-            description="Select a contract, agreement, or form. Files never leave your browser."
           />
         )}
 
@@ -560,7 +558,7 @@ export default function SignPdfPage() {
                   className="inline-flex items-center gap-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 px-3.5 py-2 text-xs font-bold text-white shadow-md shadow-rose-600/20 transition-all"
                 >
                   <Plus className="h-4 w-4" />
-                  <span>New Signature</span>
+                  <span>{t.toolUi.sign.newSignature}</span>
                 </button>
 
                 {savedSigDataUrl && (
@@ -571,7 +569,7 @@ export default function SignPdfPage() {
                     title="Insert your saved signature in 1 click"
                   >
                     <BookmarkCheck className="h-3.5 w-3.5 text-rose-600" />
-                    <span>Insert Saved</span>
+                    <span>{language === "AR" ? "إدراج المحفوظ" : language === "FR" ? "Insérer enregistré" : language === "ES" ? "Insertar guardada" : language === "RU" ? "Вставить сохраненную" : "Insert Saved"}</span>
                   </button>
                 )}
 
@@ -581,7 +579,7 @@ export default function SignPdfPage() {
                   className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 transition-colors"
                 >
                   <Calendar className="h-3.5 w-3.5 text-blue-600" />
-                  <span>+ Date</span>
+                  <span>{language === "AR" ? "+ التاريخ" : "+ Date"}</span>
                 </button>
 
                 <button
@@ -590,7 +588,7 @@ export default function SignPdfPage() {
                   className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 transition-colors"
                 >
                   <CheckSquare className="h-3.5 w-3.5 text-emerald-600" />
-                  <span>+ Check ✓</span>
+                  <span>{language === "AR" ? "+ صح ✓" : "+ Check ✓"}</span>
                 </button>
 
                 <button
@@ -832,7 +830,7 @@ export default function SignPdfPage() {
                     }`}
                   >
                     <Upload className="h-3.5 w-3.5" />
-                    <span>Upload Image</span>
+                    <span>{t.toolUi.sign.uploadTab}</span>
                   </button>
                 </div>
 
@@ -993,7 +991,7 @@ export default function SignPdfPage() {
                   className="inline-flex items-center gap-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 px-5 py-2 text-xs font-bold text-white transition-all shadow-md shadow-rose-600/20"
                 >
                   <Check className="h-4 w-4" />
-                  <span>Place & Save Signature</span>
+                  <span>{language === "AR" ? "تطبيق وحفظ التوقيع" : "Place & Save Signature"}</span>
                 </button>
               </div>
             </div>

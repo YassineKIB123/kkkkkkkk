@@ -1,18 +1,28 @@
-"use client";
-
 import React from "react";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { ShieldCheck, ArrowLeft, Lock, Cookie, EyeOff } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Privacy Policy — 100% Client-Side PDF Processing",
+  description:
+    "Read the iKnowAPDF Privacy Policy. All PDF tools run 100% locally inside your browser with zero file uploads and zero server retention.",
+  alternates: {
+    canonical: "https://iknowapdf.lol/privacy",
+  },
+  openGraph: {
+    title: "Privacy Policy | iKnowAPDF",
+    description:
+      "Review our 100% client-side privacy guarantee, cookie policies, and Google AdSense compliance details.",
+    url: "https://iknowapdf.lol/privacy",
+    siteName: "iKnowAPDF",
+    type: "website",
+  },
+};
 
 export default function PrivacyPolicyPage() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 py-12 px-4 sm:px-6 lg:px-8">
-      <title>Privacy Policy — 100% Client-Side PDF Processing | iKnowAPDF</title>
-      <meta
-        name="description"
-        content="Read the iKnowAPDF Privacy Policy. All PDF tools run 100% locally inside your browser with zero file uploads and zero server retention."
-      />
-      <link rel="canonical" href="https://iknowapdf.lol/privacy" />
       <div className="mx-auto max-w-3xl space-y-8">
         <Link
           href="/"

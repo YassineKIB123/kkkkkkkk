@@ -1,8 +1,9 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import { LanguageProvider } from "@/context/LanguageContext";
+import { CookieConsent } from "@/components/common/CookieConsent";
 
 const inter = Inter({ subsets: ["latin", "cyrillic"] });
 
@@ -12,11 +13,14 @@ const ADSENSE_ID = process.env.NEXT_PUBLIC_ADSENSE_ID || "ca-pub-515287859349407
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
+  alternates: {
+    canonical: SITE_URL,
+  },
   verification: {
     google: "TX_b_Rg1BBdC31WpXrXvxkBgRWD0LJ2tilIg3Iw9CV0",
   },
   title: {
-    default: "iKnowAPDF — Free, Fast & 100% Private PDF Tools",
+    default: "iKnowAPDF â€” Free, Fast & 100% Private PDF Tools",
     template: "%s | iKnowAPDF",
   },
   description:
@@ -40,13 +44,13 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: SITE_URL,
     siteName: "iKnowAPDF",
-    title: "iKnowAPDF — Free, Fast & 100% Private PDF Tools",
+    title: "iKnowAPDF â€” Free, Fast & 100% Private PDF Tools",
     description:
       "All-in-one PDF suite that processes files directly in your browser. Zero cloud uploads, total file privacy.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "iKnowAPDF — Free & 100% Private PDF Tools",
+    title: "iKnowAPDF â€” Free & 100% Private PDF Tools",
     description:
       "Edit, Scan, Sign, Compress, Merge, Split, and Convert PDFs client-side without servers.",
   },
@@ -113,8 +117,13 @@ export default function RootLayout({
       <body
         className={`${inter.className} min-h-screen bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-100 antialiased`}
       >
-        <LanguageProvider>{children}</LanguageProvider>
+        <LanguageProvider>
+          {children}
+          <CookieConsent />
+        </LanguageProvider>
       </body>
     </html>
   );
 }
+
+

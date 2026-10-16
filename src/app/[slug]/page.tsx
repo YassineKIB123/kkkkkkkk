@@ -13,6 +13,36 @@ import { ArrowRight, Sparkles } from "lucide-react";
 
 export const dynamic = "force-static";
 
+const CORE_INDEXED_SLUGS = new Set([
+  "pdf-to-word",
+  "word-to-pdf",
+  "pdf-to-excel",
+  "excel-to-pdf",
+  "pdf-to-powerpoint",
+  "powerpoint-to-pdf",
+  "jpg-to-pdf",
+  "pdf-to-jpg",
+  "png-to-pdf",
+  "pdf-to-png",
+  "pdf-to-text",
+  "text-to-pdf",
+  "compress-pdf-to-100kb",
+  "compress-pdf-to-200kb",
+  "compress-pdf-under-1mb",
+]);
+
+const DEDICATED_TOOL_CANONICAL_MAP: Record<string, string> = {
+  "edit-pdf": "/tools/edit-pdf",
+  "compress-pdf": "/tools/compress-pdf",
+  "merge-pdf": "/tools/merge-pdf",
+  "split-pdf": "/tools/split-pdf",
+  "rotate-pdf": "/tools/rotate-pdf",
+  "sign-pdf": "/tools/sign-pdf",
+  "scan-pdf": "/tools/scan",
+  "watermark-pdf": "/tools/watermark-pdf",
+  "sanitize-pdf": "/tools/sanitize-pdf",
+};
+
 interface PageProps {
   params: Promise<{ slug: string }>;
 }
@@ -30,16 +60,21 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!page) return {};
 
   const url = `${BASE_SITE_URL}/${slug}`;
+  const dedicatedPath = DEDICATED_TOOL_CANONICAL_MAP[slug];
+  const canonicalUrl = dedicatedPath ? `${BASE_SITE_URL}${dedicatedPath}` : url;
+  const shouldIndex = CORE_INDEXED_SLUGS.has(slug);
 
   return {
-    title: page.title,
+    title: {
+      absolute: page.title,
+    },
     description: page.metaDescription,
     robots: {
-      index: false,
+      index: shouldIndex,
       follow: true,
     },
     alternates: {
-      canonical: url,
+      canonical: canonicalUrl,
       languages: {
         en: url,
         fr: `${BASE_SITE_URL}/fr/${slug}`,

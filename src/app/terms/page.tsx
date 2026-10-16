@@ -1,18 +1,28 @@
-"use client";
-
 import React from "react";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { FileCheck, ArrowLeft } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Terms of Service",
+  description:
+    "Review the Terms of Service for using iKnowAPDF's free, browser-based PDF editing, compression, merging, signing, and conversion tools.",
+  alternates: {
+    canonical: "https://iknowapdf.lol/terms",
+  },
+  openGraph: {
+    title: "Terms of Service | iKnowAPDF",
+    description:
+      "Review the Terms of Service for iKnowAPDF client-side tools and services.",
+    url: "https://iknowapdf.lol/terms",
+    siteName: "iKnowAPDF",
+    type: "website",
+  },
+};
 
 export default function TermsOfServicePage() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 py-12 px-4 sm:px-6 lg:px-8">
-      <title>Terms of Service | iKnowAPDF</title>
-      <meta
-        name="description"
-        content="Review the Terms of Service for using iKnowAPDF's free, browser-based PDF editing, compression, merging, signing, and conversion tools."
-      />
-      <link rel="canonical" href="https://iknowapdf.lol/terms" />
       <div className="mx-auto max-w-3xl space-y-8">
         <Link
           href="/"
@@ -72,6 +82,19 @@ export default function TermsOfServicePage() {
               iKnowAPDF is provided on an &ldquo;AS IS&rdquo; and &ldquo;AS AVAILABLE&rdquo; basis without warranties of any kind. Because all files are processed in your local browser memory and never backed up on our servers, we recommend keeping a backup copy of your original documents before editing or modifying them.
             </p>
           </section>
+
+          
+          <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex flex-wrap gap-5 text-xs font-semibold text-slate-500">
+            <Link href="/about" className="hover:text-rose-600 underline">
+              About Us
+            </Link>
+            <Link href="/privacy" className="hover:text-rose-600 underline">
+              Privacy Policy
+            </Link>
+            <Link href="/contact" className="hover:text-rose-600 underline">
+              Contact Support
+            </Link>
+          </div>
         </div>
       </div>
     </div>

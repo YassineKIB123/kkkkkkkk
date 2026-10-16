@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { ToolLayout } from "@/components/tools/ToolLayout";
 import { FileDropzone } from "@/components/tools/FileDropzone";
+import { useLanguage } from "@/context/LanguageContext";
 import {
   wordToPDF,
   excelToPDF,
@@ -43,23 +44,26 @@ interface UniversalConverterPageProps {
   initialToolType?: ToolType;
 }
 
+function getInitialFormat(toolType?: ToolType): TargetFormat {
+  if (toolType === "pdf-to-word") return "docx";
+  if (toolType === "pdf-to-excel") return "xlsx";
+  if (toolType === "pdf-to-powerpoint") return "pptx";
+  if (toolType === "pdf-to-text") return "txt";
+  return "pdf";
+}
+
 export default function UniversalConverterPage({
   initialToolType,
 }: UniversalConverterPageProps = {}) {
+  const { t, language } = useLanguage();
   const [file, setFile] = useState<File | null>(null);
-  const [selectedFormat, setSelectedFormat] = useState<TargetFormat>("pdf");
+  const [selectedFormat, setSelectedFormat] = useState<TargetFormat>(() =>
+    getInitialFormat(initialToolType)
+  );
   const [isConverting, setIsConverting] = useState(false);
   const [progressStatus, setProgressStatus] = useState<string>("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (initialToolType === "pdf-to-word") setSelectedFormat("docx");
-    else if (initialToolType === "pdf-to-excel") setSelectedFormat("xlsx");
-    else if (initialToolType === "pdf-to-powerpoint") setSelectedFormat("pptx");
-    else if (initialToolType === "pdf-to-text") setSelectedFormat("txt");
-    else if (initialToolType) setSelectedFormat("pdf");
-  }, [initialToolType]);
 
   const getFileCategory = (
     fileName: string
@@ -216,7 +220,7 @@ export default function UniversalConverterPage({
   ];
 
   return (
-    <ToolLayout
+    <ToolLayout toolId="convert"
       title="Universal PDF Converter — Word, Excel, PPTX & Text"
       description="Convert PDF files to editable Word (.docx), Excel (.xlsx), PowerPoint (.pptx), and Plain Text—or compile Office documents into PDF 100% locally in your browser."
       faqs={[
@@ -243,8 +247,6 @@ export default function UniversalConverterPage({
             accept=".pdf,.docx,.doc,.xlsx,.xls,.csv,.pptx,.ppt,.txt,.md,.png,.jpg,.jpeg,.webp"
             multiple={false}
             onFilesSelected={handleFileSelected}
-            title="Drop any document, presentation, spreadsheet, or image here"
-            description="Supports PDF, Word (.docx), Excel (.xlsx/.csv), PowerPoint (.pptx), Text (.txt/.md), and Images."
           />
         )}
 
@@ -276,14 +278,14 @@ export default function UniversalConverterPage({
                 className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-850 transition-colors shadow-2xs"
               >
                 <Trash2 className="h-3.5 w-3.5" />
-                <span>Choose Another</span>
+                <span>{t.common.clear}</span>
               </button>
             </div>
 
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
                 <Layers className="h-4 w-4 text-rose-600" />
-                <span>Select Target Output Format</span>
+                <span>{language === "AR" ? "حدد صيغة التحويل المطلوبة" : language === "FR" ? "Sélectionnez le format de sortie" : language === "ES" ? "Selecciona el formato de salida" : language === "RU" ? "Выберите выходной формат" : "Select Target Output Format"}</span>
               </div>
 
               {!isPdf && (
@@ -382,12 +384,12 @@ export default function UniversalConverterPage({
                 {isConverting ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin text-white" />
-                    <span>Processing Conversion...</span>
+                    <span>{t.toolUi.convert.converting}</span>
                   </>
                 ) : (
                   <>
                     <Download className="h-4 w-4 text-white" />
-                    <span>Convert & Download</span>
+                    <span>{t.toolUi.convert.convertBtn}</span>
                   </>
                 )}
               </button>

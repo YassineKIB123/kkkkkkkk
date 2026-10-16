@@ -1,3 +1,4 @@
+﻿
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -7,14 +8,6 @@ const __dirname = path.dirname(__filename);
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://iknowapdf.lol";
 const PUBLIC_DIR = path.join(__dirname, "..", "public");
-const ROOT_DIR = path.join(__dirname, "..");
-
-for (const legacyDir of ["app", "components", "lib", "pages", ".next", "out"]) {
-  const fullLegacyPath = path.join(ROOT_DIR, legacyDir);
-  if (fs.existsSync(fullLegacyPath)) {
-    fs.rmSync(fullLegacyPath, { recursive: true, force: true });
-  }
-}
 
 if (!fs.existsSync(PUBLIC_DIR)) {
   fs.mkdirSync(PUBLIC_DIR, { recursive: true });
@@ -31,6 +24,10 @@ const today = new Date().toISOString().split("T")[0];
 
 const CORE_URLS = [
   { loc: `${SITE_URL}`, priority: "1.0", changefreq: "daily" },
+  { loc: `${SITE_URL}/about`, priority: "0.80", changefreq: "monthly" },
+  { loc: `${SITE_URL}/contact`, priority: "0.70", changefreq: "monthly" },
+  { loc: `${SITE_URL}/privacy`, priority: "0.70", changefreq: "monthly" },
+  { loc: `${SITE_URL}/terms`, priority: "0.70", changefreq: "monthly" },
   { loc: `${SITE_URL}/tools/edit-pdf`, priority: "0.95", changefreq: "weekly" },
   { loc: `${SITE_URL}/tools/compress-pdf`, priority: "0.95", changefreq: "weekly" },
   { loc: `${SITE_URL}/tools/merge-pdf`, priority: "0.95", changefreq: "weekly" },
@@ -43,9 +40,21 @@ const CORE_URLS = [
   { loc: `${SITE_URL}/tools/pdf-to-images`, priority: "0.95", changefreq: "weekly" },
   { loc: `${SITE_URL}/tools/watermark-pdf`, priority: "0.95", changefreq: "weekly" },
   { loc: `${SITE_URL}/tools/sanitize-pdf`, priority: "0.95", changefreq: "weekly" },
-  { loc: `${SITE_URL}/contact`, priority: "0.70", changefreq: "monthly" },
-  { loc: `${SITE_URL}/privacy`, priority: "0.70", changefreq: "monthly" },
-  { loc: `${SITE_URL}/terms`, priority: "0.70", changefreq: "monthly" },
+  { loc: `${SITE_URL}/pdf-to-word`, priority: "0.95", changefreq: "weekly" },
+  { loc: `${SITE_URL}/word-to-pdf`, priority: "0.95", changefreq: "weekly" },
+  { loc: `${SITE_URL}/pdf-to-excel`, priority: "0.95", changefreq: "weekly" },
+  { loc: `${SITE_URL}/excel-to-pdf`, priority: "0.95", changefreq: "weekly" },
+  { loc: `${SITE_URL}/pdf-to-powerpoint`, priority: "0.95", changefreq: "weekly" },
+  { loc: `${SITE_URL}/powerpoint-to-pdf`, priority: "0.95", changefreq: "weekly" },
+  { loc: `${SITE_URL}/jpg-to-pdf`, priority: "0.95", changefreq: "weekly" },
+  { loc: `${SITE_URL}/pdf-to-jpg`, priority: "0.95", changefreq: "weekly" },
+  { loc: `${SITE_URL}/png-to-pdf`, priority: "0.95", changefreq: "weekly" },
+  { loc: `${SITE_URL}/pdf-to-png`, priority: "0.95", changefreq: "weekly" },
+  { loc: `${SITE_URL}/pdf-to-text`, priority: "0.95", changefreq: "weekly" },
+  { loc: `${SITE_URL}/text-to-pdf`, priority: "0.95", changefreq: "weekly" },
+  { loc: `${SITE_URL}/compress-pdf-to-100kb`, priority: "0.90", changefreq: "weekly" },
+  { loc: `${SITE_URL}/compress-pdf-to-200kb`, priority: "0.90", changefreq: "weekly" },
+  { loc: `${SITE_URL}/compress-pdf-under-1mb`, priority: "0.90", changefreq: "weekly" },
 ];
 
 let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
@@ -66,3 +75,4 @@ console.log(`Saved clean AdSense-ready public/sitemap.xml (${CORE_URLS.length} U
 
 const robotsTxt = `User-agent: *\nAllow: /\n\nSitemap: ${SITE_URL}/sitemap.xml\n`;
 fs.writeFileSync(path.join(PUBLIC_DIR, "robots.txt"), robotsTxt, "utf-8");
+

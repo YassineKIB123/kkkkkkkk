@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { UploadCloud, AlertCircle } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface FileDropzoneProps {
   accept: string;
@@ -18,6 +19,7 @@ export function FileDropzone({
   title,
   description,
 }: FileDropzoneProps) {
+  const { t } = useLanguage();
   const [isDragging, setIsDragging] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -83,11 +85,11 @@ export function FileDropzone({
   // Automatically pick up any file dropped on the Homepage Hero Dropzone!
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const win = window as any;
+    const win = window as Window & { __pdfStudioPendingFiles?: File[] | null };
     if (win.__pdfStudioPendingFiles && win.__pdfStudioPendingFiles.length > 0) {
-      const pending = win.__pdfStudioPendingFiles as File[];
+      const pending = win.__pdfStudioPendingFiles;
       win.__pdfStudioPendingFiles = null;
-      processFiles(pending);
+      setTimeout(() => processFiles(pending), 0);
     }
   }, [processFiles]);
 
@@ -170,16 +172,16 @@ export function FileDropzone({
         </div>
 
         <h3 className="mt-4 text-base font-bold text-slate-900 dark:text-white">
-          {title || "Click to browse or drop your files here"}
+          {title || t.dropzone.browseOrDrop}
         </h3>
 
         <p className="mt-1.5 text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-sm leading-relaxed">
           {description ||
-            `Supports ${multiple ? "multiple files" : "a single file"} matching ${accept}. You can also paste directly with Ctrl+V.`}
+            `${multiple ? t.dropzone.supportsMultiple : t.dropzone.supportsSingle} ${t.dropzone.pasteHint}`}
         </p>
 
         <div className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-mono text-slate-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400 shadow-2xs">
-          <span>Processed locally in browser memory</span>
+          <span>{t.dropzone.processedLocally}</span>
         </div>
       </div>
 

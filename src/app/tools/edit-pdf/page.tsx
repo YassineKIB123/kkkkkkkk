@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { ToolLayout } from "@/components/tools/ToolLayout";
 import { FileDropzone } from "@/components/tools/FileDropzone";
+import { useLanguage } from "@/context/LanguageContext";
 import { downloadBlob, loadPdfJs } from "@/lib/pdf/pdf-utils";
 import { PDFDocument } from "pdf-lib";
 import {
@@ -425,6 +426,7 @@ function sampleBoxFromFullCanvas(
 }
 
 export default function EditPdfPage() {
+  const { t, language } = useLanguage();
   const [file, setFile] = useState<File | null>(null);
   const [pdfDocProxy, setPdfDocProxy] = useState<any>(null);
   const [totalPages, setTotalPages] = useState<number>(0);
@@ -1460,7 +1462,7 @@ export default function EditPdfPage() {
   const currentPageOverlays = overlays.filter((o) => o.pageNumber === currentPage);
 
   return (
-    <ToolLayout
+    <ToolLayout toolId="edit"
       title="Online PDF Editor (Sejda Style)"
       description="Click directly on any line of text in your PDF to type and edit in-place with 100% matching typography, plus add Links, Forms, Images, Signatures, Whiteout, Annotations, and Shapes."
       faqs={[
@@ -1495,8 +1497,6 @@ export default function EditPdfPage() {
             accept="application/pdf,.pdf"
             multiple={false}
             onFilesSelected={handleFileSelected}
-            title="Upload PDF file to edit"
-            description="Files stay 100% private in your browser. Click any text line to type in-place just like Sejda PDF Editor."
           />
         )}
 
@@ -2504,11 +2504,11 @@ export default function EditPdfPage() {
                 {isApplying ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Processing PDF...</span>
+                    <span>{t.common.processing}</span>
                   </>
                 ) : (
                   <>
-                    <span>Apply changes</span>
+                    <span>{language === "AR" ? "تطبيق التعديلات والتحميل" : language === "FR" ? "Appliquer les modifications" : language === "ES" ? "Aplicar cambios" : language === "RU" ? "Применить изменения" : "Apply changes"}</span>
                     <ChevronRight className="h-4 w-4" />
                   </>
                 )}

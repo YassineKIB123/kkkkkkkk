@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { ToolLayout } from "@/components/tools/ToolLayout";
 import { FileDropzone } from "@/components/tools/FileDropzone";
+import { useLanguage } from "@/context/LanguageContext";
 import {
   splitPDF,
   getPDFPageCount,
@@ -27,6 +28,7 @@ interface PageThumb {
 }
 
 export default function SplitPdfPage() {
+  const { t, language } = useLanguage();
   const [file, setFile] = useState<File | null>(null);
   const [pageCount, setPageCount] = useState<number | null>(null);
   const [rangeString, setRangeString] = useState<string>("");
@@ -39,7 +41,7 @@ export default function SplitPdfPage() {
 
   useEffect(() => {
     return () => {
-      thumbs.forEach((t) => URL.revokeObjectURL(t.url));
+      thumbs.forEach((thumb) => URL.revokeObjectURL(thumb.url));
     };
   }, [thumbs]);
 
@@ -47,7 +49,7 @@ export default function SplitPdfPage() {
     const selected = files[0];
     if (!selected) return;
 
-    thumbs.forEach((t) => URL.revokeObjectURL(t.url));
+    thumbs.forEach((thumb) => URL.revokeObjectURL(thumb.url));
     setThumbs([]);
     setErrorMessage(null);
     setSuccessMessage(null);
@@ -101,7 +103,7 @@ export default function SplitPdfPage() {
   };
 
   const handleClear = () => {
-    thumbs.forEach((t) => URL.revokeObjectURL(t.url));
+    thumbs.forEach((thumb) => URL.revokeObjectURL(thumb.url));
     setThumbs([]);
     setFile(null);
     setPageCount(null);
@@ -187,7 +189,7 @@ export default function SplitPdfPage() {
   };
 
   return (
-    <ToolLayout
+    <ToolLayout toolId="split"
       title="Split PDF & Extract Pages Online"
       description="Extract specific page ranges, odd or even sheets, or click page thumbnails visually to build a custom PDF locally in your browser."
       faqs={[
@@ -219,8 +221,6 @@ export default function SplitPdfPage() {
             accept="application/pdf,.pdf"
             multiple={false}
             onFilesSelected={handleFileSelected}
-            title="Drop a PDF document here to split"
-            description="Select a single PDF file. All page inspection and extraction happens locally in your browser."
           />
         )}
 
@@ -243,7 +243,7 @@ export default function SplitPdfPage() {
                     {file.name}
                   </p>
                   <p className="font-mono text-xs text-slate-500 dark:text-slate-400">
-                    Total Pages: <span className="text-rose-600 dark:text-rose-400 font-bold">{pageCount}</span>
+                    {language === "AR" ? "إجمالي الصفحات:" : language === "FR" ? "Total pages :" : language === "ES" ? "Páginas totales:" : language === "RU" ? "Всего страниц:" : "Total Pages:"} <span className="text-rose-600 dark:text-rose-400 font-bold">{pageCount}</span>
                   </p>
                 </div>
               </div>
@@ -255,18 +255,18 @@ export default function SplitPdfPage() {
                 className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 transition-colors"
               >
                 <Trash2 className="h-3.5 w-3.5" />
-                <span>Choose Another</span>
+                <span>{t.common.clear}</span>
               </button>
             </div>
 
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                  Pages to Extract (Type Range or Click Thumbnails)
+                  {t.toolUi.split.rangeTitle}
                 </label>
                 {extractedCount !== null && (
                   <span className="text-xs font-mono font-bold text-rose-600 dark:text-rose-400">
-                    Will extract {extractedCount} of {pageCount} pages
+                    {language === "AR" ? `سيتم استخراج ${extractedCount} من ${pageCount} صفحة` : `Will extract ${extractedCount} of ${pageCount} pages`}
                   </span>
                 )}
               </div>
@@ -279,13 +279,13 @@ export default function SplitPdfPage() {
                   setErrorMessage(null);
                   setSuccessMessage(null);
                 }}
-                placeholder="e.g. 1-3, 5, 8-10"
+                placeholder={t.toolUi.split.rangePlaceholder}
                 className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 font-mono text-sm text-slate-900 placeholder-slate-400 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500/15 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
               />
 
               <div className="flex flex-wrap items-center gap-2 pt-1">
                 <span className="text-xs text-slate-500 flex items-center gap-1 font-medium">
-                  <Layers className="h-3.5 w-3.5 text-rose-600" /> Quick Presets:
+                  <Layers className="h-3.5 w-3.5 text-rose-600" /> {language === "AR" ? "خيارات سريعة:" : language === "FR" ? "Préréglages :" : language === "ES" ? "Preajustes:" : language === "RU" ? "Шаблоны:" : "Quick Presets:"}
                 </span>
 
                 <button
@@ -293,7 +293,7 @@ export default function SplitPdfPage() {
                   onClick={handlePresetAll}
                   className="rounded-lg border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 px-2.5 py-1 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:border-rose-400 hover:text-rose-600 transition-colors"
                 >
-                  All ({pageCount})
+                  {language === "AR" ? `الكل (${pageCount})` : `All (${pageCount})`}
                 </button>
 
                 <button
@@ -326,16 +326,16 @@ export default function SplitPdfPage() {
             {thumbs.length > 0 && (
               <div className="space-y-2.5 pt-2">
                 <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                  Click any page thumbnail to include or exclude it:
+                  {language === "AR" ? "انقر على مصغرة أي صفحة لتحديدها أو استبعادها:" : "Click any page thumbnail to include or exclude it:"}
                 </p>
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3 max-h-80 overflow-y-auto p-1">
-                  {thumbs.map((t) => {
-                    const isSelected = selectedSet.has(t.pageNumber);
+                  {thumbs.map((thumb) => {
+                    const isSelected = selectedSet.has(thumb.pageNumber);
                     return (
                       <button
-                        key={t.pageNumber}
+                        key={thumb.pageNumber}
                         type="button"
-                        onClick={() => togglePageSelection(t.pageNumber)}
+                        onClick={() => togglePageSelection(thumb.pageNumber)}
                         className={`relative flex flex-col items-center rounded-xl border p-2 transition-all ${
                           isSelected
                             ? "border-rose-600 bg-rose-50/50 ring-2 ring-rose-500/20 dark:border-rose-500 dark:bg-rose-950/30"
@@ -344,12 +344,12 @@ export default function SplitPdfPage() {
                       >
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
-                          src={t.url}
-                          alt={`Page ${t.pageNumber}`}
+                          src={thumb.url}
+                          alt={`Page ${thumb.pageNumber}`}
                           className="h-24 w-auto object-contain rounded shadow-2xs"
                         />
                         <span className="mt-1.5 font-mono text-[10px] font-bold text-slate-700 dark:text-slate-300">
-                          Page {t.pageNumber}
+                          {t.toolUi.split.page} {thumb.pageNumber}
                         </span>
                         {isSelected && (
                           <span className="absolute top-1.5 right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-rose-600 text-white shadow-xs">
@@ -387,12 +387,12 @@ export default function SplitPdfPage() {
                 {isSplitting ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin text-white" />
-                    <span>Extracting Pages...</span>
+                    <span>{t.toolUi.split.extracting}</span>
                   </>
                 ) : (
                   <>
                     <Scissors className="h-4 w-4 text-white" />
-                    <span>Split & Download PDF</span>
+                    <span>{t.toolUi.split.splitBtn}</span>
                   </>
                 )}
               </button>

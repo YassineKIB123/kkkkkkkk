@@ -14,6 +14,24 @@ import { ArrowRight, Sparkles } from "lucide-react";
 
 export const dynamic = "force-static";
 
+const CORE_INDEXED_SLUGS = new Set([
+  "pdf-to-word",
+  "word-to-pdf",
+  "pdf-to-excel",
+  "excel-to-pdf",
+  "pdf-to-powerpoint",
+  "powerpoint-to-pdf",
+  "jpg-to-pdf",
+  "pdf-to-jpg",
+  "png-to-pdf",
+  "pdf-to-png",
+  "pdf-to-text",
+  "text-to-pdf",
+  "compress-pdf-to-100kb",
+  "compress-pdf-to-200kb",
+  "compress-pdf-under-1mb",
+]);
+
 interface PageProps {
   params: Promise<{ locale: string; slug: string }>;
 }
@@ -34,12 +52,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!page) return {};
 
   const url = `${BASE_SITE_URL}/${locale}/${slug}`;
+  const shouldIndex = CORE_INDEXED_SLUGS.has(slug);
 
   return {
-    title: page.title,
+    title: {
+      absolute: page.title,
+    },
     description: page.metaDescription,
     robots: {
-      index: false,
+      index: shouldIndex,
       follow: true,
     },
     alternates: {

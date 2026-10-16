@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { ToolLayout } from "@/components/tools/ToolLayout";
+import { useLanguage } from "@/context/LanguageContext";
 import {
   warpPerspective,
   processCanvasWithFilter,
@@ -52,6 +53,7 @@ const DEFAULT_CORNERS: CornerPoint[] = [
 const CORNER_LABELS = ["Top-Left", "Top-Right", "Bottom-Right", "Bottom-Left"];
 
 export default function ScanToPdfPage() {
+  const { t, language } = useLanguage();
   const [currentStep, setCurrentStep] = useState<"input" | "crop" | "result">("input");
 
   const [currentImageSrc, setCurrentImageSrc] = useState<string | null>(null);
@@ -337,7 +339,7 @@ export default function ScanToPdfPage() {
   const activePage = scannedPages[activePageIndex];
 
   return (
-    <ToolLayout
+    <ToolLayout toolId="scan"
       title="Online Document Scanner to PDF"
       description="Scan physical receipts, invoices, IDs, and paper contracts using your phone camera or uploaded photos with automatic edge detection and perspective correction."
       faqs={[
@@ -380,12 +382,8 @@ export default function ScanToPdfPage() {
                   <Camera className="h-8 w-8" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-slate-900 dark:text-white group-hover:text-rose-600 transition-colors">
-                    Take Photo
-                  </h3>
-                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                    Use your phone or web camera with rear-lens auto selection
-                  </p>
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white group-hover:text-rose-600 transition-colors">{t.toolUi.scan.takePhoto}</h3>
+                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t.toolUi.scan.takePhotoDesc}</p>
                 </div>
               </button>
 
@@ -398,12 +396,8 @@ export default function ScanToPdfPage() {
                   <ImageIcon className="h-8 w-8" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-slate-900 dark:text-white group-hover:text-rose-600 transition-colors">
-                    Upload Image
-                  </h3>
-                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                    Select an existing JPG, PNG, or WebP receipt, invoice, or page photo
-                  </p>
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white group-hover:text-rose-600 transition-colors">{t.toolUi.scan.uploadImage}</h3>
+                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t.toolUi.scan.uploadImageDesc}</p>
                 </div>
               </button>
             </div>

@@ -499,8 +499,25 @@ export default function SignPdfPage() {
 
   return (
     <ToolLayout
-      title="Sign PDF Document"
-      description="Draw, type, or upload signatures, add date stamps and checkmarks, or apply document watermarks with zero server uploads."
+      title="Sign PDF Online — Electronic Signature & Stamps"
+      description="Draw, type, or upload your signature, place date stamps and checkmarks, and sign PDF contracts 100% privately in your browser."
+      faqs={[
+        {
+          question: "How do I sign a PDF document online without uploading it?",
+          answer:
+            "Open your PDF above, click 'New Signature' to draw with your mouse or touchscreen, type a cursive signature, or upload a transparent PNG stamp. Drag and resize your signature anywhere on the page and click 'Sign & Download PDF'.",
+        },
+        {
+          question: "Can I save my signature for future documents?",
+          answer:
+            "Yes. When you create a signature, it is saved in your browser's private localStorage so you can insert it onto future contracts in one click without redrawing.",
+        },
+        {
+          question: "Can I add dates and checkmarks to PDF forms?",
+          answer:
+            "Yes! Use the '+ Date' and '+ Check ✓' buttons in the toolbar to drop today's date or form checkmarks onto any page of your agreement.",
+        },
+      ]}
     >
       <style jsx global>{`
         @import url("https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Dancing+Script:wght@600&display=swap");

@@ -82,20 +82,18 @@ const HOMEPAGE_FAQS = [
 ];
 
 const POPULAR_PSEO_LINKS = [
-  { href: "/edit-pdf-editable-text", label: "Edit Existing PDF Text Online" },
-  { href: "/edit-pdf-for-resumes", label: "Edit PDF Resume & CV Text" },
-  { href: "/compress-pdf-under-100kb", label: "Compress PDF Under 100 KB" },
-  { href: "/compress-pdf-under-200kb", label: "Compress PDF Under 200 KB" },
-  { href: "/compress-pdf-for-email", label: "Compress PDF for Email" },
-  { href: "/merge-pdf-for-contracts", label: "Merge PDF for Legal Contracts" },
-  { href: "/sign-pdf-for-contracts", label: "Sign PDF Contracts Online" },
-  { href: "/scan-pdf-for-invoices", label: "Scan Receipts & Invoices to PDF" },
-  { href: "/pdf-to-word-editable-text", label: "PDF to Editable Word DOCX" },
-  { href: "/pdf-to-excel-for-bank-statements", label: "Bank Statement PDF to Excel" },
-  { href: "/jpg-to-pdf-for-passports-and-visas", label: "JPG to PDF for Passport & Visa" },
-  { href: "/pdf-to-jpg-high-resolution-300dpi", label: "PDF to 300 DPI High-Res JPG" },
-  { href: "/split-pdf-for-court-filings", label: "Split PDF for Court E-Filing" },
-  { href: "/powerpoint-to-pdf-for-students", label: "PowerPoint PPTX to PDF" },
+  { href: "/tools/edit-pdf", label: "Edit Existing PDF Text Online" },
+  { href: "/tools/compress-pdf", label: "Compress PDF File Size Online" },
+  { href: "/tools/merge-pdf", label: "Merge Multiple PDF Files" },
+  { href: "/tools/split-pdf", label: "Split & Extract PDF Pages" },
+  { href: "/tools/sign-pdf", label: "Sign PDF Contracts Online" },
+  { href: "/tools/scan", label: "Scan Documents & Receipts to PDF" },
+  { href: "/tools/convert", label: "Convert PDF to Word, Excel & PPTX" },
+  { href: "/tools/images-to-pdf", label: "Convert JPG & PNG Images to PDF" },
+  { href: "/tools/pdf-to-images", label: "Extract PDF Pages to High-Res JPG/PNG" },
+  { href: "/tools/rotate-pdf", label: "Rotate PDF Pages Permanently" },
+  { href: "/tools/watermark-pdf", label: "Add Watermark & Page Numbers to PDF" },
+  { href: "/tools/sanitize-pdf", label: "Strip & Sanitize Hidden PDF Metadata" },
 ];
 
 export default function HomePage() {
@@ -369,6 +367,7 @@ export default function HomePage() {
       dir={isRTL ? "rtl" : "ltr"}
       className="min-h-screen bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-100 selection:bg-rose-100 selection:text-rose-900 transition-colors duration-200"
     >
+      <link rel="canonical" href="https://iknowapdf.lol" />
       {/* Top Navbar */}
       <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/95 dark:border-slate-800 dark:bg-slate-950/95 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">

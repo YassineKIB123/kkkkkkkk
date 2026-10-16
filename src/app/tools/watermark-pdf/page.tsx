@@ -114,8 +114,25 @@ export default function WatermarkPdfPage() {
 
   return (
     <ToolLayout
-      title="Watermark & Page Numbers PDF"
-      description="Stamp custom diagonal text watermarks (CONFIDENTIAL, DRAFT, COPY) and automatic 'Page X of Y' numbering across your PDF locally."
+      title="Add Watermark & Page Numbers to PDF Online"
+      description="Stamp custom diagonal text watermarks (CONFIDENTIAL, DRAFT, DO NOT COPY) and automatic 'Page X of Y' numbering across every page of your PDF locally."
+      faqs={[
+        {
+          question: "Can I add both a diagonal watermark and page numbers at the same time?",
+          answer:
+            "Yes. You can configure a custom diagonal text stamp with your choice of color and opacity while simultaneously stamping 'Page X of Y' headers or footers in a single pass.",
+        },
+        {
+          question: "Can I add page numbers without a watermark?",
+          answer:
+            "Yes! Click the 'No Watermark' preset button (or clear the watermark text box) and choose Bottom Center, Bottom Right, or Top Right to add clean page numbering only.",
+        },
+        {
+          question: "Will the watermark obscure the underlying text?",
+          answer:
+            "No. You can select Light (12%) or Medium (20%) semi-transparent opacity so your document text remains 100% legible underneath the diagonal stamp.",
+        },
+      ]}
     >
       <div className="space-y-6">
         {!file && (

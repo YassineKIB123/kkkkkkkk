@@ -86,8 +86,30 @@ export default function MergePdfPage() {
 
   return (
     <ToolLayout
-      title="Merge PDF Documents"
-      description="Combine multiple PDF files into a single document. Reorder files to determine the final page order."
+      title="Merge PDF Documents Online"
+      description="Combine multiple PDF files into a single organized document in seconds. Reorder files freely with 100% client-side browser privacy and zero server uploads."
+      faqs={[
+        {
+          question: "How do I merge multiple PDF files into one document?",
+          answer:
+            "Drop two or more PDF files into the workspace above, use the up and down arrows to arrange your exact document order, and click 'Merge PDFs' to instantly compile and download your combined PDF.",
+        },
+        {
+          question: "Are my confidential PDF contracts uploaded to a cloud server?",
+          answer:
+            "Never. iKnowAPDF merges your documents 100% locally inside your web browser memory using WebAssembly. Your tax records, legal agreements, and bank statements never leave your device.",
+        },
+        {
+          question: "Does merging PDFs reduce image or text quality?",
+          answer:
+            "No. Our merger copies the exact native vector streams, embedded fonts, and high-resolution images from each source PDF into a new container without re-compressing or degrading quality.",
+        },
+        {
+          question: "Is there a limit on how many PDF files I can combine?",
+          answer:
+            "There are no artificial paywalls, daily task limits, or watermarks. You can combine as many PDF files and pages as your device's available memory supports.",
+        },
+      ]}
     >
       <div className="space-y-6">
         <FileDropzone

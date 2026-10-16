@@ -217,8 +217,25 @@ export default function UniversalConverterPage({
 
   return (
     <ToolLayout
-      title="Universal Document Converter"
-      description="Convert Word, Excel, PowerPoint, Text, and Images to and from PDF with full Unicode support. All parsing executes 100% locally in your browser."
+      title="Universal PDF Converter — Word, Excel, PPTX & Text"
+      description="Convert PDF files to editable Word (.docx), Excel (.xlsx), PowerPoint (.pptx), and Plain Text—or compile Office documents into PDF 100% locally in your browser."
+      faqs={[
+        {
+          question: "Which file formats does the Universal Converter support?",
+          answer:
+            "You can convert PDF documents into Microsoft Word (.docx), Excel spreadsheets (.xlsx), PowerPoint slide decks (.pptx), and Plain Text (.txt), or convert DOCX, XLSX, CSV, PPTX, TXT, Markdown, and images directly into PDF.",
+        },
+        {
+          question: "Does PDF to Word and Excel conversion happen on my device?",
+          answer:
+            "Yes. Our converter parses PDF text coordinates, rows, and paragraphs directly inside your browser memory using WebAssembly and JavaScript without uploading sensitive business spreadsheets or resumes to any server.",
+        },
+        {
+          question: "Does the converter support non-English languages and Unicode?",
+          answer:
+            "Yes. Our rendering pipeline supports full UTF-8 Unicode scripts, including Latin, Cyrillic, Arabic, and accented European characters.",
+        },
+      ]}
     >
       <div className="space-y-6">
         {!file && (

@@ -7,6 +7,12 @@ import { FileCheck, ArrowLeft } from "lucide-react";
 export default function TermsOfServicePage() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 py-12 px-4 sm:px-6 lg:px-8">
+      <title>Terms of Service | iKnowAPDF</title>
+      <meta
+        name="description"
+        content="Review the Terms of Service for using iKnowAPDF's free, browser-based PDF editing, compression, merging, signing, and conversion tools."
+      />
+      <link rel="canonical" href="https://iknowapdf.lol/terms" />
       <div className="mx-auto max-w-3xl space-y-8">
         <Link
           href="/"

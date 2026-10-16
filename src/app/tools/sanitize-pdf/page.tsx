@@ -99,8 +99,25 @@ export default function SanitizePdfPage() {
 
   return (
     <ToolLayout
-      title="Sanitize & Strip PDF Metadata"
-      description="Inspect and permanently remove hidden Author, Creator, Producer, GPS/XMP streams, and editing timestamps from sensitive PDF documents."
+      title="Sanitize PDF & Remove Hidden Metadata Online"
+      description="Inspect and permanently strip hidden Author names, Creator software, Producer tags, XMP streams, and modification timestamps from sensitive PDF files."
+      faqs={[
+        {
+          question: "What hidden metadata is stored inside a standard PDF file?",
+          answer:
+            "PDFs routinely store the computer username of the original author, the exact software used (e.g., Microsoft Word or Adobe InDesign), document title tags, creation dates, and modification timestamps.",
+        },
+        {
+          question: "How does the PDF Metadata Sanitizer remove these traces?",
+          answer:
+            "When you upload a PDF, our tool displays every hidden metadata field it detects and rebuilds a fresh PDF container with blanked Author, Title, Subject, Keywords, Creator, and Producer dictionaries.",
+        },
+        {
+          question: "Does stripping metadata change how my PDF looks?",
+          answer:
+            "No. All visible pages, fonts, vectors, and layouts remain 100% identical—only the hidden background properties and author traces are purged.",
+        },
+      ]}
     >
       <div className="space-y-6">
         {!file && (

@@ -338,8 +338,25 @@ export default function ScanToPdfPage() {
 
   return (
     <ToolLayout
-      title="Scan to PDF"
-      description="Scan documents using your device camera or uploaded photos. Automatic corner detection, perspective flattening, and high-contrast B&W filters."
+      title="Online Document Scanner to PDF"
+      description="Scan physical receipts, invoices, IDs, and paper contracts using your phone camera or uploaded photos with automatic edge detection and perspective correction."
+      faqs={[
+        {
+          question: "How does the browser-based document scanner work?",
+          answer:
+            "Take a photo with your smartphone or webcam or upload an existing picture. Our computer-vision engine automatically detects the 4 corners of your paper, flattens skewed camera angles into a straight rectangle, and applies studio readability filters.",
+        },
+        {
+          question: "Which scan filter should I use for text documents and receipts?",
+          answer:
+            "Use 'Magic Color' to brighten paper backgrounds while keeping ink colors vibrant, or 'B&W Clean' for high-contrast black-and-white output that looks like a laser-printed office scan.",
+        },
+        {
+          question: "Can I scan multiple pages into a single PDF?",
+          answer:
+            "Yes. After cropping and enhancing your first page, click 'Add Page' or 'Scan Another Page' to capture additional sheets before exporting the entire batch as a standard A4 PDF.",
+        },
+      ]}
     >
       <div className="space-y-6">
         <input

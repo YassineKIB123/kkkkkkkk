@@ -190,6 +190,42 @@ export function ToolLayout({
           <meta property="og:title" content={`${title} — iKnowAPDF`} />
           <meta property="og:description" content={description} />
           <meta property="og:url" content={canonicalUrl} />
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "SoftwareApplication",
+                name: `${title} — iKnowAPDF`,
+                applicationCategory: "BusinessApplication",
+                operatingSystem: "All",
+                url: canonicalUrl,
+                description,
+                offers: {
+                  "@type": "Offer",
+                  price: "0",
+                  priceCurrency: "USD",
+                },
+              }),
+            }}
+          />
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "FAQPage",
+                mainEntity: activeFaqs.map((f) => ({
+                  "@type": "Question",
+                  name: f.question,
+                  acceptedAnswer: {
+                    "@type": "Answer",
+                    text: f.answer,
+                  },
+                })),
+              }),
+            }}
+          />
         </>
       )}
 
@@ -325,6 +361,14 @@ export function ToolLayout({
                         </p>
                         <div className="space-y-1">
                           <Link
+                            href="/tools/edit-pdf"
+                            onClick={() => setIsMegaMenuOpen(false)}
+                            className="flex items-center gap-2.5 rounded-lg p-2 text-slate-700 hover:bg-slate-50 hover:text-rose-600 dark:text-slate-300 dark:hover:bg-slate-800 transition-colors"
+                          >
+                            <PenLine className="h-4 w-4 text-rose-500" />
+                            <span className="font-semibold text-xs">Edit PDF Text</span>
+                          </Link>
+                          <Link
                             href="/tools/scan"
                             onClick={() => setIsMegaMenuOpen(false)}
                             className="flex items-center gap-2.5 rounded-lg p-2 text-slate-700 hover:bg-slate-50 hover:text-rose-600 dark:text-slate-300 dark:hover:bg-slate-800 transition-colors"
@@ -339,6 +383,22 @@ export function ToolLayout({
                           >
                             <PenLine className="h-4 w-4 text-emerald-500" />
                             <span className="font-semibold text-xs">{t.tools.signTitle}</span>
+                          </Link>
+                          <Link
+                            href="/tools/watermark-pdf"
+                            onClick={() => setIsMegaMenuOpen(false)}
+                            className="flex items-center gap-2.5 rounded-lg p-2 text-slate-700 hover:bg-slate-50 hover:text-rose-600 dark:text-slate-300 dark:hover:bg-slate-800 transition-colors"
+                          >
+                            <Layers className="h-4 w-4 text-pink-500" />
+                            <span className="font-semibold text-xs">Watermark & Page Numbers</span>
+                          </Link>
+                          <Link
+                            href="/tools/sanitize-pdf"
+                            onClick={() => setIsMegaMenuOpen(false)}
+                            className="flex items-center gap-2.5 rounded-lg p-2 text-slate-700 hover:bg-slate-50 hover:text-rose-600 dark:text-slate-300 dark:hover:bg-slate-800 transition-colors"
+                          >
+                            <ShieldCheck className="h-4 w-4 text-teal-500" />
+                            <span className="font-semibold text-xs">Sanitize PDF Metadata</span>
                           </Link>
                         </div>
                       </div>

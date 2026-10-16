@@ -150,8 +150,25 @@ export default function RotatePdfPage() {
 
   return (
     <ToolLayout
-      title="Rotate PDF Pages"
-      description="Rotate individual pages or entire documents permanently. Changes are rendered locally in browser memory."
+      title="Rotate PDF Pages Permanently"
+      description="Fix upside-down or sideways scanned PDF pages individually or rotate your entire document at once—100% locally in your browser."
+      faqs={[
+        {
+          question: "Will the rotation be saved permanently when I download the PDF?",
+          answer:
+            "Yes. Unlike PDF viewers that only rotate the temporary screen view, iKnowAPDF updates the internal page rotation dictionary inside the PDF file so it opens upright on every device.",
+        },
+        {
+          question: "Can I rotate just one upside-down page without rotating the rest?",
+          answer:
+            "Absolutely. Every page is rendered as an interactive thumbnail with its own left (-90°) and right (+90°) rotation buttons, allowing you to fix individual sheets.",
+        },
+        {
+          question: "Does rotating a PDF alter the text or vector quality?",
+          answer:
+            "Not at all. Rotating updates the lossless page orientation metadata without re-encoding your text, fonts, or embedded graphics.",
+        },
+      ]}
     >
       <div className="space-y-6">
         {!file && (

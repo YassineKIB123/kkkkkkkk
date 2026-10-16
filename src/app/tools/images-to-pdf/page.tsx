@@ -174,8 +174,25 @@ export default function ImagesToPdfPage() {
 
   return (
     <ToolLayout
-      title="Convert Images to PDF"
-      description="Transform JPG, PNG, and WebP images into clean, formatted PDF documents with live interactive sheet preview and zero-margin support."
+      title="Convert Images to PDF — JPG, PNG & WebP to PDF"
+      description="Combine JPG, PNG, and WebP photos into a clean PDF document with live sheet preview, custom A4 or Fit-to-Image sizing, and zero-margin options."
+      faqs={[
+        {
+          question: "How do I combine multiple JPG or PNG images into one PDF?",
+          answer:
+            "Drop all your images into the upload box, reorder them using the sequence arrows, choose your preferred page size (Standard A4 or Fit Image Size) and orientation, and click 'Convert Images to PDF'.",
+        },
+        {
+          question: "Can I create a borderless PDF with no white margins?",
+          answer:
+            "Yes. Set Page Margins to 'None (0)' or choose 'Fit Image Size' so every page in the exported PDF matches the exact pixel aspect ratio of your source photo.",
+        },
+        {
+          question: "Are my personal ID photos or passport scans uploaded anywhere?",
+          answer:
+            "Never. All image decoding and PDF compilation happen 100% locally inside your browser tab, making it safe for passports, driver's licenses, and medical images.",
+        },
+      ]}
     >
       <div className="space-y-6">
         <FileDropzone

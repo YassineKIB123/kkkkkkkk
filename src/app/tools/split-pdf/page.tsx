@@ -188,8 +188,30 @@ export default function SplitPdfPage() {
 
   return (
     <ToolLayout
-      title="Split PDF Document"
-      description="Extract specific page ranges, odd/even pages, or click page thumbnails visually to build a custom PDF."
+      title="Split PDF & Extract Pages Online"
+      description="Extract specific page ranges, odd or even sheets, or click page thumbnails visually to build a custom PDF locally in your browser."
+      faqs={[
+        {
+          question: "How can I extract specific pages from a large PDF?",
+          answer:
+            "Upload your PDF and either type custom page ranges (such as '1-3, 5, 8-10') or click directly on the visual page thumbnails to toggle which pages you want to include before clicking 'Split & Download PDF'.",
+        },
+        {
+          question: "Can I extract only odd or even pages from a scanned PDF?",
+          answer:
+            "Yes. Use the 'Odd Pages' or 'Even Pages' quick preset buttons to automatically select alternating pages, which is ideal for fixing single-sided duplex scans.",
+        },
+        {
+          question: "Is my original PDF file modified when I split it?",
+          answer:
+            "No. Your original file on your computer or phone remains untouched. Our tool generates a brand-new, watermark-free PDF containing only your selected pages.",
+        },
+        {
+          question: "How fast is client-side PDF splitting?",
+          answer:
+            "Because there is zero file uploading or downloading from remote cloud servers, extracting pages from even a 200-page PDF takes less than a second in your browser.",
+        },
+      ]}
     >
       <div className="space-y-6">
         {!file && (

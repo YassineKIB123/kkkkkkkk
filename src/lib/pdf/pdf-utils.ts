@@ -23,8 +23,8 @@ export async function loadPdfJs(): Promise<any> {
   }
 
   _pdfJsPromise = new Promise((resolve, reject) => {
-    const CDN_SCRIPT = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
-    const CDN_WORKER = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+    const CDN_SCRIPT = "/pdfjs/pdf.min.js";
+    const CDN_WORKER = "/pdfjs/pdf.worker.min.js";
 
     const existing = document.querySelector(`script[src="${CDN_SCRIPT}"]`);
     if (existing) {

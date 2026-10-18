@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "prebuild": "node scripts/generate-sitemaps.mjs",
-    "build": "next build",
+    "build": "node -e \"try { fs.rmSync('.next', { recursive: true, force: true }) } catch {}\" && node scripts/generate-sitemaps.mjs && next build",
     "start": "next start",
     "lint": "eslint"
   },

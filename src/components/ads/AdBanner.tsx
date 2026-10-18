@@ -34,8 +34,8 @@ export function AdBanner({
     }
   }, [adsenseId]);
 
-  // Render nothing until NEXT_PUBLIC_ADSENSE_ID is configured
-  if (!adsenseId && !showPlaceholder) {
+  // Do not render manual slot if no slotId is provided
+  if ((!adsenseId || !slotId) && !showPlaceholder) {
     return null;
   }
 
@@ -59,7 +59,7 @@ export function AdBanner({
             className="adsbygoogle"
             style={{ display: "block", width: "100%" }}
             data-ad-client={adsenseId}
-            data-ad-slot={slotId || "auto"}
+            data-ad-slot={slotId}
             data-ad-format={isLeaderboard ? "horizontal" : "rectangle"}
             data-full-width-responsive="true"
           />

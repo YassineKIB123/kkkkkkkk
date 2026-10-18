@@ -43,22 +43,30 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 
   // Client hydration sync from localStorage
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem("lang") as Language | null;
-      if (saved && DICTIONARY[saved] && saved !== language) {
-        setLanguageState(saved);
-      }
-      const savedTheme = localStorage.getItem("theme") as "light" | "dark" | null;
-      if (savedTheme && (savedTheme === "dark" || savedTheme === "light") && savedTheme !== theme) {
-        setThemeState(savedTheme);
-      }
-    } catch {}
+    queueMicrotask(() => {
+      try {
+        const saved = localStorage.getItem("lang") as Language | null;
+        if (saved && DICTIONARY[saved]) {
+          setLanguageState(saved);
+        }
+        const savedTheme = localStorage.getItem("theme") as "light" | "dark" | null;
+        if (savedTheme === "dark" || savedTheme === "light") {
+          setThemeState(savedTheme);
+        }
+      } catch {}
+    });
   }, []);
 
   useEffect(() => {
     document.documentElement.dir = language === "AR" ? "rtl" : "ltr";
     document.documentElement.lang = language.toLowerCase();
-    document.documentElement.classList.toggle("dark", theme === "dark");
+    if (theme === "dark") {
+      document.documentElement.classList.add("dark");
+      document.documentElement.classList.remove("light");
+    } else {
+      document.documentElement.classList.remove("dark");
+      document.documentElement.classList.add("light");
+    }
 
     // Register Offline PWA Service Worker
     if ("serviceWorker" in navigator) {

@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     google: "TX_b_Rg1BBdC31WpXrXvxkBgRWD0LJ2tilIg3Iw9CV0",
   },
   title: {
-    default: "iKnowAPDF â€” Free, Fast & 100% Private PDF Tools",
+    default: "iKnowAPDF — Free, Fast & 100% Private PDF Tools",
     template: "%s | iKnowAPDF",
   },
   description:
@@ -44,13 +44,13 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: SITE_URL,
     siteName: "iKnowAPDF",
-    title: "iKnowAPDF â€” Free, Fast & 100% Private PDF Tools",
+    title: "iKnowAPDF — Free, Fast & 100% Private PDF Tools",
     description:
       "All-in-one PDF suite that processes files directly in your browser. Zero cloud uploads, total file privacy.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "iKnowAPDF â€” Free & 100% Private PDF Tools",
+    title: "iKnowAPDF — Free & 100% Private PDF Tools",
     description:
       "Edit, Scan, Sign, Compress, Merge, Split, and Convert PDFs client-side without servers.",
   },
@@ -98,7 +98,7 @@ export default function RootLayout({
   };
 
   return (
-    <html lang="en" className="light" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <head>
         <script
           type="application/ld+json"

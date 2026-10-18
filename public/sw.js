@@ -15,6 +15,8 @@ const PRECACHE_URLS = [
   "/tools/pdf-to-images",
   "/tools/watermark-pdf",
   "/tools/sanitize-pdf",
+  "/pdfjs/pdf.min.js",
+  "/pdfjs/pdf.worker.min.js",
 ];
 
 self.addEventListener("install", (event) => {

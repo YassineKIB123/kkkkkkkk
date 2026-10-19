@@ -51,7 +51,7 @@ export default function PricingPage() {
     payerName?: string;
   } | null>(null);
 
-  const handleProceedToPayPal = () => {
+  const handleProceedToPayPal = (method: "paypal" | "card" = "paypal") => {
     if (typeof window === "undefined") return;
     setIsSubmittingPayPal(true);
 
@@ -60,7 +60,7 @@ export default function PricingPage() {
     form.action = "https://www.paypal.com/cgi-bin/webscr";
     form.target = "_self";
 
-    const fields = {
+    const fields: Record<string, string> = {
       cmd: "_xclick",
       business: "fenangplay@gmail.com",
       item_name: "iKnowAPDF Ad-Free Monthly Pass",
@@ -71,6 +71,7 @@ export default function PricingPage() {
       return: window.location.origin + "/pricing?payment=completed",
       cancel_return: window.location.origin + "/pricing?payment=cancelled",
       rm: "1",
+      landing_page: method === "card" ? "Billing" : "Login",
     };
 
     Object.entries(fields).forEach(([key, val]) => {
@@ -775,11 +776,11 @@ export default function PricingPage() {
                   </div>
                 </div>
 
-                {/* Direct Live PayPal Checkout Button */}
-                <div className="space-y-3 pt-1">
+                {/* Direct Live Checkout Buttons: PayPal + Debit/Credit Card */}
+                <div className="space-y-2.5 pt-1">
                   <button
                     type="button"
-                    onClick={handleProceedToPayPal}
+                    onClick={() => handleProceedToPayPal("paypal")}
                     disabled={isSubmittingPayPal}
                     className="w-full flex items-center justify-center gap-2.5 rounded-xl bg-[#FFC439] hover:bg-[#F2BA36] text-[#003087] font-black py-3.5 px-5 text-sm shadow-md transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer disabled:opacity-60"
                   >
@@ -789,15 +790,25 @@ export default function PricingPage() {
                     </span>
                   </button>
 
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 text-center leading-relaxed">
-                    You will be redirected securely to PayPal to complete your $5.00 USD payment. Once completed, PayPal will return you here and your <strong>Ad-Free Pass will activate automatically</strong>.
+                  <button
+                    type="button"
+                    onClick={() => handleProceedToPayPal("card")}
+                    disabled={isSubmittingPayPal}
+                    className="w-full flex items-center justify-center gap-2 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 text-white font-bold py-3.5 px-5 text-xs shadow-md transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer disabled:opacity-60"
+                  >
+                    <CreditCard className="h-4 w-4 text-slate-300" />
+                    <span>Pay with Debit or Credit Card</span>
+                  </button>
+
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 text-center leading-relaxed pt-1">
+                    Processed securely via PayPal. You can pay with your PayPal account or directly using any credit/debit card (Visa, Mastercard, etc.). Once completed, your <strong>Ad-Free Pass activates automatically</strong>.
                   </p>
                 </div>
 
                 <div className="flex items-center justify-center gap-4 text-[11px] text-slate-400 pt-2 border-t border-slate-100 dark:border-slate-800">
                   <span className="flex items-center gap-1">
                     <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
-                    Encrypted PayPal Checkout
+                    Encrypted Card & PayPal Checkout
                   </span>
                   <span>-</span>
                   <span>Instant Auto-Activation</span>

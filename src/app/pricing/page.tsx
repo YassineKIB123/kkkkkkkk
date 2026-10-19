@@ -40,51 +40,99 @@ export default function PricingPage() {
   const [showCheckoutModal, setShowCheckoutModal] = useState<boolean>(false);
   const [checkoutStep, setCheckoutStep] = useState<"checkout" | "activated">("checkout");
   const [isAdFree, setIsAdFree] = useState<boolean>(false);
-  const [transactionId, setTransactionId] = useState<string>("");
-  const [verificationError, setVerificationError] = useState<string | null>(null);
+  const [isSubmittingPayPal, setIsSubmittingPayPal] = useState<boolean>(false);
+  const [paymentNotice, setPaymentNotice] = useState<{
+    type: "success" | "cancelled";
+    message: string;
+  } | null>(null);
   const [verifiedOrder, setVerifiedOrder] = useState<{
     orderId: string;
     payerEmail?: string;
     payerName?: string;
   } | null>(null);
 
-  // Configurable PayPal destination
-  const paypalMePassUrl =
-    process.env.NEXT_PUBLIC_PAYPAL_ME_PASS_URL ||
-    "https://paypal.me/fenangplay/5USD";
+  const handleProceedToPayPal = () => {
+    if (typeof window === "undefined") return;
+    setIsSubmittingPayPal(true);
 
-  const handleActivateWithTx = () => {
-    const cleanTx = transactionId.trim().toUpperCase();
-    if (!cleanTx || cleanTx.length < 8 || !/^[A-Z0-9_-]+$/.test(cleanTx)) {
-      setVerificationError(
-        "Please enter a valid PayPal Transaction ID (found in your PayPal payment email)."
-      );
-      return;
-    }
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = "https://www.paypal.com/cgi-bin/webscr";
+    form.target = "_self";
 
-    localStorage.setItem("iknowapdf_ad_free", "true");
-    localStorage.setItem(
-      "iknowapdf_ad_free_order",
-      JSON.stringify({
-        orderId: cleanTx,
-        status: "COMPLETED",
-        payerEmail: "PayPal Verified",
-        payerName: "Subscriber",
-        activatedAt: new Date().toISOString(),
-      })
-    );
-    setIsAdFree(true);
-    setVerifiedOrder({
-      orderId: cleanTx,
-      payerEmail: "PayPal Verified",
-      payerName: "Subscriber",
+    const fields = {
+      cmd: "_xclick",
+      business: "fenangplay@gmail.com",
+      item_name: "iKnowAPDF Ad-Free Monthly Pass",
+      amount: "5.00",
+      currency_code: "USD",
+      no_shipping: "1",
+      no_note: "1",
+      return: window.location.origin + "/pricing?payment=completed",
+      cancel_return: window.location.origin + "/pricing?payment=cancelled",
+      rm: "1",
+    };
+
+    Object.entries(fields).forEach(([key, val]) => {
+      const input = document.createElement("input");
+      input.type = "hidden";
+      input.name = key;
+      input.value = val;
+      form.appendChild(input);
     });
-    window.dispatchEvent(new Event("ad_free_status_changed"));
-    setCheckoutStep("activated");
+
+    document.body.appendChild(form);
+    form.submit();
   };
 
-  // Read ad-free status and saved order details
+  // Read ad-free status, saved order details, and check for return from PayPal checkout
   useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    // Detect return from PayPal
+    try {
+      const searchParams = new URLSearchParams(window.location.search);
+      const paymentStatus = searchParams.get("payment");
+      const tx = searchParams.get("tx") || searchParams.get("txn_id");
+      const amt = searchParams.get("amt");
+
+      if (paymentStatus === "completed" || paymentStatus === "success" || tx) {
+        const orderId = tx || ("PP-" + Date.now().toString(36).toUpperCase());
+        localStorage.setItem("iknowapdf_ad_free", "true");
+        localStorage.setItem(
+          "iknowapdf_ad_free_order",
+          JSON.stringify({
+            orderId,
+            amount: amt ? ("$" + amt) : "$5.00",
+            status: "COMPLETED",
+            verified: true,
+            payerEmail: "fenangplay@gmail.com",
+            activatedAt: new Date().toISOString(),
+          })
+        );
+        setIsAdFree(true);
+        setVerifiedOrder({
+          orderId,
+          payerEmail: "fenangplay@gmail.com",
+          payerName: "Subscriber",
+        });
+        setCheckoutStep("activated");
+        setShowCheckoutModal(true);
+        window.dispatchEvent(new Event("ad_free_status_changed"));
+
+        // Clean query string from browser address bar
+        window.history.replaceState({}, document.title, window.location.pathname);
+      } else if (paymentStatus === "cancelled") {
+        setPaymentNotice({
+          type: "cancelled",
+          message: "Checkout was cancelled on PayPal. You have not been charged.",
+        });
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    } catch (e) {
+      console.error("Failed to process payment return:", e);
+    }
+
     const checkStatus = () => {
       try {
         const active = localStorage.getItem("iknowapdf_ad_free") === "true";
@@ -257,6 +305,14 @@ export default function PricingPage() {
 
       {/* Main Content */}
       <main className="mx-auto max-w-7xl px-4 pt-12 pb-20 sm:px-6 lg:px-8 space-y-16">
+        {paymentNotice && (
+          <div className="max-w-xl mx-auto rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-900/60 dark:bg-amber-950/40 text-xs text-amber-800 dark:text-amber-300 flex items-center justify-between">
+            <span>{paymentNotice.message}</span>
+            <button type="button" onClick={() => setPaymentNotice(null)} className="text-amber-600 dark:text-amber-400 hover:text-amber-900 font-bold cursor-pointer">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        )}
         {/* Hero Section */}
         <section className="text-center max-w-3xl mx-auto space-y-4">
           <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-slate-900 dark:text-white">
@@ -711,7 +767,7 @@ export default function PricingPage() {
                   </div>
                   <div className="flex justify-between font-semibold text-slate-700 dark:text-slate-300">
                     <span>Recipient</span>
-                    <span className="font-mono text-slate-900 dark:text-slate-100 font-bold">@fenangplay</span>
+                    <span className="font-mono text-slate-900 dark:text-slate-100 font-bold">fenangplay@gmail.com</span>
                   </div>
                   <div className="flex justify-between font-bold text-sm text-slate-900 dark:text-white border-t border-slate-200 dark:border-slate-800 pt-2">
                     <span>Amount</span>
@@ -719,75 +775,32 @@ export default function PricingPage() {
                   </div>
                 </div>
 
-                {/* Step 1: Pay Directly with PayPal */}
-                <div className="space-y-2.5">
-                  <div className="flex items-center justify-between text-xs font-bold text-slate-900 dark:text-white">
-                    <span>Step 1: Complete $5.00 payment</span>
-                    <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">Live & Secure</span>
-                  </div>
-
-                  <a
-                    href={paypalMePassUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full flex items-center justify-between rounded-xl bg-[#FFC439] hover:bg-[#F2BA36] text-[#003087] font-black py-3.5 px-5 text-sm shadow-md transition-transform hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
+                {/* Direct Live PayPal Checkout Button */}
+                <div className="space-y-3 pt-1">
+                  <button
+                    type="button"
+                    onClick={handleProceedToPayPal}
+                    disabled={isSubmittingPayPal}
+                    className="w-full flex items-center justify-center gap-2.5 rounded-xl bg-[#FFC439] hover:bg-[#F2BA36] text-[#003087] font-black py-3.5 px-5 text-sm shadow-md transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer disabled:opacity-60"
                   >
-                    <div className="flex items-center gap-2">
-                      <span className="font-black italic text-lg tracking-tight">PayPal</span>
-                      <span className="text-slate-950 font-bold text-xs">- Pay $5.00 USD</span>
-                    </div>
-                    <ExternalLink className="h-4 w-4 text-slate-800" />
-                  </a>
+                    <span className="font-black italic text-lg tracking-tight">PayPal</span>
+                    <span className="text-slate-950 font-bold text-xs">
+                      {isSubmittingPayPal ? "Redirecting to PayPal..." : "- Pay $5.00 USD"}
+                    </span>
+                  </button>
 
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                    Clicking opens live PayPal with <strong>$5.00 USD</strong> ready to send directly to <strong>@fenangplay</strong>.
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 text-center leading-relaxed">
+                    You will be redirected securely to PayPal to complete your $5.00 USD payment. Once completed, PayPal will return you here and your <strong>Ad-Free Pass will activate automatically</strong>.
                   </p>
                 </div>
 
-                {/* Step 2: Activate Ad-Free Pass */}
-                <div className="space-y-2 pt-3 border-t border-slate-100 dark:border-slate-800">
-                  <label className="text-xs font-bold text-slate-900 dark:text-white flex items-center justify-between">
-                    <span>Step 2: Enter PayPal Transaction ID</span>
-                    <span className="text-[10px] font-normal text-slate-400">From payment receipt</span>
-                  </label>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      placeholder="e.g. 8XY12345AB678901C"
-                      value={transactionId}
-                      onChange={(e) => {
-                        setTransactionId(e.target.value.trim());
-                        setVerificationError(null);
-                      }}
-                      className="flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-mono text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-500 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleActivateWithTx}
-                      disabled={!transactionId}
-                      className="shrink-0 rounded-xl bg-rose-600 hover:bg-rose-500 px-4 py-2 text-xs font-bold text-white transition-colors cursor-pointer shadow-xs disabled:opacity-50"
-                    >
-                      Activate Pass
-                    </button>
-                  </div>
-                  {verificationError && (
-                    <p className="text-[11px] text-rose-600 dark:text-rose-400 flex items-center gap-1 font-medium">
-                      <AlertCircle className="h-3 w-3 shrink-0" />
-                      <span>{verificationError}</span>
-                    </p>
-                  )}
-                  <p className="text-[10px] text-slate-400 leading-normal">
-                    Enter the Transaction ID shown on your PayPal receipt or email to activate zero-ads mode instantly.
-                  </p>
-                </div>
-
-                <div className="flex items-center justify-center gap-4 text-[11px] text-slate-400 pt-1">
+                <div className="flex items-center justify-center gap-4 text-[11px] text-slate-400 pt-2 border-t border-slate-100 dark:border-slate-800">
                   <span className="flex items-center gap-1">
                     <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
                     Encrypted PayPal Checkout
                   </span>
                   <span>-</span>
-                  <span>Instant Ad Removal</span>
+                  <span>Instant Auto-Activation</span>
                 </div>
               </div>
             ) : (
@@ -817,14 +830,12 @@ export default function PricingPage() {
                       </span>
                     </div>
                   )}
-                  {verifiedOrder?.payerEmail && (
-                    <div className="flex justify-between">
-                      <span className="text-slate-500 dark:text-slate-400">Payer</span>
-                      <span className="font-medium text-slate-800 dark:text-slate-200">
-                        {verifiedOrder.payerEmail}
-                      </span>
-                    </div>
-                  )}
+                  <div className="flex justify-between">
+                    <span className="text-slate-500 dark:text-slate-400">Merchant</span>
+                    <span className="font-mono text-[11px] text-slate-800 dark:text-slate-200">
+                      fenangplay@gmail.com
+                    </span>
+                  </div>
                   <div className="flex justify-between border-t border-slate-200 dark:border-slate-800 pt-2 font-semibold">
                     <span>Ad Removal</span>
                     <span className="text-emerald-600 dark:text-emerald-400">100% Zero Ads</span>

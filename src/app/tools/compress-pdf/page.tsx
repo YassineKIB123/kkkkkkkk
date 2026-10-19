@@ -1,5 +1,7 @@
 "use client";
 
+import { ToolSuccessAlert } from "@/components/common/ToolSuccessAlert";
+
 import React, { useState } from "react";
 import { ToolLayout } from "@/components/tools/ToolLayout";
 import { FileDropzone } from "@/components/tools/FileDropzone";
@@ -232,27 +234,19 @@ export default function CompressPdfPage({ targetKb }: CompressPdfPageProps = {})
 
             {/* Result Stats */}
             {resultBytes && (
-              <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-4 dark:border-emerald-900/50 dark:bg-emerald-950/30">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400 font-bold text-sm">
-                    <CheckCircle2 className="h-4 w-4" />
-                    <span>
-                      {language === "AR"
-                        ? "اكتمل الضغط بنجاح!"
-                        : language === "FR"
-                          ? "Compression terminée !"
-                          : language === "ES"
-                            ? "¡Compresión completada!"
-                            : language === "RU"
-                              ? "Сжатие завершено!"
-                              : "Compression Complete!"}
-                    </span>
-                  </div>
-                  <span className="font-mono text-xs font-bold text-emerald-700 dark:text-emerald-400">
-                    {t.common.compressedSize}: {formatBytes(resultBytes.length)} ({t.common.reduction}: {savedRatio}%)
-                  </span>
-                </div>
-              </div>
+              <ToolSuccessAlert
+                message={
+                  language === "AR"
+                    ? `\u0627\u0643\u062A\u0645\u0644 \u0627\u0644\u0636\u063A\u0637 \u0628\u0646\u062C\u0627\u062D! \u0627\u0644\u062D\u062C\u0645 \u0627\u0644\u0645\u0636\u063A\u0648\u0637: ${formatBytes(resultBytes.length)} (\u0646\u0633\u0628\u0629 \u0627\u0644\u062A\u062E\u0641\u064A\u0636: ${savedRatio}%)`
+                    : language === "FR"
+                      ? `Compression terminee ! Taille : ${formatBytes(resultBytes.length)} (reduction : ${savedRatio}%)`
+                      : language === "ES"
+                        ? `¡Compresión completada! Tamaño: ${formatBytes(resultBytes.length)} (reducción: ${savedRatio}%)`
+                        : language === "RU"
+                          ? `\u0421\u0436\u0430\u0442\u0438\u0435 \u0437\u0430\u0432\u0435\u0440\u0448\u0435\u043D\u043E! \u0420\u0430\u0437\u043C\u0435\u0440: ${formatBytes(resultBytes.length)} (\u0441\u043E\u043A\u0440\u0430\u0449\u0435\u043D\u0438\u0435: ${savedRatio}%)`
+                          : `Success! Compressed from ${formatBytes(file.size)} to ${formatBytes(resultBytes.length)} (${savedRatio}% reduction).`
+                }
+              />
             )}
 
             {errorMessage && (
@@ -302,3 +296,4 @@ export default function CompressPdfPage({ targetKb }: CompressPdfPageProps = {})
     </ToolLayout>
   );
 }
+

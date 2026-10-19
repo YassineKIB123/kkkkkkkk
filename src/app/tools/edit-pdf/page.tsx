@@ -1,5 +1,7 @@
 "use client";
 
+import { ToolSuccessAlert } from "@/components/common/ToolSuccessAlert";
+
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { ToolLayout } from "@/components/tools/ToolLayout";
 import { FileDropzone } from "@/components/tools/FileDropzone";
@@ -2515,16 +2517,21 @@ export default function EditPdfPage() {
               </button>
 
               {readyDownloadBlob && (
-                <button
-                  type="button"
-                  onClick={() =>
-                    downloadBlob(readyDownloadBlob.bytes, readyDownloadBlob.name)
-                  }
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 px-4 py-2.5 text-xs font-bold text-white shadow-sm"
-                >
-                  <Download className="h-3.5 w-3.5" />
-                  <span>Download ({readyDownloadBlob.name})</span>
-                </button>
+                <div className="space-y-3 w-full">
+                  <ToolSuccessAlert
+                    message={`Success! Saved "${readyDownloadBlob.name}".`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() =>
+                      downloadBlob(readyDownloadBlob.bytes, readyDownloadBlob.name)
+                    }
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 px-4 py-2.5 text-xs font-bold text-white shadow-sm"
+                  >
+                    <Download className="h-3.5 w-3.5" />
+                    <span>Download ({readyDownloadBlob.name})</span>
+                  </button>
+                </div>
               )}
             </div>
 

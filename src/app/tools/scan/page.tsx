@@ -1,5 +1,7 @@
 "use client";
 
+import { ToolSuccessAlert } from "@/components/common/ToolSuccessAlert";
+
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { ToolLayout } from "@/components/tools/ToolLayout";
 import { useLanguage } from "@/context/LanguageContext";
@@ -69,6 +71,7 @@ export default function ScanToPdfPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [feedbackError, setFeedbackError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const [containerDimensions, setContainerDimensions] = useState({ width: 0, height: 0 });
 
@@ -328,6 +331,7 @@ export default function ScanToPdfPage() {
       const pdfBytes = await canvasesToPDF(canvasesToEmbed);
       const filename = `scan_${Date.now()}.pdf`;
       downloadBlob(pdfBytes, filename);
+      setSuccessMessage(`Success! Saved and downloaded "${filename}" with ${scannedPages.length} scanned page(s).`);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to assemble PDF document.";
       setFeedbackError(msg);
@@ -532,6 +536,10 @@ export default function ScanToPdfPage() {
                   })}
               </div>
             </div>
+
+            {successMessage && (
+              <ToolSuccessAlert message={successMessage} className="mb-4" />
+            )}
 
             {feedbackError && (
               <div className="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 p-3.5 text-xs text-red-700">

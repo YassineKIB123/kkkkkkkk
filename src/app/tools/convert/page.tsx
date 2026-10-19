@@ -1,5 +1,7 @@
 "use client";
 
+import { ToolSuccessAlert } from "@/components/common/ToolSuccessAlert";
+
 import React, { useState } from "react";
 import { ToolLayout } from "@/components/tools/ToolLayout";
 import { FileDropzone } from "@/components/tools/FileDropzone";
@@ -364,10 +366,7 @@ export default function UniversalConverterPage({
             )}
 
             {successMessage && (
-              <div className="flex items-start gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50 p-3.5 text-xs text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-400">
-                <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 mt-0.5" />
-                <span>{successMessage}</span>
-              </div>
+              <ToolSuccessAlert message={successMessage} />
             )}
 
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2 border-t border-slate-200 dark:border-slate-800">

@@ -31,6 +31,7 @@ import {
   Lock,
   Zap,
   Check,
+  Heart,
 } from "lucide-react";
 import React, { useState, useEffect, useRef, createContext, useContext } from "react";
 import { AdBanner } from "@/components/ads/AdBanner";
@@ -179,6 +180,19 @@ export function ToolLayout({
 
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showInstallHelp, setShowInstallHelp] = useState(false);
+  const [tipThankYou, setTipThankYou] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const sp = new URLSearchParams(window.location.search);
+      if (sp.get("tip") === "thankyou") {
+        const timer = setTimeout(() => setTipThankYou(true), 0);
+        window.history.replaceState({}, document.title, window.location.pathname);
+        return () => clearTimeout(timer);
+      }
+    } catch {}
+  }, []);
 
   const langDropdownRef = useRef<HTMLDivElement>(null);
   const megaMenuRef = useRef<HTMLDivElement>(null);
@@ -650,6 +664,21 @@ export function ToolLayout({
 
           {/* Interactive Tool Container */}
           <div className="rounded-2xl border border-slate-200/90 bg-white p-5 sm:p-7 shadow-xs dark:border-slate-800 dark:bg-slate-900/60">
+            {tipThankYou && (
+              <div className="mb-5 flex items-center justify-between rounded-xl border border-rose-200 bg-rose-50 p-3.5 text-xs text-rose-800 dark:border-rose-900/60 dark:bg-rose-950/50 dark:text-rose-300 shadow-xs">
+                <span className="flex items-center gap-2 font-bold text-sm">
+                  <Heart className="h-4 w-4 text-rose-600 fill-rose-600 shrink-0" />
+                  Thank you so much for buying me a coffee and supporting iKnowAPDF!
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setTipThankYou(false)}
+                  className="p-1 text-slate-500 hover:text-slate-900 dark:hover:text-white cursor-pointer"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            )}
             {children}
           </div>
 

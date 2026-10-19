@@ -111,23 +111,25 @@ export default function PricingPage() {
             activatedAt: new Date().toISOString(),
           })
         );
-        setIsAdFree(true);
-        setVerifiedOrder({
-          orderId,
-          payerEmail: "fenangplay@gmail.com",
-          payerName: "Subscriber",
-        });
-        setCheckoutStep("activated");
-        setShowCheckoutModal(true);
-        window.dispatchEvent(new Event("ad_free_status_changed"));
+        setTimeout(() => {
+          setIsAdFree(true);
+          setVerifiedOrder({
+            orderId,
+            payerEmail: "fenangplay@gmail.com",
+            payerName: "Subscriber",
+          });
+          setCheckoutStep("activated");
+          setShowCheckoutModal(true);
+          window.dispatchEvent(new Event("ad_free_status_changed"));
+        }, 0);
 
         // Clean query string from browser address bar
         window.history.replaceState({}, document.title, window.location.pathname);
       } else if (paymentStatus === "cancelled") {
-        setPaymentNotice({
+        setTimeout(() => { setPaymentNotice({
           type: "cancelled",
           message: "Checkout was cancelled on PayPal. You have not been charged.",
-        });
+        }); }, 0);
         window.history.replaceState({}, document.title, window.location.pathname);
       }
     } catch (e) {

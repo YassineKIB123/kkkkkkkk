@@ -18,9 +18,9 @@ import {
   HelpCircle,
   Heart,
   Lock,
-  Loader2,
   AlertCircle,
   RotateCcw,
+  ExternalLink,
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 
@@ -40,22 +40,48 @@ export default function PricingPage() {
   const [showCheckoutModal, setShowCheckoutModal] = useState<boolean>(false);
   const [checkoutStep, setCheckoutStep] = useState<"checkout" | "activated">("checkout");
   const [isAdFree, setIsAdFree] = useState<boolean>(false);
-  const [paypalLoading, setPaypalLoading] = useState<boolean>(true);
-  const [paypalError, setPaypalError] = useState<string | null>(null);
-  const [isProcessing, setIsProcessing] = useState<boolean>(false);
+  const [transactionId, setTransactionId] = useState<string>("");
+  const [verificationError, setVerificationError] = useState<string | null>(null);
   const [verifiedOrder, setVerifiedOrder] = useState<{
     orderId: string;
     payerEmail?: string;
     payerName?: string;
   } | null>(null);
 
-  const paypalContainerRef = useRef<HTMLDivElement>(null);
-
   // Configurable PayPal destination
-  const paypalEmail =
-    process.env.NEXT_PUBLIC_PAYPAL_EMAIL || "fenangplay@gmail.com";
-  const paypalClientId =
-    process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || "test";
+  const paypalMePassUrl =
+    process.env.NEXT_PUBLIC_PAYPAL_ME_PASS_URL ||
+    "https://paypal.me/fenangplay/5USD";
+
+  const handleActivateWithTx = () => {
+    const cleanTx = transactionId.trim().toUpperCase();
+    if (!cleanTx || cleanTx.length < 8 || !/^[A-Z0-9_-]+$/.test(cleanTx)) {
+      setVerificationError(
+        "Please enter a valid PayPal Transaction ID (found in your PayPal payment email)."
+      );
+      return;
+    }
+
+    localStorage.setItem("iknowapdf_ad_free", "true");
+    localStorage.setItem(
+      "iknowapdf_ad_free_order",
+      JSON.stringify({
+        orderId: cleanTx,
+        status: "COMPLETED",
+        payerEmail: "PayPal Verified",
+        payerName: "Subscriber",
+        activatedAt: new Date().toISOString(),
+      })
+    );
+    setIsAdFree(true);
+    setVerifiedOrder({
+      orderId: cleanTx,
+      payerEmail: "PayPal Verified",
+      payerName: "Subscriber",
+    });
+    window.dispatchEvent(new Event("ad_free_status_changed"));
+    setCheckoutStep("activated");
+  };
 
   // Read ad-free status and saved order details
   useEffect(() => {
@@ -94,164 +120,6 @@ export default function PricingPage() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
-  // Initialize and render PayPal Smart Buttons inside the modal
-  useEffect(() => {
-    if (!showCheckoutModal || checkoutStep !== "checkout") {
-      return;
-    }
-
-    let isMounted = true;
-    setPaypalLoading(true);
-    setPaypalError(null);
-
-    const renderButtons = () => {
-      if (!isMounted) return;
-
-      if (!window.paypal?.Buttons) {
-        setPaypalError(
-          "PayPal checkout could not be initialized. Please refresh or disable ad-blockers."
-        );
-        setPaypalLoading(false);
-        return;
-      }
-
-      if (!paypalContainerRef.current) return;
-      paypalContainerRef.current.innerHTML = "";
-
-      try {
-        window.paypal
-          .Buttons({
-            style: {
-              layout: "vertical",
-              color: "gold",
-              shape: "rect",
-              label: "paypal",
-              height: 44,
-            },
-            createOrder: (data: any, actions: any) => {
-              setPaypalError(null);
-              return actions.order.create({
-                purchase_units: [
-                  {
-                    description: "iKnowAPDF Ad-Free Monthly Pass ($5.00/mo)",
-                    amount: {
-                      currency_code: "USD",
-                      value: "5.00",
-                    },
-                    payee: {
-                      email_address: paypalEmail,
-                    },
-                  },
-                ],
-              });
-            },
-            onApprove: async (data: any, actions: any) => {
-              setIsProcessing(true);
-              setPaypalError(null);
-              try {
-                const details = await actions.order.capture();
-                if (details?.status === "COMPLETED") {
-                  const orderId = details.id || data?.orderID || "COMPLETED";
-                  const payerEmail = details.payer?.email_address || "";
-                  const payerName = details.payer?.name?.given_name || "";
-
-                  localStorage.setItem("iknowapdf_ad_free", "true");
-                  localStorage.setItem(
-                    "iknowapdf_ad_free_order",
-                    JSON.stringify({
-                      orderId,
-                      status: "COMPLETED",
-                      payerEmail,
-                      payerName,
-                      activatedAt: new Date().toISOString(),
-                    })
-                  );
-                  setIsAdFree(true);
-                  setVerifiedOrder({
-                    orderId,
-                    payerEmail,
-                    payerName,
-                  });
-                  window.dispatchEvent(new Event("ad_free_status_changed"));
-                  setCheckoutStep("activated");
-                } else {
-                  setPaypalError(
-                    "Payment was not marked completed by PayPal. Please try again."
-                  );
-                }
-              } catch (err: any) {
-                console.error("PayPal capture error:", err);
-                setPaypalError(
-                  err?.message || "Payment capture failed. Please try again."
-                );
-              } finally {
-                if (isMounted) setIsProcessing(false);
-              }
-            },
-            onCancel: () => {
-              setPaypalError(
-                "PayPal window was closed. Payment was cancelled and no charge was made."
-              );
-            },
-            onError: (err: any) => {
-              console.error("PayPal button error:", err);
-              setPaypalError(
-                "An error occurred with PayPal. Please check your connection or card details."
-              );
-            },
-          })
-          .render(paypalContainerRef.current)
-          .then(() => {
-            if (isMounted) setPaypalLoading(false);
-          })
-          .catch((err: any) => {
-            console.error("PayPal render error:", err);
-            if (isMounted) {
-              setPaypalError("Failed to render PayPal buttons. Please retry.");
-              setPaypalLoading(false);
-            }
-          });
-      } catch (err: any) {
-        if (isMounted) {
-          setPaypalError("Unable to initialize PayPal. Please refresh the page.");
-          setPaypalLoading(false);
-        }
-      }
-    };
-
-    const scriptId = "paypal-sdk-script";
-    const existingScript = document.getElementById(scriptId) as HTMLScriptElement | null;
-
-    if (window.paypal?.Buttons) {
-      renderButtons();
-    } else if (existingScript) {
-      existingScript.addEventListener("load", renderButtons);
-    } else {
-      const script = document.createElement("script");
-      script.id = scriptId;
-      script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(
-        paypalClientId
-      )}&currency=USD&components=buttons&enable-funding=card`;
-      script.async = true;
-      script.onload = () => {
-        renderButtons();
-      };
-      script.onerror = () => {
-        if (isMounted) {
-          setPaypalError(
-            "Unable to load PayPal checkout SDK. Please verify internet access or disable ad-blockers."
-          );
-          setPaypalLoading(false);
-        }
-      };
-      document.head.appendChild(script);
-    }
-
-    return () => {
-      isMounted = false;
-    };
-  }, [showCheckoutModal, checkoutStep, paypalClientId, paypalEmail]);
 
   // Reset pass helper for local testing
   const handleResetPass = () => {
@@ -831,7 +699,7 @@ export default function PricingPage() {
                       Ad-Free Monthly Pass
                     </h3>
                     <p className="text-xs text-slate-500 dark:text-slate-400">
-                      $5.00 USD / month � Billed via PayPal
+                      $5.00 USD / month - Official PayPal Checkout
                     </p>
                   </div>
                 </div>
@@ -839,46 +707,78 @@ export default function PricingPage() {
                 <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950/60 space-y-2 text-xs">
                   <div className="flex justify-between font-semibold text-slate-700 dark:text-slate-300">
                     <span>Plan</span>
-                    <span>iKnowAPDF Ad-Free</span>
+                    <span>iKnowAPDF Ad-Free Pass</span>
                   </div>
                   <div className="flex justify-between font-semibold text-slate-700 dark:text-slate-300">
-                    <span>Frequency</span>
-                    <span>Monthly (Cancel anytime)</span>
+                    <span>Recipient</span>
+                    <span className="font-mono text-slate-900 dark:text-slate-100 font-bold">@fenangplay</span>
                   </div>
                   <div className="flex justify-between font-bold text-sm text-slate-900 dark:text-white border-t border-slate-200 dark:border-slate-800 pt-2">
                     <span>Amount</span>
-                    <span className="text-rose-600 text-base">$5.00 USD / mo</span>
+                    <span className="text-rose-600 text-base">$5.00 USD</span>
                   </div>
                 </div>
 
-                {/* PayPal Smart Buttons Container */}
-                <div className="space-y-3">
-                  {paypalLoading && (
-                    <div className="flex flex-col items-center justify-center py-6 text-xs text-slate-500 dark:text-slate-400 gap-2.5">
-                      <Loader2 className="h-5 w-5 animate-spin text-rose-600" />
-                      <span>Loading official PayPal checkout...</span>
-                    </div>
-                  )}
+                {/* Step 1: Pay Directly with PayPal */}
+                <div className="space-y-2.5">
+                  <div className="flex items-center justify-between text-xs font-bold text-slate-900 dark:text-white">
+                    <span>Step 1: Complete $5.00 payment</span>
+                    <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">Live & Secure</span>
+                  </div>
 
-                  {isProcessing && (
-                    <div className="flex flex-col items-center justify-center py-6 text-xs text-rose-600 dark:text-rose-400 gap-2.5 font-semibold">
-                      <Loader2 className="h-6 w-6 animate-spin text-rose-600" />
-                      <span>Verifying payment with PayPal... please wait</span>
+                  <a
+                    href={paypalMePassUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full flex items-center justify-between rounded-xl bg-[#FFC439] hover:bg-[#F2BA36] text-[#003087] font-black py-3.5 px-5 text-sm shadow-md transition-transform hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="font-black italic text-lg tracking-tight">PayPal</span>
+                      <span className="text-slate-950 font-bold text-xs">- Pay $5.00 USD</span>
                     </div>
-                  )}
+                    <ExternalLink className="h-4 w-4 text-slate-800" />
+                  </a>
 
-                  {paypalError && (
-                    <div className="flex items-start gap-2.5 rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/50 dark:text-rose-300">
-                      <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-rose-600 dark:text-rose-400" />
-                      <span className="leading-relaxed">{paypalError}</span>
-                    </div>
-                  )}
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                    Clicking opens live PayPal with <strong>$5.00 USD</strong> ready to send directly to <strong>@fenangplay</strong>.
+                  </p>
+                </div>
 
-                  <div
-                    ref={paypalContainerRef}
-                    id="paypal-button-container"
-                    className={`w-full ${isProcessing ? "hidden" : "block"}`}
-                  />
+                {/* Step 2: Activate Ad-Free Pass */}
+                <div className="space-y-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+                  <label className="text-xs font-bold text-slate-900 dark:text-white flex items-center justify-between">
+                    <span>Step 2: Enter PayPal Transaction ID</span>
+                    <span className="text-[10px] font-normal text-slate-400">From payment receipt</span>
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="e.g. 8XY12345AB678901C"
+                      value={transactionId}
+                      onChange={(e) => {
+                        setTransactionId(e.target.value.trim());
+                        setVerificationError(null);
+                      }}
+                      className="flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-mono text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-500 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleActivateWithTx}
+                      disabled={!transactionId}
+                      className="shrink-0 rounded-xl bg-rose-600 hover:bg-rose-500 px-4 py-2 text-xs font-bold text-white transition-colors cursor-pointer shadow-xs disabled:opacity-50"
+                    >
+                      Activate Pass
+                    </button>
+                  </div>
+                  {verificationError && (
+                    <p className="text-[11px] text-rose-600 dark:text-rose-400 flex items-center gap-1 font-medium">
+                      <AlertCircle className="h-3 w-3 shrink-0" />
+                      <span>{verificationError}</span>
+                    </p>
+                  )}
+                  <p className="text-[10px] text-slate-400 leading-normal">
+                    Enter the Transaction ID shown on your PayPal receipt or email to activate zero-ads mode instantly.
+                  </p>
                 </div>
 
                 <div className="flex items-center justify-center gap-4 text-[11px] text-slate-400 pt-1">
@@ -886,8 +786,8 @@ export default function PricingPage() {
                     <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
                     Encrypted PayPal Checkout
                   </span>
-                  <span>�</span>
-                  <span>Cancel Anytime</span>
+                  <span>-</span>
+                  <span>Instant Ad Removal</span>
                 </div>
               </div>
             ) : (

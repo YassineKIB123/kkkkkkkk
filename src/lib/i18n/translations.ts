@@ -17,6 +17,7 @@ export interface Translations {
     allTools: string;
     installApp: string;
     searchPlaceholder: string;
+    pricing: string;
   };
   hero: {
     titleStart: string;
@@ -261,7 +262,8 @@ export const DICTIONARY: Record<Language, Translations> = {
     "sanitize": "Sanitize Metadata",
     "allTools": "All Tools",
     "installApp": "Install App",
-    "searchPlaceholder": "Search tools..."
+    "searchPlaceholder": "Search tools...",
+    "pricing": "Pricing"
   },
   "hero": {
     "titleStart": "Every PDF Tool You Need,",
@@ -525,7 +527,8 @@ export const DICTIONARY: Record<Language, Translations> = {
     "sanitize": "Nettoyer métadonnées",
     "allTools": "Tous les outils",
     "installApp": "Installer l'app",
-    "searchPlaceholder": "Rechercher des outils..."
+    "searchPlaceholder": "Rechercher des outils...",
+    "pricing": "Tarifs"
   },
   "hero": {
     "titleStart": "Tous les outils PDF dont vous avez besoin,",
@@ -789,7 +792,8 @@ export const DICTIONARY: Record<Language, Translations> = {
     "sanitize": "Limpiar metadatos",
     "allTools": "Todas las herramientas",
     "installApp": "Instalar app",
-    "searchPlaceholder": "Buscar herramientas..."
+    "searchPlaceholder": "Buscar herramientas...",
+    "pricing": "Precios"
   },
   "hero": {
     "titleStart": "Todas las herramientas PDF que necesitas,",
@@ -1053,7 +1057,8 @@ export const DICTIONARY: Record<Language, Translations> = {
     "sanitize": "Очистить метаданные",
     "allTools": "Все инструменты",
     "installApp": "Установить приложение",
-    "searchPlaceholder": "Поиск инструментов..."
+    "searchPlaceholder": "Поиск инструментов...",
+    "pricing": "Тарифы"
   },
   "hero": {
     "titleStart": "Все необходимые инструменты PDF,",
@@ -1317,7 +1322,8 @@ export const DICTIONARY: Record<Language, Translations> = {
     "sanitize": "تنظيف البيانات الوصفية",
     "allTools": "جميع الأدوات",
     "installApp": "تثبيت التطبيق",
-    "searchPlaceholder": "البحث عن أدوات..."
+    "searchPlaceholder": "البحث عن أدوات...",
+    "pricing": "الأسعار"
   },
   "hero": {
     "titleStart": "كل أدوات PDF التي تحتاجها،",

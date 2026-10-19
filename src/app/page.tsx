@@ -376,7 +376,7 @@ export default function HomePage() {
       {/* Top Navbar */}
       <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/95 dark:border-slate-800 dark:bg-slate-950/95 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          <Link href="/" className="flex items-center gap-2.5">
+          <Link href="/" className="flex items-center gap-2.5 shrink-0 mr-4 xl:mr-6">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-600 text-white shadow-xs shadow-rose-600/30">
               <Layers className="h-5 w-5" />
             </div>
@@ -390,18 +390,24 @@ export default function HomePage() {
             </div>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-5 text-xs font-semibold text-slate-600 dark:text-slate-300">
-            <Link href="/tools/edit-pdf" className="hover:text-rose-600 transition-colors font-bold text-rose-600 dark:text-rose-400">
+          <nav className="hidden md:flex items-center gap-4 xl:gap-5 text-xs font-semibold text-slate-600 dark:text-slate-300">
+            <Link href="/tools/edit-pdf" className="hover:text-rose-600 transition-colors">
               Edit PDF Text
             </Link>
             <Link href="/tools/compress-pdf" className="hover:text-rose-600 transition-colors">
               {t.tools.compressTitle}
             </Link>
-            <Link href="/tools/merge-pdf" className="hover:text-rose-600 transition-colors">
-              {t.nav.merge}
+            <Link href="/tools/sign-pdf" className="hover:text-rose-600 transition-colors">
+              Sign PDF
             </Link>
             <Link href="/tools/scan" className="hover:text-rose-600 transition-colors">
               {t.nav.scan}
+            </Link>
+            <Link
+              href="/pricing"
+              className="hover:text-rose-600 transition-colors font-semibold"
+            >
+              {t.nav.pricing}
             </Link>
 
             <div className="relative" ref={megaMenuRef}>
@@ -536,14 +542,14 @@ export default function HomePage() {
           </nav>
 
           {/* Right Controls */}
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 ml-2">
             <button
               type="button"
               onClick={handleInstallClick}
               className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 text-white hover:bg-slate-800 dark:bg-rose-600 dark:hover:bg-rose-500 px-3.5 py-1.5 text-xs font-bold transition-all shadow-xs"
             >
               <Download className="h-3.5 w-3.5" />
-              <span>Install App</span>
+              <span className="hidden sm:inline">Install App</span>
             </button>
 
             <button
@@ -559,7 +565,7 @@ export default function HomePage() {
               )}
             </button>
 
-            <div className="relative hidden lg:block w-44">
+            <div className="relative hidden xl:block w-40">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
               <input
                 type="text"
@@ -625,7 +631,7 @@ export default function HomePage() {
           </p>
 
           {/* ================================================================ */}
-          {/* HERO "DROP PDF OR IMG" DROPZONE (SCROLLS TO MAIN TOOLS BELOW)    */}
+          {/* HERO "DROP PDF" DROPZONE (SCROLLS TO MAIN TOOLS BELOW)    */}
           {/* ================================================================ */}
           <div className="pt-2 max-w-2xl mx-auto">
             <input
@@ -690,7 +696,7 @@ export default function HomePage() {
                     <span>Instant File Drop</span>
                   </span>
                   <h2 className="text-xl sm:text-2xl font-black tracking-tight uppercase text-slate-900 dark:text-white">
-                    DROP PDF OR IMG
+                    DROP PDF HERE
                   </h2>
                   <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
                     Drag & drop your PDF or image here — then pick any tool below to open it right away
@@ -702,11 +708,6 @@ export default function HomePage() {
                     <FileText className="h-4 w-4" />
                     <span>Select PDF or Image</span>
                     <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-                  </span>
-
-                  <span className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200/90 bg-white/90 dark:border-slate-800 dark:bg-slate-900 px-3 py-2 text-[11px] font-semibold text-slate-600 dark:text-slate-300">
-                    <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
-                    <span>100% Local & Private</span>
                   </span>
                 </div>
               </div>
@@ -1116,6 +1117,7 @@ export default function HomePage() {
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-between border-t border-slate-200 dark:border-slate-800 pt-6 gap-4 text-slate-500">
             <div className="flex flex-wrap items-center gap-4">
               <p>iKnowAPDF &copy; 2026. {t.footer.rights}</p>
+              <Link href="/pricing" className="hover:text-rose-600 underline-offset-4 hover:underline font-semibold text-rose-600 dark:text-rose-400">{t.nav.pricing} ($5/mo Ad-Free)</Link>
               <Link href="/about" className="hover:text-rose-600 underline-offset-4 hover:underline">{t.common.about}</Link>
               <Link href="/privacy" className="hover:text-rose-600 underline-offset-4 hover:underline">{t.common.privacy}</Link>
               <Link href="/terms" className="hover:text-rose-600 underline-offset-4 hover:underline">{t.common.terms}</Link>

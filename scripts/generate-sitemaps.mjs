@@ -28,6 +28,7 @@ const CORE_URLS = [
   { loc: `${SITE_URL}/contact`, priority: "0.70", changefreq: "monthly" },
   { loc: `${SITE_URL}/privacy`, priority: "0.70", changefreq: "monthly" },
   { loc: `${SITE_URL}/terms`, priority: "0.70", changefreq: "monthly" },
+  { loc: `${SITE_URL}/pricing`, priority: "0.85", changefreq: "weekly" },
   { loc: `${SITE_URL}/tools/edit-pdf`, priority: "0.95", changefreq: "weekly" },
   { loc: `${SITE_URL}/tools/compress-pdf`, priority: "0.95", changefreq: "weekly" },
   { loc: `${SITE_URL}/tools/merge-pdf`, priority: "0.95", changefreq: "weekly" },

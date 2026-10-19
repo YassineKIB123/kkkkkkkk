@@ -1,6 +1,8 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 
 declare global {
   interface Window {
@@ -23,8 +25,44 @@ export function AdBanner({
 }: AdBannerProps) {
   const adsenseId = process.env.NEXT_PUBLIC_ADSENSE_ID || "ca-pub-5152878593494077";
   const pushedRef = useRef(false);
+  const [isAdFree, setIsAdFree] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        return localStorage.getItem("iknowapdf_ad_free") === "true";
+      } catch {}
+    }
+    return false;
+  });
 
   useEffect(() => {
+    const checkAdFree = () => {
+      try {
+        setIsAdFree(localStorage.getItem("iknowapdf_ad_free") === "true");
+      } catch {}
+    };
+
+    checkAdFree();
+    window.addEventListener("ad_free_status_changed", checkAdFree);
+    window.addEventListener("storage", checkAdFree);
+
+    return () => {
+      window.removeEventListener("ad_free_status_changed", checkAdFree);
+      window.removeEventListener("storage", checkAdFree);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isAdFree) {
+      try {
+        const w = window as any;
+        w.adsbygoogle = w.adsbygoogle || [];
+        w.adsbygoogle.pauseAdRequests = 1;
+        document.querySelectorAll('ins.adsbygoogle-noablate, ins.adsbygoogle').forEach((el) => {
+          (el as HTMLElement).style.display = 'none';
+        });
+      } catch {}
+      return;
+    }
     if (!adsenseId || pushedRef.current) return;
     try {
       (window.adsbygoogle = window.adsbygoogle || []).push({});
@@ -32,7 +70,12 @@ export function AdBanner({
     } catch {
       // Ignore duplicate push on hot reload
     }
-  }, [adsenseId]);
+  }, [adsenseId, isAdFree]);
+
+  // Strip all ad wrappers and banners if ad-free pass is active
+  if (isAdFree) {
+    return null;
+  }
 
   // Render nothing until NEXT_PUBLIC_ADSENSE_ID is configured
   if (!adsenseId && !showPlaceholder) {
@@ -52,9 +95,18 @@ export function AdBanner({
     >
       {adsenseId ? (
         <>
-          <span className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-            Advertisement
-          </span>
+          <div className="flex items-center justify-between w-full px-2 mb-1">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+              Advertisement
+            </span>
+            <Link
+              href="/pricing"
+              className="inline-flex items-center gap-1 text-[10px] font-bold text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 hover:underline transition-colors cursor-pointer"
+            >
+              <span>Remove ads ($5/mo)</span>
+              <ArrowRight className="h-2.5 w-2.5" />
+            </Link>
+          </div>
           <ins
             className="adsbygoogle"
             style={{ display: "block", width: "100%" }}
@@ -66,9 +118,18 @@ export function AdBanner({
         </>
       ) : (
         <div className="flex h-full w-full flex-col items-center justify-center rounded-lg border border-dashed border-slate-200 bg-white py-3 text-xs text-slate-400 dark:border-slate-800 dark:bg-slate-900">
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-            Advertisement
-          </span>
+          <div className="flex items-center justify-between w-full px-3 mb-1">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+              Advertisement
+            </span>
+            <Link
+              href="/pricing"
+              className="inline-flex items-center gap-1 text-[10px] font-bold text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 hover:underline transition-colors cursor-pointer"
+            >
+              <span>Remove ads ($5/mo)</span>
+              <ArrowRight className="h-2.5 w-2.5" />
+            </Link>
+          </div>
           <span className="mt-1 text-[11px] font-medium text-slate-400">
             {isLeaderboard ? "Leaderboard (728x90)" : "Rectangle (300x250)"}
           </span>

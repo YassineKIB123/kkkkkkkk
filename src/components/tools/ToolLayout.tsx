@@ -357,7 +357,7 @@ export function ToolLayout({
         {/* Top Navbar */}
         <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/95 dark:border-slate-800 dark:bg-slate-950/95 backdrop-blur-md">
           <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-            <Link href="/" className="flex items-center gap-2.5">
+            <Link href="/" className="flex items-center gap-2.5 shrink-0 mr-4 xl:mr-6">
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-600 text-white shadow-xs shadow-rose-600/30">
                 <Layers className="h-5 w-5" />
               </div>
@@ -371,21 +371,27 @@ export function ToolLayout({
               </div>
             </Link>
 
-            <nav className="hidden md:flex items-center gap-5 text-xs font-semibold text-slate-600 dark:text-slate-300">
+            <nav className="hidden md:flex items-center gap-4 xl:gap-5 text-xs font-semibold text-slate-600 dark:text-slate-300">
               <Link
                 href="/tools/edit-pdf"
-                className="hover:text-rose-600 transition-colors font-bold text-rose-600 dark:text-rose-400"
+                className="hover:text-rose-600 transition-colors"
               >
                 {t.tools.editTitle}
               </Link>
               <Link href="/tools/compress-pdf" className="hover:text-rose-600 transition-colors">
                 {t.tools.compressTitle}
               </Link>
-              <Link href="/tools/merge-pdf" className="hover:text-rose-600 transition-colors">
-                {t.tools.mergeTitle}
+              <Link href="/tools/sign-pdf" className="hover:text-rose-600 transition-colors">
+                {t.tools.signTitle}
               </Link>
               <Link href="/tools/scan" className="hover:text-rose-600 transition-colors">
                 {t.tools.scanTitle}
+              </Link>
+              <Link
+                href="/pricing"
+                className="hover:text-rose-600 transition-colors font-semibold"
+              >
+                {t.nav.pricing}
               </Link>
 
               <div className="relative" ref={megaMenuRef}>
@@ -535,7 +541,7 @@ export function ToolLayout({
               </div>
             </nav>
 
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 ml-2">
               <button
                 type="button"
                 onClick={handleInstallClick}
@@ -837,6 +843,7 @@ export function ToolLayout({
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-between border-t border-slate-200 dark:border-slate-800 pt-6 gap-4 text-slate-500">
             <div className="flex flex-wrap items-center gap-4">
               <p>iKnowAPDF &copy; 2026. {t.footer.rights}</p>
+              <Link href="/pricing" className="hover:text-rose-600 underline-offset-4 hover:underline font-semibold text-rose-600 dark:text-rose-400">{t.nav.pricing} ($5/mo Ad-Free)</Link>
               <Link href="/about" className="hover:text-rose-600 underline-offset-4 hover:underline">{t.common.about}</Link>
               <Link href="/contact" className="hover:text-rose-600 underline-offset-4 hover:underline">{t.common.contact}</Link>
               <Link href="/privacy" className="hover:text-rose-600 underline-offset-4 hover:underline">{t.common.privacy}</Link>

@@ -35,6 +35,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { AdBanner } from "@/components/ads/AdBanner";
+import { BuyCoffeeButton } from "@/components/common/BuyCoffeeModal";
 import { DICTIONARY, Language } from "@/lib/i18n/translations";
 import { useLanguage } from "@/context/LanguageContext";
 
@@ -613,6 +614,8 @@ export default function HomePage() {
                 </div>
               )}
             </div>
+
+            <BuyCoffeeButton variant="navbar" />
           </div>
         </div>
       </header>
@@ -1124,7 +1127,8 @@ export default function HomePage() {
               <Link href="/contact" className="hover:text-rose-600 underline-offset-4 hover:underline">{t.common.contact}</Link>
             </div>
 
-            <div className="flex items-center gap-1.5 font-medium">
+            <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap justify-center sm:justify-end">
+              <div className="flex items-center gap-1.5 font-medium">
               {(["EN", "FR", "ES", "RU", "AR"] as const).map((lang) => (
                 <button
                   key={lang}
@@ -1140,7 +1144,10 @@ export default function HomePage() {
                 </button>
               ))}
             </div>
+
+            <BuyCoffeeButton variant="footer" />
           </div>
+        </div>
         </div>
       </footer>
 

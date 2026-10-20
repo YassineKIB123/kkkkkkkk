@@ -23,6 +23,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
+import { BuyCoffeeButton } from "@/components/common/BuyCoffeeModal";
 
 declare global {
   interface Window {
@@ -302,6 +303,8 @@ export default function PricingPage() {
                 </div>
               )}
             </div>
+
+            <BuyCoffeeButton variant="navbar" />
           </div>
         </div>
       </header>
@@ -939,7 +942,8 @@ export default function PricingPage() {
               <Link href="/contact" className="hover:text-rose-600 underline-offset-4 hover:underline">Contact</Link>
             </div>
 
-            <div className="flex items-center gap-1.5 font-medium">
+            <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap justify-center sm:justify-end">
+              <div className="flex items-center gap-1.5 font-medium">
               {(["EN", "FR", "ES", "RU", "AR"] as const).map((lang) => (
                 <button
                   key={lang}
@@ -954,6 +958,9 @@ export default function PricingPage() {
                   {lang}
                 </button>
               ))}
+            </div>
+
+              <BuyCoffeeButton variant="footer" />
             </div>
           </div>
         </div>

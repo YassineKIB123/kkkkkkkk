@@ -35,6 +35,7 @@ import {
 } from "lucide-react";
 import React, { useState, useEffect, useRef, createContext, useContext } from "react";
 import { AdBanner } from "@/components/ads/AdBanner";
+import { BuyCoffeeButton } from "@/components/common/BuyCoffeeModal";
 import { useLanguage } from "@/context/LanguageContext";
 import { Language, Translations } from "@/lib/i18n/translations";
 
@@ -615,6 +616,8 @@ export function ToolLayout({
                   </div>
                 )}
               </div>
+
+            <BuyCoffeeButton variant="navbar" />
             </div>
           </div>
         </header>
@@ -879,7 +882,8 @@ export function ToolLayout({
               <Link href="/terms" className="hover:text-rose-600 underline-offset-4 hover:underline">{t.common.terms}</Link>
             </div>
 
-            <div className="flex items-center gap-1.5 font-medium">
+            <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap justify-center sm:justify-end">
+              <div className="flex items-center gap-1.5 font-medium">
               {(["EN", "FR", "ES", "RU", "AR"] as const).map((lang) => (
                 <button
                   key={lang}
@@ -895,7 +899,10 @@ export function ToolLayout({
                 </button>
               ))}
             </div>
+
+              <BuyCoffeeButton variant="footer" />
           </div>
+        </div>
         </div>
       </footer>
 

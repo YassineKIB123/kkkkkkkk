@@ -117,6 +117,8 @@ const TOOL_PATH_MAP: Record<string, SupportedToolId> = {
   "/pdf-to-jpg": "pdfToImages",
   "/pdf-to-png": "pdfToImages",
   "/compress-pdf-to-100kb": "compress",
+  "/compress-pdf-under-100kb": "compress",
+  "/compress-pdf-under-200kb": "compress",
   "/compress-pdf-to-200kb": "compress",
   "/compress-pdf-under-1mb": "compress",
   "/watermark-pdf": "watermark",

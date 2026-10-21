@@ -53,8 +53,8 @@ const CORE_URLS = [
   { loc: `${SITE_URL}/pdf-to-png`, priority: "0.95", changefreq: "weekly" },
   { loc: `${SITE_URL}/pdf-to-text`, priority: "0.95", changefreq: "weekly" },
   { loc: `${SITE_URL}/text-to-pdf`, priority: "0.95", changefreq: "weekly" },
-  { loc: `${SITE_URL}/compress-pdf-to-100kb`, priority: "0.90", changefreq: "weekly" },
-  { loc: `${SITE_URL}/compress-pdf-to-200kb`, priority: "0.90", changefreq: "weekly" },
+  { loc: `${SITE_URL}/compress-pdf-under-100kb`, priority: "0.90", changefreq: "weekly" },
+  { loc: `${SITE_URL}/compress-pdf-under-200kb`, priority: "0.90", changefreq: "weekly" },
   { loc: `${SITE_URL}/compress-pdf-under-1mb`, priority: "0.90", changefreq: "weekly" },
 ];
 

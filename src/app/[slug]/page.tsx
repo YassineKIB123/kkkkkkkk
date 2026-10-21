@@ -26,6 +26,8 @@ const CORE_INDEXED_SLUGS = new Set([
   "pdf-to-png",
   "pdf-to-text",
   "text-to-pdf",
+  "compress-pdf-under-100kb",
+  "compress-pdf-under-200kb",
   "compress-pdf-to-100kb",
   "compress-pdf-to-200kb",
   "compress-pdf-under-1mb",
@@ -41,6 +43,8 @@ const DEDICATED_TOOL_CANONICAL_MAP: Record<string, string> = {
   "scan-pdf": "/tools/scan",
   "watermark-pdf": "/tools/watermark-pdf",
   "sanitize-pdf": "/tools/sanitize-pdf",
+  "compress-pdf-to-100kb": "/compress-pdf-under-100kb",
+  "compress-pdf-to-200kb": "/compress-pdf-under-200kb",
 };
 
 interface PageProps {

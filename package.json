@@ -15,7 +15,7 @@
     "jszip": "^3.10.2",
     "lucide-react": "^1.56.0",
     "mammoth": "^1.13.0",
-    "next": "16.4.0",
+    "next": "16.4.2",
     "pdf-lib": "^1.17.1",
     "pdfjs-dist": "^6.4.299",
     "pptxgenjs": "^4.0.1",
@@ -31,7 +31,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.4.0",
+    "eslint-config-next": "16.4.2",
     "postcss": "^8.5.30",
     "tailwindcss": "^4",
     "typescript": "^5"

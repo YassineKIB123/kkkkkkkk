@@ -6,16 +6,16 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://iknowapdf.lol";
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://iknowapdf.lol").replace(/\/+$/, "");
 const PUBLIC_DIR = path.join(__dirname, "..", "public");
 
 if (!fs.existsSync(PUBLIC_DIR)) {
   fs.mkdirSync(PUBLIC_DIR, { recursive: true });
 }
 
-// Remove old sitemap_1.xml ... sitemap_7.xml chunks so Google doesn't crawl doorway pages
+// Remove old sitemap_1.xml ... sitemap_7.xml chunks and legacy sitemap-main.xml
 for (const existing of fs.readdirSync(PUBLIC_DIR)) {
-  if (/^sitemap_\d+\.xml$/.test(existing)) {
+  if (/^sitemap_\d+\.xml$/.test(existing) || existing === "sitemap-main.xml") {
     fs.unlinkSync(path.join(PUBLIC_DIR, existing));
   }
 }

@@ -373,7 +373,6 @@ export default function HomePage() {
       dir={isRTL ? "rtl" : "ltr"}
       className="min-h-screen bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-100 selection:bg-rose-100 selection:text-rose-900 transition-colors duration-200"
     >
-      <link rel="canonical" href="https://iknowapdf.lol" />
       {/* Top Navbar */}
       <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/95 dark:border-slate-800 dark:bg-slate-950/95 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">

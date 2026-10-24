@@ -2,7 +2,7 @@
 
 import { ToolSuccessAlert } from "@/components/common/ToolSuccessAlert";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { ToolLayout } from "@/components/tools/ToolLayout";
 import { FileDropzone } from "@/components/tools/FileDropzone";
 import { useLanguage } from "@/context/LanguageContext";
@@ -15,7 +15,6 @@ import {
   Trash2,
   FileText,
   Sliders,
-  CheckCircle2,
   AlertCircle,
   Archive,
 } from "lucide-react";
@@ -33,7 +32,7 @@ interface PdfToImagesPageProps {
 export default function PdfToImagesPage({
   initialFormat = "png",
 }: PdfToImagesPageProps = {}) {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const [file, setFile] = useState<File | null>(null);
   const [format, setFormat] = useState<"png" | "jpeg">(initialFormat);
   const [resolution, setResolution] = useState<number>(2.0);
@@ -45,11 +44,16 @@ export default function PdfToImagesPage({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
+  const pagesRef = useRef<RenderedPage[]>([]);
+  useEffect(() => {
+    pagesRef.current = pages;
+  }, [pages]);
+
   useEffect(() => {
     return () => {
-      pages.forEach((p) => URL.revokeObjectURL(p.objectUrl));
+      pagesRef.current.forEach((p) => URL.revokeObjectURL(p.objectUrl));
     };
-  }, [pages]);
+  }, []);
 
   const renderPdfPages = async (
     targetFile: File,

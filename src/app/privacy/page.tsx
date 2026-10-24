@@ -73,17 +73,20 @@ export default function PrivacyPolicyPage() {
           <section className="space-y-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
             <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <Cookie className="h-4 w-4 text-rose-600" />
-              <span>3. Cookies & Third-Party Advertising (Google AdSense)</span>
+              <span>3. Cookies & Third-Party Advertising (Google, NitroPay & Programmatic Partners)</span>
             </h2>
             <p>
-              To keep iKnowAPDF 100% free for everyone without watermarks or file limits, we may display advertisements provided by third-party ad networks, including <strong>Google AdSense</strong>:
+              To keep iKnowAPDF 100% free for everyone without watermarks or file limits, we may display advertisements provided by third-party ad networks, including <strong>Google AdSense</strong>, <strong>NitroPay</strong>, and their programmatic demand partners:
             </p>
             <ul className="list-disc pl-5 space-y-1.5">
               <li>
-                Third-party vendors, including Google, use cookies to serve ads based on a user&apos;s prior visits to this website or other websites.
+                Third-party vendors and ad exchanges (including Google and NitroPay), use cookies to serve ads based on a user&apos;s prior visits to this website or other websites.
               </li>
               <li>
                 Google&apos;s use of advertising cookies enables it and its partners to serve ads to users based on their visit to iKnowAPDF and/or other sites on the Internet.
+              </li>
+              <li>
+                <strong>CCPA / US State Privacy Rights:</strong> We do not sell or share personal files or documents. You may opt out of personalized third-party ad tracking at any time using the opt-out links below.
               </li>
               <li>
                 Users may opt out of personalized advertising by visiting{" "}
@@ -126,3 +129,5 @@ export default function PrivacyPolicyPage() {
     </div>
   );
 }
+
+

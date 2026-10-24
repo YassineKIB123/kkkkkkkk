@@ -15,7 +15,6 @@ import {
   Download,
   Loader2,
   Trash2,
-  CheckCircle2,
   AlertCircle,
 } from "lucide-react";
 
@@ -23,7 +22,7 @@ type PageNumberPosition = "none" | "bottom-center" | "bottom-right" | "top-right
 type WatermarkColor = "red" | "slate" | "blue";
 
 export default function WatermarkPdfPage() {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const [file, setFile] = useState<File | null>(null);
   const [watermarkText, setWatermarkText] = useState<string>("CONFIDENTIAL");
   const [watermarkColor, setWatermarkColor] = useState<WatermarkColor>("red");
@@ -50,7 +49,7 @@ export default function WatermarkPdfPage() {
 
     try {
       const bytes = await file.arrayBuffer();
-      const pdfDoc = await PDFDocument.load(bytes, { ignoreEncryption: false });
+      const pdfDoc = await PDFDocument.load(bytes, { ignoreEncryption: true });
       const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
       const regularFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
       const pages = pdfDoc.getPages();

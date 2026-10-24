@@ -2,7 +2,7 @@
 
 import { ToolSuccessAlert } from "@/components/common/ToolSuccessAlert";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { ToolLayout } from "@/components/tools/ToolLayout";
 import { FileDropzone } from "@/components/tools/FileDropzone";
 import { useLanguage } from "@/context/LanguageContext";
@@ -17,7 +17,6 @@ import {
   Scissors,
   FileText,
   Loader2,
-  CheckCircle2,
   AlertCircle,
   Trash2,
   Layers,
@@ -41,11 +40,16 @@ export default function SplitPdfPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
+  const thumbsRef = useRef<PageThumb[]>([]);
+  useEffect(() => {
+    thumbsRef.current = thumbs;
+  }, [thumbs]);
+
   useEffect(() => {
     return () => {
-      thumbs.forEach((thumb) => URL.revokeObjectURL(thumb.url));
+      thumbsRef.current.forEach((thumb) => URL.revokeObjectURL(thumb.url));
     };
-  }, [thumbs]);
+  }, []);
 
   const handleFileSelected = async (files: File[]) => {
     const selected = files[0];

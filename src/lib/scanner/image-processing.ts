@@ -242,16 +242,17 @@ export async function warpPerspective(
           URL.revokeObjectURL(workerUrl);
           reject(err);
         };
+        const workerSrcBuffer = srcData.data.buffer.slice(0);
         worker.postMessage(
           {
-            srcBuffer: srcData.data.buffer,
+            srcBuffer: workerSrcBuffer,
             srcW,
             srcH,
             outW,
             outH,
             coeffs: { a11, a12, a13, a21, a22, a23, a31, a32 },
           },
-          [srcData.data.buffer]
+          [workerSrcBuffer]
         );
       });
 

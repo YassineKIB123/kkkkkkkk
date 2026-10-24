@@ -201,7 +201,7 @@ export async function mergePDFs(files: File[]): Promise<Uint8Array> {
     try {
       const arrayBuffer = await file.arrayBuffer();
       const sourcePdf = await PDFDocument.load(arrayBuffer, {
-        ignoreEncryption: false,
+        ignoreEncryption: true,
       });
 
       const pageIndices = sourcePdf.getPageIndices();
@@ -463,13 +463,13 @@ export function parsePageRangeString(rangeStr: string, totalPages: number): numb
     if (!token) continue;
 
     if (token.includes("-")) {
-      const [startStr, endStr] = token.split("-");
-      const start = parseInt(startStr, 10);
-      const end = parseInt(endStr, 10);
-
-      if (isNaN(start) || isNaN(end)) {
+      const parts = token.split("-");
+      if (parts.length !== 2 || !/^\d+$/.test(parts[0]) || !/^\d+$/.test(parts[1])) {
         throw new Error(`Invalid range format: "${token}"`);
       }
+      const start = parseInt(parts[0], 10);
+      const end = parseInt(parts[1], 10);
+
       if (start < 1 || end > totalPages || start > end) {
         throw new Error(`Range "${token}" is outside document limits (1 to ${totalPages} pages).`);
       }
@@ -478,10 +478,10 @@ export function parsePageRangeString(rangeStr: string, totalPages: number): numb
         selectedPages.add(i - 1);
       }
     } else {
-      const pageNum = parseInt(token, 10);
-      if (isNaN(pageNum)) {
+      if (!/^\d+$/.test(token)) {
         throw new Error(`Invalid page number: "${token}"`);
       }
+      const pageNum = parseInt(token, 10);
       if (pageNum < 1 || pageNum > totalPages) {
         throw new Error(`Page ${pageNum} is out of bounds (Document has ${totalPages} pages).`);
       }
@@ -501,7 +501,7 @@ export function parsePageRangeString(rangeStr: string, totalPages: number): numb
  */
 export async function splitPDF(file: File, pageRangeStr: string): Promise<Uint8Array> {
   const bytes = await file.arrayBuffer();
-  const sourcePdf = await PDFDocument.load(bytes, { ignoreEncryption: false });
+  const sourcePdf = await PDFDocument.load(bytes, { ignoreEncryption: true });
   const totalPages = sourcePdf.getPageCount();
 
   const pageIndices = parsePageRangeString(pageRangeStr, totalPages);
@@ -535,7 +535,7 @@ export async function embedSignaturesIntoPDF(
   watermarkText?: string
 ): Promise<Uint8Array> {
   const bytes = await pdfFile.arrayBuffer();
-  const pdfDoc = await PDFDocument.load(bytes, { ignoreEncryption: false });
+  const pdfDoc = await PDFDocument.load(bytes, { ignoreEncryption: true });
   const pages = pdfDoc.getPages();
 
   if (watermarkText && watermarkText.trim()) {

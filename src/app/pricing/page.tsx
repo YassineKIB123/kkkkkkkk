@@ -18,9 +18,7 @@ import {
   HelpCircle,
   Heart,
   Lock,
-  AlertCircle,
   RotateCcw,
-  ExternalLink,
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { BuyCoffeeButton } from "@/components/common/BuyCoffeeModal";
@@ -292,10 +290,10 @@ export default function PricingPage() {
                     >
                       <span>
                         {lang === "EN" && "English"}
-                        {lang === "FR" && "Fran�ais"}
-                        {lang === "ES" && "Espa�ol"}
-                        {lang === "RU" && "???????"}
-                        {lang === "AR" && "???????"}
+                        {lang === "FR" && "Français"}
+                        {lang === "ES" && "Español"}
+                        {lang === "RU" && "Русский"}
+                        {lang === "AR" && "العربية"}
                       </span>
                       <span className="font-mono text-[10px] text-slate-400">{lang}</span>
                     </button>
@@ -402,7 +400,7 @@ export default function PricingPage() {
           <div className="relative flex flex-col justify-between rounded-3xl border-2 border-rose-600 bg-white p-6 sm:p-8 shadow-xl shadow-rose-600/10 dark:shadow-rose-950/40 dark:border-rose-500 dark:bg-slate-900 transition-all">
             {/* Top Pill */}
             <div className="absolute -top-3.5 right-6 rounded-full bg-rose-600 px-3.5 py-1 text-[10px] font-extrabold uppercase tracking-wider text-white shadow-xs">
-              ? $5 / Month � Cancel Anytime
+              ✨ $5 / Month • Cancel Anytime
             </div>
 
             <div className="space-y-6">
@@ -425,7 +423,7 @@ export default function PricingPage() {
                   $5
                 </span>
                 <span className="text-xs font-bold text-rose-600">
-                  / month � pay with PayPal
+                  / month • pay with PayPal
                 </span>
               </div>
 
@@ -503,7 +501,7 @@ export default function PricingPage() {
                 </button>
               )}
               <p className="text-center text-[11px] text-slate-400">
-                🔒 Protected by PayPal Buyer Protection � Cancel anytime
+                🔒 Protected by PayPal Buyer Protection • Cancel anytime
               </p>
             </div>
           </div>

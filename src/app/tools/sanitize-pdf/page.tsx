@@ -14,7 +14,6 @@ import {
   Download,
   Loader2,
   Trash2,
-  CheckCircle2,
   AlertCircle,
   Sparkles,
 } from "lucide-react";
@@ -32,7 +31,7 @@ interface PdfMetadataSnapshot {
 }
 
 export default function SanitizePdfPage() {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const [file, setFile] = useState<File | null>(null);
   const [meta, setMeta] = useState<PdfMetadataSnapshot | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);

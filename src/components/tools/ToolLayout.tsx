@@ -11,7 +11,6 @@ import {
   Download,
   HelpCircle,
   Layers,
-  Search,
   Globe,
   Sun,
   Moon,
@@ -82,49 +81,6 @@ interface ToolLayoutProps {
   hideSeoMeta?: boolean;
 }
 
-const TOOL_PATH_MAP: Record<string, SupportedToolId> = {
-  "/tools/compress-pdf": "compress",
-  "/tools/merge-pdf": "merge",
-  "/tools/split-pdf": "split",
-  "/tools/rotate-pdf": "rotate",
-  "/tools/edit-pdf": "edit",
-  "/tools/sign-pdf": "sign",
-  "/tools/scan": "scan",
-  "/tools/convert": "convert",
-  "/tools/images-to-pdf": "imagesToPdf",
-  "/tools/pdf-to-images": "pdfToImages",
-  "/tools/watermark-pdf": "watermark",
-  "/tools/sanitize-pdf": "sanitize",
-  "/compress-pdf": "compress",
-  "/merge-pdf": "merge",
-  "/split-pdf": "split",
-  "/rotate-pdf": "rotate",
-  "/edit-pdf": "edit",
-  "/sign-pdf": "sign",
-  "/scan": "scan",
-  "/scan-pdf": "scan",
-  "/convert": "convert",
-  "/pdf-to-word": "convert",
-  "/word-to-pdf": "convert",
-  "/pdf-to-excel": "convert",
-  "/excel-to-pdf": "convert",
-  "/pdf-to-powerpoint": "convert",
-  "/powerpoint-to-pdf": "convert",
-  "/pdf-to-text": "convert",
-  "/text-to-pdf": "convert",
-  "/jpg-to-pdf": "imagesToPdf",
-  "/png-to-pdf": "imagesToPdf",
-  "/pdf-to-jpg": "pdfToImages",
-  "/pdf-to-png": "pdfToImages",
-  "/compress-pdf-to-100kb": "compress",
-  "/compress-pdf-under-100kb": "compress",
-  "/compress-pdf-under-200kb": "compress",
-  "/compress-pdf-to-200kb": "compress",
-  "/compress-pdf-under-1mb": "compress",
-  "/watermark-pdf": "watermark",
-  "/sanitize-pdf": "sanitize",
-};
-
 function getToolMeta(
   toolKey: SupportedToolId | undefined,
   t: Translations,
@@ -177,8 +133,6 @@ export function ToolLayout({
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
   const [isLangOpen, setIsLangOpen] = useState(false);
   const [isMegaMenuOpen, setIsMegaMenuOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
 
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
@@ -199,20 +153,10 @@ export function ToolLayout({
 
   const langDropdownRef = useRef<HTMLDivElement>(null);
   const megaMenuRef = useRef<HTMLDivElement>(null);
-  const searchDropdownRef = useRef<HTMLDivElement>(null);
 
-  // Auto-detect tool ID from pathname if not explicitly passed
-  const detectedToolId: SupportedToolId | undefined =
-    toolId ||
-    TOOL_PATH_MAP[pathname] ||
-    (Object.entries(TOOL_PATH_MAP).find(([p]) => pathname.startsWith(p))?.[1] as SupportedToolId | undefined);
-
-  const { title: localizedTitle, description: localizedDesc } = getToolMeta(
-    detectedToolId,
-    t,
-    title,
-    description
-  );
+  const { title: localizedTitle, description: localizedDesc } = toolId
+    ? getToolMeta(toolId, t, title, description)
+    : { title, description };
 
   useEffect(() => {
     if (isEmbedded) return;
@@ -232,9 +176,6 @@ export function ToolLayout({
       }
       if (megaMenuRef.current && !megaMenuRef.current.contains(e.target as Node)) {
         setIsMegaMenuOpen(false);
-      }
-      if (searchDropdownRef.current && !searchDropdownRef.current.contains(e.target as Node)) {
-        setIsSearchOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -273,29 +214,6 @@ export function ToolLayout({
 
   const canonicalUrl = `https://iknowapdf.lol${pathname === "/" ? "" : pathname}`;
 
-  const quickTools = [
-    { label: t.tools.compressTitle, href: "/tools/compress-pdf", keywords: "compress shrink reduce size kb mb" },
-    { label: t.tools.mergeTitle, href: "/tools/merge-pdf", keywords: "merge combine join pdfs" },
-    { label: t.tools.splitTitle, href: "/tools/split-pdf", keywords: "split extract separate pages" },
-    { label: t.tools.rotateTitle, href: "/tools/rotate-pdf", keywords: "rotate orientation turn pages" },
-    { label: t.tools.editTitle, href: "/tools/edit-pdf", keywords: "edit text modify replace whiteout redact pdf" },
-    { label: t.tools.signTitle, href: "/tools/sign-pdf", keywords: "sign signature stamp initials" },
-    { label: t.tools.scanTitle, href: "/tools/scan", keywords: "scan camera crop perspective ocr" },
-    { label: t.tools.convertTitle, href: "/tools/convert", keywords: "convert word docx excel xlsx pptx text" },
-    { label: t.tools.imagesToPdfTitle, href: "/tools/images-to-pdf", keywords: "jpg png webp images to pdf" },
-    { label: t.tools.pdfToImagesTitle, href: "/tools/pdf-to-images", keywords: "pdf to jpg png images zip" },
-    { label: t.tools.watermarkTitle, href: "/tools/watermark-pdf", keywords: "watermark page numbers stamp confidential draft" },
-    { label: t.tools.sanitizeTitle, href: "/tools/sanitize-pdf", keywords: "sanitize metadata remove author privacy clean" },
-  ];
-
-  const matchingSearchTools = searchQuery.trim()
-    ? quickTools.filter(
-        (item) =>
-          item.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          item.keywords.includes(searchQuery.toLowerCase())
-      )
-    : [];
-
   const defaultLocalizedFaqs: FAQItem[] = [
     {
       question: t.faq.toolFaqs.qLocalProcess.replace("{tool}", localizedTitle),
@@ -320,7 +238,7 @@ export function ToolLayout({
   ];
 
   const activeFaqs =
-    language === "EN" && faqs && faqs.length > 0
+    faqs && faqs.length > 0 && (hideSeoMeta || language === "EN")
       ? [...faqs, ...defaultLocalizedFaqs].slice(0, 5)
       : defaultLocalizedFaqs;
 

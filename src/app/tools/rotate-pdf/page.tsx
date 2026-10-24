@@ -2,7 +2,7 @@
 
 import { ToolSuccessAlert } from "@/components/common/ToolSuccessAlert";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { ToolLayout } from "@/components/tools/ToolLayout";
 import { FileDropzone } from "@/components/tools/FileDropzone";
 import { useLanguage } from "@/context/LanguageContext";
@@ -17,7 +17,6 @@ import {
   Trash2,
   FileText,
   AlertCircle,
-  CheckCircle2,
 } from "lucide-react";
 
 interface PageThumbnail {
@@ -26,7 +25,7 @@ interface PageThumbnail {
 }
 
 export default function RotatePdfPage() {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const [file, setFile] = useState<File | null>(null);
   const [thumbnails, setThumbnails] = useState<PageThumbnail[]>([]);
   const [rotations, setRotations] = useState<number[]>([]);
@@ -37,11 +36,16 @@ export default function RotatePdfPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
+  const thumbnailsRef = useRef<PageThumbnail[]>([]);
+  useEffect(() => {
+    thumbnailsRef.current = thumbnails;
+  }, [thumbnails]);
+
   useEffect(() => {
     return () => {
-      thumbnails.forEach((t) => URL.revokeObjectURL(t.objectUrl));
+      thumbnailsRef.current.forEach((t) => URL.revokeObjectURL(t.objectUrl));
     };
-  }, [thumbnails]);
+  }, []);
 
   const handleFileSelected = async (files: File[]) => {
     const selected = files[0];
@@ -129,7 +133,7 @@ export default function RotatePdfPage() {
 
     try {
       const arrayBuffer = await file.arrayBuffer();
-      const pdfDoc = await PDFDocument.load(arrayBuffer, { ignoreEncryption: false });
+      const pdfDoc = await PDFDocument.load(arrayBuffer, { ignoreEncryption: true });
       const pages = pdfDoc.getPages();
 
       pages.forEach((page, idx) => {

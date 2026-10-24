@@ -13,7 +13,6 @@ import {
   Download,
   Loader2,
   Trash2,
-  CheckCircle2,
   AlertCircle,
   Zap,
   Target,

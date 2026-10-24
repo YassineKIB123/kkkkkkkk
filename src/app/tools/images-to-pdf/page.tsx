@@ -14,7 +14,6 @@ import {
   Trash2,
   Settings2,
   AlertCircle,
-  CheckCircle2,
   ChevronLeft,
   ChevronRight,
   Eye,
@@ -27,7 +26,7 @@ interface ImageMeta {
 }
 
 export default function ImagesToPdfPage() {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const [files, setFiles] = useState<File[]>([]);
   const [imageMetas, setImageMetas] = useState<ImageMeta[]>([]);
   const [previewIndex, setPreviewIndex] = useState<number>(0);
@@ -70,11 +69,16 @@ export default function ImagesToPdfPage() {
     setImageMetas((prev) => [...prev, ...resolvedMetas]);
   };
 
+  const imageMetasRef = React.useRef<ImageMeta[]>([]);
+  useEffect(() => {
+    imageMetasRef.current = imageMetas;
+  }, [imageMetas]);
+
   useEffect(() => {
     return () => {
-      imageMetas.forEach((meta) => URL.revokeObjectURL(meta.url));
+      imageMetasRef.current.forEach((meta) => URL.revokeObjectURL(meta.url));
     };
-  }, [imageMetas]);
+  }, []);
 
   const handleRemoveFile = (index: number) => {
     if (imageMetas[index]) {
@@ -183,8 +187,7 @@ export default function ImagesToPdfPage() {
       faqs={[
         {
           question: "How do I combine multiple JPG or PNG images into one PDF?",
-          answer:
-            "Drop all your images into the upload box, reorder them using the sequence arrows, choose your preferred page size ({t.toolUi.imagesToPdf.standardA4} or {t.toolUi.imagesToPdf.fitImage}) and orientation, and click 'Convert Images to PDF'.",
+          answer: `Drop all your images into the upload box, reorder them using the sequence arrows, choose your preferred page size (${t.toolUi.imagesToPdf.standardA4} or ${t.toolUi.imagesToPdf.fitImage}) and orientation, and click 'Convert Images to PDF'.`,
         },
         {
           question: "Can I create a borderless PDF with no white margins?",

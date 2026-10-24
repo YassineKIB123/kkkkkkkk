@@ -23,7 +23,6 @@ import {
   Loader2,
   Download,
   AlertCircle,
-  CheckCircle2,
   FileText,
   Move,
   Trash2,
@@ -61,9 +60,16 @@ export default function SignPdfPage() {
 
   const [signatures, setSignatures] = useState<PlacedSignature[]>([]);
   const [selectedSigId, setSelectedSigId] = useState<string | null>(null);
-  const [savedSigDataUrl, setSavedSigDataUrl] = useState<string | null>(() =>
-    typeof window !== "undefined" ? localStorage.getItem(SAVED_SIG_STORAGE_KEY) : null
-  );
+  const [savedSigDataUrl, setSavedSigDataUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    queueMicrotask(() => {
+      try {
+        const saved = localStorage.getItem(SAVED_SIG_STORAGE_KEY);
+        if (saved) setSavedSigDataUrl(saved);
+      } catch {}
+    });
+  }, []);
   const [watermarkText, setWatermarkText] = useState<string>("");
 
   const [isModalOpen, setIsModalOpen] = useState(false);

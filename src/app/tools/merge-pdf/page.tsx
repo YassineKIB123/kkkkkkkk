@@ -13,7 +13,6 @@ import {
   Loader2,
   Trash2,
   AlertCircle,
-  CheckCircle2,
 } from "lucide-react";
 
 export default function MergePdfPage() {

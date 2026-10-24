@@ -55,7 +55,7 @@ const DEFAULT_CORNERS: CornerPoint[] = [
 const CORNER_LABELS = ["Top-Left", "Top-Right", "Bottom-Right", "Bottom-Left"];
 
 export default function ScanToPdfPage() {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const [currentStep, setCurrentStep] = useState<"input" | "crop" | "result">("input");
 
   const [currentImageSrc, setCurrentImageSrc] = useState<string | null>(null);
@@ -80,6 +80,27 @@ export default function ScanToPdfPage() {
   const streamRef = useRef<MediaStream | null>(null);
   const imageRef = useRef<HTMLImageElement>(null);
   const editorContainerRef = useRef<HTMLDivElement>(null);
+  const isCameraModalOpenRef = useRef(false);
+
+  // Automatically pick up files passed from the Homepage Hero Dropzone
+  useEffect(() => {
+    const win = window as Window & { __pdfStudioPendingFiles?: File[] | null };
+    if (win.__pdfStudioPendingFiles && win.__pdfStudioPendingFiles.length > 0) {
+      const pendingFile = win.__pdfStudioPendingFiles[0];
+      win.__pdfStudioPendingFiles = null;
+      if (pendingFile && pendingFile.type.startsWith("image/")) {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          if (typeof ev.target?.result === "string") {
+            setCurrentImageSrc(ev.target.result);
+            setCorners(DEFAULT_CORNERS);
+            setCurrentStep("crop");
+          }
+        };
+        reader.readAsDataURL(pendingFile);
+      }
+    }
+  }, []);
 
   const stopCameraStream = useCallback(() => {
     if (streamRef.current) {
@@ -89,12 +110,16 @@ export default function ScanToPdfPage() {
   }, []);
 
   useEffect(() => {
-    return () => stopCameraStream();
+    return () => {
+      isCameraModalOpenRef.current = false;
+      stopCameraStream();
+    };
   }, [stopCameraStream]);
 
   const openCamera = async () => {
     setCameraError(null);
     setIsCameraOpen(true);
+    isCameraModalOpenRef.current = true;
 
     try {
       const constraints: MediaStreamConstraints = {
@@ -107,13 +132,19 @@ export default function ScanToPdfPage() {
       };
 
       const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+      if (!isCameraModalOpenRef.current) {
+        mediaStream.getTracks().forEach((track) => track.stop());
+        return;
+      }
+
       streamRef.current = mediaStream;
 
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
-        await videoRef.current.play();
+        await videoRef.current.play().catch(() => {});
       }
     } catch (err: unknown) {
+      if (!isCameraModalOpenRef.current) return;
       const message =
         err instanceof Error
           ? err.message
@@ -123,6 +154,7 @@ export default function ScanToPdfPage() {
   };
 
   const closeCamera = () => {
+    isCameraModalOpenRef.current = false;
     stopCameraStream();
     setIsCameraOpen(false);
     setCameraError(null);

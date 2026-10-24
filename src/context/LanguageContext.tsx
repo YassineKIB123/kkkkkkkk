@@ -22,32 +22,21 @@ const LanguageContext = createContext<LanguageContextType>({
 });
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguageState] = useState<Language>(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const saved = localStorage.getItem("lang") as Language | null;
-        if (saved && DICTIONARY[saved]) return saved;
-      } catch {}
-    }
-    return "EN";
-  });
-  const [theme, setThemeState] = useState<"light" | "dark">(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const savedTheme = localStorage.getItem("theme") as "light" | "dark" | null;
-        if (savedTheme === "dark") return "dark";
-      } catch {}
-    }
-    return "light";
-  });
+  const [language, setLanguageState] = useState<Language>("EN");
+  const [theme, setThemeState] = useState<"light" | "dark">("light");
 
-  // Client hydration sync from localStorage
+  // Client hydration sync from URL locale prefix or localStorage
   useEffect(() => {
     queueMicrotask(() => {
       try {
-        const saved = localStorage.getItem("lang") as Language | null;
-        if (saved && DICTIONARY[saved]) {
-          setLanguageState(saved);
+        const pathSegment = window.location.pathname.split("/")[1]?.toUpperCase();
+        if (pathSegment && pathSegment in DICTIONARY) {
+          setLanguageState(pathSegment as Language);
+        } else {
+          const saved = localStorage.getItem("lang") as Language | null;
+          if (saved && DICTIONARY[saved]) {
+            setLanguageState(saved);
+          }
         }
         const savedTheme = localStorage.getItem("theme") as "light" | "dark" | null;
         if (savedTheme === "dark" || savedTheme === "light") {

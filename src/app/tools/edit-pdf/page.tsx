@@ -555,6 +555,29 @@ export default function EditPdfPage() {
     });
   }, [lines, overlays]);
 
+  useEffect(() => {
+    if (!file) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
+        if (e.shiftKey) {
+          e.preventDefault();
+          handleRedo();
+        } else {
+          e.preventDefault();
+          handleUndo();
+        }
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "y") {
+        e.preventDefault();
+        handleRedo();
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "f") {
+        e.preventDefault();
+        setShowFindReplace(true);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [file, handleUndo, handleRedo]);
+
   /**
    * Renders a PDF page into TWO offscreen canvases:
    * 1) `fullCanvas`: Full PDF render (used to sample true ink colors & stem thicknesses)
@@ -1289,9 +1312,29 @@ export default function EditPdfPage() {
     try {
       const EXPORT_SCALE = 2.5;
       const outPdf = await PDFDocument.create();
+      const srcPdfBytes = await file.arrayBuffer();
+      const srcPdfDoc = await PDFDocument.load(srcPdfBytes, { ignoreEncryption: true });
 
       const workingLines = [...lines];
       for (let p = 1; p <= totalPages; p++) {
+        const pageOverlays = overlays.filter((o) => o.pageNumber === p);
+        const pageLines = workingLines.filter((l) => l.pageNumber === p);
+        const hasLineChanges =
+          extractedPagesRef.current.has(p) &&
+          pageLines.some(
+            (l) =>
+              l.isNew ||
+              l.text !== l.originalText ||
+              Math.abs(l.xPt - l.origXPt) > 0.5 ||
+              Math.abs(l.yPt - l.origYPt) > 0.5
+          );
+
+        if (!hasLineChanges && pageOverlays.length === 0) {
+          const [copiedPage] = await outPdf.copyPages(srcPdfDoc, [p - 1]);
+          outPdf.addPage(copiedPage);
+          continue;
+        }
+
         if (!extractedPagesRef.current.has(p)) {
           extractedPagesRef.current.add(p);
           const { builtLines } = await extractAndRenderPage(pdfDocProxy, p);
@@ -1320,7 +1363,6 @@ export default function EditPdfPage() {
         }
 
         // 2. Draw all Whiteouts & Highlights behind text
-        const pageOverlays = overlays.filter((o) => o.pageNumber === p);
         for (const ov of pageOverlays) {
           const ox = ov.xPt * EXPORT_SCALE;
           const oy = ov.yPt * EXPORT_SCALE;
@@ -1340,8 +1382,8 @@ export default function EditPdfPage() {
         }
 
         // 3. Draw 100% of live text lines on the page with identical typography
-        const pageLines = workingLines.filter((l) => l.pageNumber === p);
-        for (const ln of pageLines) {
+        const currentLines = workingLines.filter((l) => l.pageNumber === p);
+        for (const ln of currentLines) {
           if (!ln.text.trim()) continue;
           const fontPx = ln.fontSizePt * EXPORT_SCALE;
           const prefix = `${ln.isItalic ? "italic " : ""}${ln.isBold ? "700 " : "400 "}`;
@@ -1964,6 +2006,22 @@ export default function EditPdfPage() {
                   />
                 )}
 
+                {/* Live Freehand Preview */}
+                {dragState?.kind === "freehand" && dragState.points && dragState.points.length > 1 && (
+                  <svg className="pointer-events-none absolute inset-0 z-40 h-full w-full">
+                    <polyline
+                      fill="none"
+                      stroke="#dc2626"
+                      strokeWidth={2 * displayScale}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      points={dragState.points
+                        .map((p) => `${p.x * displayScale},${p.y * displayScale}`)
+                        .join(" ")}
+                    />
+                  </svg>
+                )}
+
                 {/* ============================================================ */}
                 {/* OVERLAY ITEMS (Whiteouts, Highlights, Shapes, Forms, Images) */}
                 {/* ============================================================ */}
@@ -2101,13 +2159,46 @@ export default function EditPdfPage() {
                           className="w-full h-full rounded-full"
                         />
                       )}
-                      {(ov.kind === "line" || ov.kind === "arrow") && (
+                      {ov.kind === "line" && (
                         <div className="w-full h-full flex items-center">
                           <div
                             style={{ backgroundColor: ov.color }}
                             className="w-full h-[2px]"
                           />
                         </div>
+                      )}
+                      {ov.kind === "arrow" && (
+                        <svg className="w-full h-full overflow-visible pointer-events-none">
+                          <line
+                            x1={0}
+                            y1={heightPx / 2}
+                            x2={widthPx}
+                            y2={heightPx / 2}
+                            stroke={ov.color}
+                            strokeWidth={2 * displayScale}
+                          />
+                          <polygon
+                            points={`${widthPx},${heightPx / 2} ${widthPx - 7 * displayScale},${heightPx / 2 - 4.5 * displayScale} ${widthPx - 7 * displayScale},${heightPx / 2 + 4.5 * displayScale}`}
+                            fill={ov.color}
+                          />
+                        </svg>
+                      )}
+                      {ov.kind === "freehand" && ov.points && ov.points.length > 1 && (
+                        <svg className="w-full h-full overflow-visible pointer-events-none">
+                          <polyline
+                            fill="none"
+                            stroke={ov.color || "#dc2626"}
+                            strokeWidth={(ov.strokeWidthPt || 2) * displayScale}
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            points={ov.points
+                              .map(
+                                (pt) =>
+                                  `${(pt.x - ov.xPt) * displayScale},${(pt.y - ov.yPt) * displayScale}`
+                              )
+                              .join(" ")}
+                          />
+                        </svg>
                       )}
                       {(ov.kind === "check" ||
                         ov.kind === "cross" ||
@@ -2591,23 +2682,30 @@ export default function EditPdfPage() {
                           if (!c) return;
                           isDrawingSignRef.current = true;
                           const r = c.getBoundingClientRect();
+                          const scaleX = c.width / r.width;
+                          const scaleY = c.height / r.height;
                           const ctx = c.getContext("2d")!;
                           ctx.strokeStyle = signColor;
                           ctx.lineWidth = 2.8;
                           ctx.lineCap = "round";
                           ctx.beginPath();
-                          ctx.moveTo(e.clientX - r.left, e.clientY - r.top);
+                          ctx.moveTo((e.clientX - r.left) * scaleX, (e.clientY - r.top) * scaleY);
                         }}
                         onPointerMove={(e) => {
                           if (!isDrawingSignRef.current || !signPadCanvasRef.current)
                             return;
                           const c = signPadCanvasRef.current;
                           const r = c.getBoundingClientRect();
+                          const scaleX = c.width / r.width;
+                          const scaleY = c.height / r.height;
                           const ctx = c.getContext("2d")!;
-                          ctx.lineTo(e.clientX - r.left, e.clientY - r.top);
+                          ctx.lineTo((e.clientX - r.left) * scaleX, (e.clientY - r.top) * scaleY);
                           ctx.stroke();
                         }}
                         onPointerUp={() => {
+                          isDrawingSignRef.current = false;
+                        }}
+                        onPointerLeave={() => {
                           isDrawingSignRef.current = false;
                         }}
                         className="w-full h-36 rounded-xl border border-slate-300 bg-slate-50 cursor-crosshair"

@@ -40,6 +40,12 @@ function hasNonWinAnsiCharacters(text: string): boolean {
   return /[^\x00-\xFF]/.test(text);
 }
 
+function sanitizeWinAnsiText(text: string): string {
+  return text
+    .replace(/\t/g, "    ")
+    .replace(/[\x00-\x1F\x7F-\x9F]/g, " ");
+}
+
 /**
  * High-DPI HTML5 Canvas paginator for Unicode text (Arabic RTL, Cyrillic, CJK, Emojis)
  * so pdf-lib never crashes on non-WinAnsi characters.
@@ -154,6 +160,7 @@ async function unicodeTextToPDFViaCanvas(title: string, rawText: string): Promis
 export async function textToPDF(file: File): Promise<Uint8Array> {
   const text = await file.text();
   const cleanTitle = file.name.replace(/\.[^/.]+$/, "");
+  const safeTitle = sanitizeWinAnsiText(cleanTitle);
 
   if (hasNonWinAnsiCharacters(text) || hasNonWinAnsiCharacters(cleanTitle)) {
     return await unicodeTextToPDFViaCanvas(cleanTitle, text);
@@ -180,7 +187,7 @@ export async function textToPDF(file: File): Promise<Uint8Array> {
     }
 
     const isHeader = rawLine.startsWith("# ") || rawLine.startsWith("## ");
-    const cleanLine = rawLine.replace(/^#+\s*/, "");
+    const cleanLine = sanitizeWinAnsiText(rawLine.replace(/^#+\s*/, ""));
     const words = cleanLine.split(" ");
     let currentLine = "";
 
@@ -203,7 +210,7 @@ export async function textToPDF(file: File): Promise<Uint8Array> {
   let currentPage = pdfDoc.addPage(PageSizes.A4);
   let y = pageHeight - margin;
 
-  currentPage.drawText(cleanTitle, {
+  currentPage.drawText(safeTitle, {
     x: margin,
     y,
     size: 16,
@@ -241,7 +248,8 @@ export async function wordToPDF(file: File): Promise<Uint8Array> {
   let mammothLib = window.mammoth;
   if (!mammothLib) {
     try {
-      mammothLib = await import("mammoth");
+      const mod = await import("mammoth");
+      mammothLib = (mod as any).default || mod;
     } catch {
       mammothLib = await ensureLibrary(
         "https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js",
@@ -379,7 +387,8 @@ export async function excelToPDF(file: File): Promise<Uint8Array> {
   let xlsxLib = window.XLSX;
   if (!xlsxLib) {
     try {
-      xlsxLib = await import("xlsx");
+      const mod = await import("xlsx");
+      xlsxLib = (mod as any).default || mod;
     } catch {
       xlsxLib = await ensureLibrary(
         "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js",
@@ -435,7 +444,7 @@ export async function excelToPDF(file: File): Promise<Uint8Array> {
     let page = pdfDoc.addPage([pageWidth, pageHeight]);
     let y = pageHeight - margin;
 
-    page.drawText(`Sheet: ${sheetName}`, {
+    page.drawText(`Sheet: ${sanitizeWinAnsiText(sheetName)}`, {
       x: margin,
       y,
       size: 14,
@@ -473,7 +482,10 @@ export async function excelToPDF(file: File): Promise<Uint8Array> {
       }
 
       for (let cIdx = 0; cIdx < maxCols; cIdx++) {
-        const cellValue = row[cIdx] !== undefined ? String(row[cIdx]).slice(0, 22) : "";
+        const cellValue =
+          row[cIdx] !== undefined
+            ? sanitizeWinAnsiText(String(row[cIdx])).slice(0, 22).trim()
+            : "";
         if (cellValue) {
           page.drawText(cellValue, {
             x: margin + cIdx * colWidth + 4,
@@ -522,7 +534,8 @@ export async function pdfToWord(file: File): Promise<Blob> {
   let docxLib = window.docx;
   if (!docxLib) {
     try {
-      docxLib = await import("docx");
+      const mod = await import("docx");
+      docxLib = (mod as any).default || mod;
     } catch {
       docxLib = await ensureLibrary(
         "https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js",
@@ -595,7 +608,8 @@ export async function pdfToExcel(file: File): Promise<Blob> {
   let xlsxLib = window.XLSX;
   if (!xlsxLib) {
     try {
-      xlsxLib = await import("xlsx");
+      const mod = await import("xlsx");
+      xlsxLib = (mod as any).default || mod;
     } catch {
       xlsxLib = await ensureLibrary(
         "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js",

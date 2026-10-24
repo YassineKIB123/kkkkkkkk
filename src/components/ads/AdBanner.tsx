@@ -25,14 +25,7 @@ export function AdBanner({
 }: AdBannerProps) {
   const adsenseId = process.env.NEXT_PUBLIC_ADSENSE_ID || "ca-pub-5152878593494077";
   const pushedRef = useRef(false);
-  const [isAdFree, setIsAdFree] = useState<boolean>(() => {
-    if (typeof window !== "undefined") {
-      try {
-        return localStorage.getItem("iknowapdf_ad_free") === "true";
-      } catch {}
-    }
-    return false;
-  });
+  const [isAdFree, setIsAdFree] = useState<boolean>(false);
 
   useEffect(() => {
     const checkAdFree = () => {
@@ -65,7 +58,12 @@ export function AdBanner({
     }
     if (!adsenseId || pushedRef.current) return;
     try {
-      (window.adsbygoogle = window.adsbygoogle || []).push({});
+      const w = window as any;
+      w.adsbygoogle = w.adsbygoogle || [];
+      if (localStorage.getItem("cookie_consent") === "declined") {
+        w.adsbygoogle.requestNonPersonalizedAds = 1;
+      }
+      w.adsbygoogle.push({});
       pushedRef.current = true;
     } catch {
       // Ignore duplicate push on hot reload

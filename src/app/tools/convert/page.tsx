@@ -26,7 +26,6 @@ import {
   Download,
   Loader2,
   AlertCircle,
-  CheckCircle2,
   Trash2,
   FileType,
   Layers,

@@ -7,7 +7,7 @@ import { ToolLayout } from "@/components/tools/ToolLayout";
 import { FileDropzone } from "@/components/tools/FileDropzone";
 import { useLanguage } from "@/context/LanguageContext";
 import { downloadBlob, loadPdfJs } from "@/lib/pdf/pdf-utils";
-import { PDFDocument } from "pdf-lib";
+import { PDFDocument, PDFName } from "pdf-lib";
 import {
   Type,
   Link as LinkIcon,
@@ -115,6 +115,11 @@ export interface LiveTextLine {
   origBaselineYPt: number;
   origWidthPt: number;
   origHeightPt: number;
+  origFontSizePt?: number;
+  origFontId?: EditorFontId;
+  origColor?: string;
+  origIsBold?: boolean;
+  origIsItalic?: boolean;
   xPt: number;
   yPt: number;
   widthPt: number;
@@ -481,6 +486,7 @@ export default function EditPdfPage() {
   // Refs for clean background canvases per page
   const cleanBgCanvasByPageRef = useRef<Record<number, HTMLCanvasElement>>({});
   const extractedPagesRef = useRef<Set<number>>(new Set());
+  const initialLineCountByPageRef = useRef<Record<number, number>>({});
   const defaultFontIdRef = useRef<EditorFontId>("cambria");
   const bgCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const pageWrapperRef = useRef<HTMLDivElement | null>(null);
@@ -554,29 +560,6 @@ export default function EditPdfPage() {
       return future.slice(1);
     });
   }, [lines, overlays]);
-
-  useEffect(() => {
-    if (!file) return;
-    const onKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
-        if (e.shiftKey) {
-          e.preventDefault();
-          handleRedo();
-        } else {
-          e.preventDefault();
-          handleUndo();
-        }
-      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "y") {
-        e.preventDefault();
-        handleRedo();
-      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "f") {
-        e.preventDefault();
-        setShowFindReplace(true);
-      }
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [file, handleUndo, handleRedo]);
 
   /**
    * Renders a PDF page into TWO offscreen canvases:
@@ -766,6 +749,11 @@ export default function EditPdfPage() {
           origBaselineYPt: ln.baselineYPt,
           origWidthPt: ln.wPt,
           origHeightPt: ln.hPt,
+          origFontSizePt: ln.fontSizePt,
+          origFontId: ln.fontId,
+          origColor: sampled.fgHex,
+          origIsBold: finalBold,
+          origIsItalic: ln.isItalic,
           xPt: ln.xPt,
           yPt: ln.yTopPt,
           widthPt: ln.wPt,
@@ -779,6 +767,7 @@ export default function EditPdfPage() {
         };
       });
 
+      initialLineCountByPageRef.current[pageNum] = builtLines.length;
       cleanBgCanvasByPageRef.current[pageNum] = cleanCanvas;
       return { pageW, pageH, cleanCanvas, builtLines };
     },
@@ -800,6 +789,7 @@ export default function EditPdfPage() {
     setErrorMessage(null);
     cleanBgCanvasByPageRef.current = {};
     extractedPagesRef.current = new Set();
+    initialLineCountByPageRef.current = {};
 
     try {
       const pdfjs = await loadPdfJs();
@@ -933,6 +923,47 @@ export default function EditPdfPage() {
     setSelectedId(null);
   }, [selectedId, pushHistory]);
 
+  useEffect(() => {
+    if (!file) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const isInput =
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable);
+
+      if (e.key === "Escape") {
+        setSelectedId(null);
+        return;
+      }
+
+      if ((e.key === "Delete" || e.key === "Backspace") && !isInput && selectedId) {
+        e.preventDefault();
+        handleDeleteSelected();
+        return;
+      }
+
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
+        if (e.shiftKey) {
+          e.preventDefault();
+          handleRedo();
+        } else {
+          e.preventDefault();
+          handleUndo();
+        }
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "y") {
+        e.preventDefault();
+        handleRedo();
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "f") {
+        e.preventDefault();
+        setShowFindReplace(true);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [file, selectedId, handleDeleteSelected, handleUndo, handleRedo]);
+
   // Find & Replace across all extracted lines
   const findMatches = findText.trim()
     ? lines.filter((l) =>
@@ -982,6 +1013,11 @@ export default function EditPdfPage() {
         origBaselineYPt: clickYPt,
         origWidthPt: 95,
         origHeightPt: 16,
+        origFontSizePt: 12,
+        origFontId: defaultFontIdRef.current,
+        origColor: "#000000",
+        origIsBold: false,
+        origIsItalic: false,
         xPt: Math.max(10, Math.min(pageSizePt.width - 100, clickXPt)),
         yPt: Math.max(10, Math.min(pageSizePt.height - 24, clickYPt - 10)),
         widthPt: 95,
@@ -1319,15 +1355,23 @@ export default function EditPdfPage() {
       for (let p = 1; p <= totalPages; p++) {
         const pageOverlays = overlays.filter((o) => o.pageNumber === p);
         const pageLines = workingLines.filter((l) => l.pageNumber === p);
+        const initialCount = initialLineCountByPageRef.current[p] ?? pageLines.length;
         const hasLineChanges =
           extractedPagesRef.current.has(p) &&
-          pageLines.some(
-            (l) =>
-              l.isNew ||
-              l.text !== l.originalText ||
-              Math.abs(l.xPt - l.origXPt) > 0.5 ||
-              Math.abs(l.yPt - l.origYPt) > 0.5
-          );
+          (pageLines.length !== initialCount ||
+            pageLines.some(
+              (l) =>
+                l.isNew ||
+                l.text !== l.originalText ||
+                Math.abs(l.xPt - l.origXPt) > 0.5 ||
+                Math.abs(l.yPt - l.origYPt) > 0.5 ||
+                (l.origColor !== undefined && l.color !== l.origColor) ||
+                (l.origFontSizePt !== undefined && l.fontSizePt !== l.origFontSizePt) ||
+                (l.origFontId !== undefined && l.fontId !== l.origFontId) ||
+                (l.origIsBold !== undefined && l.isBold !== l.origIsBold) ||
+                (l.origIsItalic !== undefined && l.isItalic !== l.origIsItalic) ||
+                Boolean(l.linkUrl?.trim())
+            ));
 
         if (!hasLineChanges && pageOverlays.length === 0) {
           const [copiedPage] = await outPdf.copyPages(srcPdfDoc, [p - 1]);
@@ -1485,6 +1529,55 @@ export default function EditPdfPage() {
           width: pW,
           height: pH,
         });
+
+        // Attach clickable PDF URI Link Annotations for link overlays and linked text lines
+        const linkRects: { x: number; y: number; w: number; h: number; url: string }[] = [];
+        for (const ov of pageOverlays) {
+          if (ov.kind === "link" && ov.linkUrl && ov.linkUrl.trim()) {
+            linkRects.push({
+              x: ov.xPt,
+              y: pH - (ov.yPt + ov.hPt),
+              w: ov.wPt,
+              h: ov.hPt,
+              url: ov.linkUrl.trim(),
+            });
+          }
+        }
+        for (const ln of currentLines) {
+          if (ln.linkUrl && ln.linkUrl.trim()) {
+            linkRects.push({
+              x: ln.xPt,
+              y: pH - (ln.yPt + ln.heightPt),
+              w: Math.max(24, ln.widthPt),
+              h: Math.max(12, ln.heightPt),
+              url: ln.linkUrl.trim(),
+            });
+          }
+        }
+        if (linkRects.length > 0) {
+          const annotRefs = linkRects.map((lr) => {
+            const safeUri = /^https?:\/\/|^mailto:/i.test(lr.url)
+              ? lr.url
+              : `https://${lr.url}`;
+            return outPdf.context.register(
+              outPdf.context.obj({
+                Type: "Annot",
+                Subtype: "Link",
+                Rect: [lr.x, lr.y, lr.x + lr.w, lr.y + lr.h],
+                Border: [0, 0, 0],
+                A: {
+                  Type: "Action",
+                  S: "URI",
+                  URI: safeUri,
+                },
+              })
+            );
+          });
+          pdfPage.node.set(
+            PDFName.of("Annots"),
+            outPdf.context.obj(annotRefs)
+          );
+        }
       }
 
       const finalBytes = await outPdf.save({ useObjectStreams: true });

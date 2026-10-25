@@ -74,25 +74,33 @@ export default function SplitPdfPage() {
           const pdf = await pdfjs.getDocument({ data: buffer }).promise;
           const maxPreviewPages = Math.min(pdf.numPages, 40);
           const list: PageThumb[] = [];
+          const canvas = document.createElement("canvas");
 
-          for (let i = 1; i <= maxPreviewPages; i++) {
-            const page = await pdf.getPage(i);
-            const viewport = page.getViewport({ scale: 0.35 });
-            const canvas = document.createElement("canvas");
-            canvas.width = viewport.width;
-            canvas.height = viewport.height;
-            const ctx = canvas.getContext("2d");
-            if (ctx) {
-              await page.render({ canvasContext: ctx, viewport }).promise;
-              const blob = await new Promise<Blob | null>((res) =>
-                canvas.toBlob((b) => res(b), "image/jpeg", 0.72)
-              );
-              if (blob) {
-                list.push({ pageNumber: i, url: URL.createObjectURL(blob) });
+          try {
+            for (let i = 1; i <= maxPreviewPages; i++) {
+              const page = await pdf.getPage(i);
+              const viewport = page.getViewport({ scale: 0.35 });
+              canvas.width = viewport.width;
+              canvas.height = viewport.height;
+              const ctx = canvas.getContext("2d");
+              if (ctx) {
+                await page.render({ canvasContext: ctx, viewport }).promise;
+                const blob = await new Promise<Blob | null>((res) =>
+                  canvas.toBlob((b) => res(b), "image/jpeg", 0.72)
+                );
+                if (blob) {
+                  list.push({ pageNumber: i, url: URL.createObjectURL(blob) });
+                }
               }
             }
+            setThumbs(list);
+          } finally {
+            canvas.width = 0;
+            canvas.height = 0;
+            if (pdf && typeof pdf.destroy === "function") {
+              pdf.destroy().catch(() => {});
+            }
           }
-          setThumbs(list);
         })
         .catch(() => {});
     } catch (err: unknown) {
@@ -307,7 +315,7 @@ export default function SplitPdfPage() {
                   onClick={handlePresetOdd}
                   className="rounded-lg border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 px-2.5 py-1 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:border-rose-400 hover:text-rose-600 transition-colors"
                 >
-                  Odd Pages
+                  {language === "AR" ? "الصفحات الفردية" : language === "FR" ? "Pages impaires" : language === "ES" ? "Páginas impares" : language === "RU" ? "Нечетные" : "Odd Pages"}
                 </button>
 
                 <button
@@ -315,7 +323,7 @@ export default function SplitPdfPage() {
                   onClick={handlePresetEven}
                   className="rounded-lg border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 px-2.5 py-1 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:border-rose-400 hover:text-rose-600 transition-colors"
                 >
-                  Even Pages
+                  {language === "AR" ? "الصفحات الزوجية" : language === "FR" ? "Pages paires" : language === "ES" ? "Páginas pares" : language === "RU" ? "Четные" : "Even Pages"}
                 </button>
 
                 <button
@@ -323,7 +331,7 @@ export default function SplitPdfPage() {
                   onClick={handlePresetFirstPage}
                   className="rounded-lg border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 px-2.5 py-1 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:border-rose-400 hover:text-rose-600 transition-colors"
                 >
-                  First Page Only
+                  {language === "AR" ? "الصفحة الأولى فقط" : language === "FR" ? "Première page" : language === "ES" ? "Primera página" : language === "RU" ? "Только 1-я стр." : "First Page Only"}
                 </button>
               </div>
             </div>

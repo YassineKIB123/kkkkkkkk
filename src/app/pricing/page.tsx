@@ -93,17 +93,19 @@ export default function PricingPage() {
     try {
       const searchParams = new URLSearchParams(window.location.search);
       const paymentStatus = searchParams.get("payment");
-      const tx = searchParams.get("tx") || searchParams.get("txn_id");
-      const amt = searchParams.get("amt");
+      const rawTx = searchParams.get("tx") || searchParams.get("txn_id");
+      const rawAmt = searchParams.get("amt");
+      const safeTx = rawTx && /^[a-zA-Z0-9_-]{1,32}$/.test(rawTx) ? rawTx : null;
+      const safeAmt = rawAmt && /^\d+(\.\d{1,2})?$/.test(rawAmt) ? rawAmt : null;
 
-      if (paymentStatus === "completed" || paymentStatus === "success" || tx) {
-        const orderId = tx || ("PP-" + Date.now().toString(36).toUpperCase());
+      if (paymentStatus === "completed" || paymentStatus === "success" || safeTx) {
+        const orderId = safeTx || ("PP-" + Date.now().toString(36).toUpperCase());
         localStorage.setItem("iknowapdf_ad_free", "true");
         localStorage.setItem(
           "iknowapdf_ad_free_order",
           JSON.stringify({
             orderId,
-            amount: amt ? ("$" + amt) : "$5.00",
+            amount: safeAmt ? ("$" + safeAmt) : "$5.00",
             status: "COMPLETED",
             verified: true,
             payerEmail: "fenangplay@gmail.com",

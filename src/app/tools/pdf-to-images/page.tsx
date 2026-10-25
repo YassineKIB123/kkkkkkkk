@@ -64,17 +64,18 @@ export default function PdfToImagesPage({
     setIsLoadingDoc(true);
     setErrorMessage(null);
 
+    let pdf: any = null;
+    const canvas = document.createElement("canvas");
     try {
       const pdfjs = await loadPdfJs();
       const arrayBuffer = await targetFile.arrayBuffer();
-      const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
+      pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
       const renderedList: RenderedPage[] = [];
 
       for (let i = 1; i <= pdf.numPages; i++) {
         setProgressText(`Rendering page ${i} of ${pdf.numPages}...`);
         const page = await pdf.getPage(i);
         const viewport = page.getViewport({ scale });
-        const canvas = document.createElement("canvas");
         canvas.width = viewport.width;
         canvas.height = viewport.height;
         const ctx = canvas.getContext("2d");
@@ -102,6 +103,11 @@ export default function PdfToImagesPage({
       setErrorMessage(msg);
       setPages([]);
     } finally {
+      canvas.width = 0;
+      canvas.height = 0;
+      if (pdf && typeof pdf.destroy === "function") {
+        pdf.destroy().catch(() => {});
+      }
       setIsLoadingDoc(false);
       setProgressText("");
     }

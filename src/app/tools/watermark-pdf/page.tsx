@@ -21,6 +21,41 @@ import {
 type PageNumberPosition = "none" | "bottom-center" | "bottom-right" | "top-right";
 type WatermarkColor = "red" | "slate" | "blue";
 
+function renderUnicodeWatermarkPng(
+  text: string,
+  colorHex: string,
+  opacity: number
+): Uint8Array {
+  const canvas = document.createElement("canvas");
+  canvas.width = 1200;
+  canvas.height = 1200;
+  const ctx = canvas.getContext("2d")!;
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.save();
+  ctx.translate(canvas.width / 2, canvas.height / 2);
+  ctx.rotate((-35 * Math.PI) / 180);
+  ctx.globalAlpha = opacity;
+  ctx.fillStyle = colorHex;
+  ctx.font = 'bold 88px system-ui, -apple-system, "Segoe UI", Arial, sans-serif';
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(text, 0, 0);
+  ctx.restore();
+
+  const dataUrl = canvas.toDataURL("image/png");
+  canvas.width = 0;
+  canvas.height = 0;
+
+  const base64 = dataUrl.split(",")[1];
+  const bin = atob(base64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) {
+    bytes[i] = bin.charCodeAt(i);
+  }
+  return bytes;
+}
+
 export default function WatermarkPdfPage() {
   const { t } = useLanguage();
   const [file, setFile] = useState<File | null>(null);
@@ -43,6 +78,12 @@ export default function WatermarkPdfPage() {
 
   const handleApply = async () => {
     if (!file) return;
+    const rawTrimmed = watermarkText.trim();
+    if (!rawTrimmed && pageNumberPos === "none") {
+      setErrorMessage("Please enter watermark text or select a page number position.");
+      return;
+    }
+
     setIsProcessing(true);
     setErrorMessage(null);
     setSuccessMessage(null);
@@ -61,22 +102,52 @@ export default function WatermarkPdfPage() {
         blue: rgb(0.12, 0.35, 0.82),
       };
 
-      const cleanText = watermarkText.replace(/[^\x20-\x7E]/g, "").trim();
+      const hexMap: Record<WatermarkColor, string> = {
+        red: "#d91f3d",
+        slate: "#404756",
+        blue: "#1f59d1",
+      };
+
+      const isAsciiOnly = /^[\x20-\x7E]*$/.test(rawTrimmed);
+      let unicodeStampImage: import("pdf-lib").PDFImage | null = null;
+      if (rawTrimmed && !isAsciiOnly) {
+        const pngBytes = renderUnicodeWatermarkPng(
+          rawTrimmed,
+          hexMap[watermarkColor],
+          opacity
+        );
+        unicodeStampImage = await pdfDoc.embedPng(pngBytes);
+      }
 
       pages.forEach((page, idx) => {
         const { width, height } = page.getSize();
 
-        if (cleanText) {
-          const fontSize = Math.min(width, height) * 0.085;
-          page.drawText(cleanText, {
-            x: width * 0.16,
-            y: height * 0.44,
-            size: fontSize,
-            font: boldFont,
-            color: colorMap[watermarkColor],
-            opacity,
-            rotate: degrees(35),
-          });
+        if (rawTrimmed) {
+          if (isAsciiOnly) {
+            const fontSize = Math.min(width, height) * 0.085;
+            const textWidth = boldFont.widthOfTextAtSize(rawTrimmed, fontSize);
+            const rad = (35 * Math.PI) / 180;
+            const x = width / 2 - (textWidth / 2) * Math.cos(rad);
+            const y = height / 2 - (textWidth / 2) * Math.sin(rad);
+
+            page.drawText(rawTrimmed, {
+              x,
+              y,
+              size: fontSize,
+              font: boldFont,
+              color: colorMap[watermarkColor],
+              opacity,
+              rotate: degrees(35),
+            });
+          } else if (unicodeStampImage) {
+            const stampDim = Math.min(width, height) * 0.78;
+            page.drawImage(unicodeStampImage, {
+              x: (width - stampDim) / 2,
+              y: (height - stampDim) / 2,
+              width: stampDim,
+              height: stampDim,
+            });
+          }
         }
 
         if (pageNumberPos !== "none") {

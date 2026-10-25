@@ -19,23 +19,26 @@ async function ensureLibrary(url: string, globalKey: string): Promise<any> {
   return new Promise((resolve, reject) => {
     const existing = document.querySelector(`script[src="${url}"]`);
     if (existing) {
-      existing.addEventListener("load", () => resolve((window as any)[globalKey]));
-      existing.addEventListener("error", reject);
-      return;
+      if ((window as any)[globalKey]) {
+        resolve((window as any)[globalKey]);
+        return;
+      }
+      existing.remove();
     }
 
     const script = document.createElement("script");
     script.src = url;
     script.async = true;
+    script.crossOrigin = "anonymous";
     script.onload = () => resolve((window as any)[globalKey]);
-    script.onerror = reject;
+    script.onerror = (err) => {
+      script.remove();
+      reject(err);
+    };
     document.body.appendChild(script);
   });
 }
 
-/**
- * Checks whether a string contains characters outside standard WinAnsi (e.g. Arabic, Cyrillic, CJK).
- */
 function hasNonWinAnsiCharacters(text: string): boolean {
   return /[^\x00-\xFF]/.test(text);
 }
@@ -46,10 +49,19 @@ function sanitizeWinAnsiText(text: string): string {
     .replace(/[\x00-\x1F\x7F-\x9F]/g, " ");
 }
 
-/**
- * High-DPI HTML5 Canvas paginator for Unicode text (Arabic RTL, Cyrillic, CJK, Emojis)
- * so pdf-lib never crashes on non-WinAnsi characters.
- */
+function sortPdfTextItems(items: any[]): any[] {
+  return [...items].sort((a, b) => {
+    const yA = a.transform ? a.transform[5] : 0;
+    const yB = b.transform ? b.transform[5] : 0;
+    if (Math.abs(yA - yB) > 5) {
+      return yB - yA; // Top-to-bottom (higher Y first in PDF coordinates)
+    }
+    const xA = a.transform ? a.transform[4] : 0;
+    const xB = b.transform ? b.transform[4] : 0;
+    return xA - xB; // Left-to-right
+  });
+}
+
 async function unicodeTextToPDFViaCanvas(title: string, rawText: string): Promise<Uint8Array> {
   const pdfDoc = await PDFDocument.create();
   const A4_W = PageSizes.A4[0];
@@ -61,7 +73,7 @@ async function unicodeTextToPDFViaCanvas(title: string, rawText: string): Promis
   const maxLineW = canvasW - margin * 2;
   const lineHeight = 18 * SCALE;
 
-  const isRTL = /[\u0600-\u06FF]/.test(rawText);
+  const isRTL = /[؀-ۿ]/.test(rawText);
 
   const measureCanvas = document.createElement("canvas");
   const mCtx = measureCanvas.getContext("2d");
@@ -101,13 +113,12 @@ async function unicodeTextToPDFViaCanvas(title: string, rawText: string): Promis
 
   let lineCursor = 0;
   let pageIndex = 0;
+  const pageCanvas = document.createElement("canvas");
+  pageCanvas.width = canvasW;
+  pageCanvas.height = canvasH;
+  const ctx = pageCanvas.getContext("2d")!;
 
   while (lineCursor < wrappedLines.length || pageIndex === 0) {
-    const pageCanvas = document.createElement("canvas");
-    pageCanvas.width = canvasW;
-    pageCanvas.height = canvasH;
-    const ctx = pageCanvas.getContext("2d")!;
-
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, canvasW, canvasH);
     ctx.direction = isRTL ? "rtl" : "ltr";
@@ -146,6 +157,8 @@ async function unicodeTextToPDFViaCanvas(title: string, rawText: string): Promis
     pageIndex++;
   }
 
+  pageCanvas.width = 0;
+  pageCanvas.height = 0;
   return await pdfDoc.save({ useObjectStreams: true });
 }
 
@@ -153,10 +166,6 @@ async function unicodeTextToPDFViaCanvas(title: string, rawText: string): Promis
 // 1. CONVERT TO PDF
 // ==========================================
 
-/**
- * Converts Plain Text or Markdown files into a cleanly paginated PDF document.
- * Automatically switches to Unicode High-DPI Canvas rendering for Arabic, Cyrillic, or non-Latin scripts.
- */
 export async function textToPDF(file: File): Promise<Uint8Array> {
   const text = await file.text();
   const cleanTitle = file.name.replace(/\.[^/.]+$/, "");
@@ -187,19 +196,35 @@ export async function textToPDF(file: File): Promise<Uint8Array> {
     }
 
     const isHeader = rawLine.startsWith("# ") || rawLine.startsWith("## ");
+    const activeFont = isHeader ? boldFont : font;
+    const activeSize = isHeader ? fontSize + 2 : fontSize;
     const cleanLine = sanitizeWinAnsiText(rawLine.replace(/^#+\s*/, ""));
     const words = cleanLine.split(" ");
     let currentLine = "";
 
     for (const word of words) {
       const testLine = currentLine ? `${currentLine} ${word}` : word;
-      const testWidth = font.widthOfTextAtSize(testLine, fontSize);
+      const testWidth = activeFont.widthOfTextAtSize(testLine, activeSize);
 
       if (testWidth <= maxLineWidth) {
         currentLine = testLine;
       } else {
         if (currentLine) wrappedLines.push({ text: currentLine, isHeader });
-        currentLine = word;
+        // Break single overlong tokens (such as long URLs) so they don't overflow right margin
+        if (activeFont.widthOfTextAtSize(word, activeSize) > maxLineWidth) {
+          let chunk = "";
+          for (const ch of word) {
+            if (activeFont.widthOfTextAtSize(chunk + ch, activeSize) <= maxLineWidth) {
+              chunk += ch;
+            } else {
+              if (chunk) wrappedLines.push({ text: chunk, isHeader });
+              chunk = ch;
+            }
+          }
+          currentLine = chunk;
+        } else {
+          currentLine = word;
+        }
       }
     }
     if (currentLine) {
@@ -241,9 +266,6 @@ export async function textToPDF(file: File): Promise<Uint8Array> {
   return await pdfDoc.save({ useObjectStreams: true });
 }
 
-/**
- * Converts Microsoft Word (.docx) documents to PDF in the browser using mammoth.
- */
 export async function wordToPDF(file: File): Promise<Uint8Array> {
   let mammothLib = window.mammoth;
   if (!mammothLib) {
@@ -267,10 +289,6 @@ export async function wordToPDF(file: File): Promise<Uint8Array> {
   return await textToPDF(textFile);
 }
 
-/**
- * Converts Microsoft PowerPoint (.pptx) decks into landscape 16:9 PDF slides client-side
- * by parsing slide XML structures from the PPTX ZIP container.
- */
 export async function powerpointToPDF(file: File): Promise<Uint8Array> {
   const arrayBuffer = await file.arrayBuffer();
   const zip = await JSZip.loadAsync(arrayBuffer);
@@ -288,9 +306,13 @@ export async function powerpointToPDF(file: File): Promise<Uint8Array> {
   }
 
   const pdfDoc = await PDFDocument.create();
-  const SLIDE_W = 841.89; // Landscape A4 / 16:9 width
+  const SLIDE_W = 841.89;
   const SLIDE_H = 473.56;
   const SCALE = 2;
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(SLIDE_W * SCALE);
+  canvas.height = Math.round(SLIDE_H * SCALE);
+  const ctx = canvas.getContext("2d")!;
 
   for (let i = 0; i < slideFiles.length; i++) {
     const xmlContent = await zip.files[slideFiles[i]].async("text");
@@ -315,24 +337,17 @@ export async function powerpointToPDF(file: File): Promise<Uint8Array> {
       }
     }
 
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.round(SLIDE_W * SCALE);
-    canvas.height = Math.round(SLIDE_H * SCALE);
-    const ctx = canvas.getContext("2d")!;
-
-    // Clean slide background & accent header bar
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = "#e11d48";
     ctx.fillRect(0, 0, canvas.width, 10 * SCALE);
 
-    // Slide number badge
     ctx.font = `bold ${10 * SCALE}px monospace`;
     ctx.fillStyle = "#94a3b8";
     ctx.textAlign = "right";
     ctx.fillText(`SLIDE ${i + 1} / ${slideFiles.length}`, canvas.width - 36 * SCALE, canvas.height - 22 * SCALE);
 
-    const isRTL = paragraphs.some((p) => /[\u0600-\u06FF]/.test(p));
+    const isRTL = paragraphs.some((p) => /[؀-ۿ]/.test(p));
     ctx.direction = isRTL ? "rtl" : "ltr";
     ctx.textAlign = isRTL ? "right" : "left";
     const startX = isRTL ? canvas.width - 48 * SCALE : 48 * SCALE;
@@ -376,13 +391,11 @@ export async function powerpointToPDF(file: File): Promise<Uint8Array> {
     }
   }
 
+  canvas.width = 0;
+  canvas.height = 0;
   return await pdfDoc.save({ useObjectStreams: true });
 }
 
-/**
- * Converts Microsoft Excel (.xlsx, .xls, .csv) files into formatted landscape PDF tables.
- * Uses Unicode-safe rendering when non-Latin characters are present.
- */
 export async function excelToPDF(file: File): Promise<Uint8Array> {
   let xlsxLib = window.XLSX;
   if (!xlsxLib) {
@@ -400,7 +413,6 @@ export async function excelToPDF(file: File): Promise<Uint8Array> {
   const arrayBuffer = await file.arrayBuffer();
   const workbook = xlsxLib.read(arrayBuffer, { type: "array" });
 
-  // Check if any cell contains Unicode characters outside WinAnsi
   let containsUnicode = false;
   for (const sheetName of workbook.SheetNames) {
     if (hasNonWinAnsiCharacters(sheetName)) containsUnicode = true;
@@ -441,6 +453,15 @@ export async function excelToPDF(file: File): Promise<Uint8Array> {
     const data: any[][] = xlsxLib.utils.sheet_to_json(sheet, { header: 1 });
     if (!data || data.length === 0) continue;
 
+    let maxRowLen = 0;
+    for (let i = 0; i < data.length; i++) {
+      if (Array.isArray(data[i]) && data[i].length > maxRowLen) {
+        maxRowLen = data[i].length;
+      }
+    }
+    const maxCols = Math.min(maxRowLen, 8);
+    if (maxCols === 0) continue;
+
     let page = pdfDoc.addPage([pageWidth, pageHeight]);
     let y = pageHeight - margin;
 
@@ -452,12 +473,6 @@ export async function excelToPDF(file: File): Promise<Uint8Array> {
       color: rgb(0.1, 0.1, 0.1),
     });
     y -= 25;
-
-    const maxCols = Math.min(
-      Math.max(...data.map((r) => (Array.isArray(r) ? r.length : 0))),
-      8
-    );
-    if (maxCols === 0) continue;
 
     const colWidth = (pageWidth - margin * 2) / maxCols;
     const rowHeight = 18;
@@ -501,6 +516,17 @@ export async function excelToPDF(file: File): Promise<Uint8Array> {
     }
   }
 
+  if (pdfDoc.getPageCount() === 0) {
+    const emptyPage = pdfDoc.addPage([pageWidth, pageHeight]);
+    emptyPage.drawText(sanitizeWinAnsiText(file.name), {
+      x: margin,
+      y: pageHeight - margin,
+      size: 14,
+      font: boldFont,
+      color: rgb(0.1, 0.1, 0.1),
+    });
+  }
+
   return await pdfDoc.save({ useObjectStreams: true });
 }
 
@@ -508,28 +534,29 @@ export async function excelToPDF(file: File): Promise<Uint8Array> {
 // 2. CONVERT FROM PDF
 // ==========================================
 
-/**
- * Extracts raw textual content from all pages of a PDF document using PDF.js.
- */
 export async function pdfToText(file: File): Promise<string> {
   const pdfjs = await loadPdfJs();
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
   let fullText = "";
 
-  for (let i = 1; i <= pdf.numPages; i++) {
-    const page = await pdf.getPage(i);
-    const content = await page.getTextContent();
-    const strings = content.items.map((item: any) => item.str);
-    fullText += `--- Page ${i} ---\n` + strings.join(" ") + "\n\n";
+  try {
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      const sortedItems = sortPdfTextItems(content.items || []);
+      const strings = sortedItems.map((item: any) => item.str);
+      fullText += `--- Page ${i} ---\n` + strings.join(" ") + "\n\n";
+    }
+  } finally {
+    if (typeof pdf.destroy === "function") {
+      pdf.destroy().catch(() => {});
+    }
   }
 
   return fullText;
 }
 
-/**
- * Extracts text lines and converts a PDF into an editable Microsoft Word (.docx) document.
- */
 export async function pdfToWord(file: File): Promise<Blob> {
   let docxLib = window.docx;
   if (!docxLib) {
@@ -551,46 +578,52 @@ export async function pdfToWord(file: File): Promise<Blob> {
   const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
   const docChildren: any[] = [];
 
-  for (let i = 1; i <= pdf.numPages; i++) {
-    const page = await pdf.getPage(i);
-    const content = await page.getTextContent();
+  try {
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
 
-    docChildren.push(
-      new Paragraph({
-        text: `Page ${i}`,
-        heading: HeadingLevel.HEADING_2,
-        spacing: { before: 200, after: 100 },
-      })
-    );
+      docChildren.push(
+        new Paragraph({
+          text: `Page ${i}`,
+          heading: HeadingLevel.HEADING_2,
+          spacing: { before: 200, after: 100 },
+        })
+      );
 
-    const items = content.items;
-    let currentY: number | null = null;
-    let lineBuffer: string[] = [];
+      const items = sortPdfTextItems(content.items || []);
+      let currentY: number | null = null;
+      let lineBuffer: string[] = [];
 
-    for (const item of items) {
-      if (!item.str || item.str.trim() === "") continue;
+      for (const item of items) {
+        if (!item.str || item.str.trim() === "") continue;
 
-      if (currentY !== null && Math.abs(item.transform[5] - currentY) > 6) {
+        if (currentY !== null && Math.abs(item.transform[5] - currentY) > 6) {
+          docChildren.push(
+            new Paragraph({
+              children: [new TextRun(lineBuffer.join(" "))],
+              spacing: { after: 80 },
+            })
+          );
+          lineBuffer = [];
+        }
+
+        lineBuffer.push(item.str);
+        currentY = item.transform[5];
+      }
+
+      if (lineBuffer.length > 0) {
         docChildren.push(
           new Paragraph({
             children: [new TextRun(lineBuffer.join(" "))],
-            spacing: { after: 80 },
+            spacing: { after: 120 },
           })
         );
-        lineBuffer = [];
       }
-
-      lineBuffer.push(item.str);
-      currentY = item.transform[5];
     }
-
-    if (lineBuffer.length > 0) {
-      docChildren.push(
-        new Paragraph({
-          children: [new TextRun(lineBuffer.join(" "))],
-          spacing: { after: 120 },
-        })
-      );
+  } finally {
+    if (typeof pdf.destroy === "function") {
+      pdf.destroy().catch(() => {});
     }
   }
 
@@ -601,9 +634,6 @@ export async function pdfToWord(file: File): Promise<Blob> {
   return await Packer.toBlob(doc);
 }
 
-/**
- * Extracts tabulated text data from a PDF and converts it into a Microsoft Excel (.xlsx) file.
- */
 export async function pdfToExcel(file: File): Promise<Blob> {
   let xlsxLib = window.XLSX;
   if (!xlsxLib) {
@@ -623,31 +653,38 @@ export async function pdfToExcel(file: File): Promise<Blob> {
   const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
   const workbook = xlsxLib.utils.book_new();
 
-  for (let i = 1; i <= pdf.numPages; i++) {
-    const page = await pdf.getPage(i);
-    const content = await page.getTextContent();
-    const rows: string[][] = [];
+  try {
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      const items = sortPdfTextItems(content.items || []);
+      const rows: string[][] = [];
 
-    let currentY: number | null = null;
-    let currentRow: string[] = [];
+      let currentY: number | null = null;
+      let currentRow: string[] = [];
 
-    for (const item of content.items) {
-      if (!item.str) continue;
+      for (const item of items) {
+        if (!item.str || !item.str.trim()) continue;
 
-      if (currentY !== null && Math.abs(item.transform[5] - currentY) > 8) {
-        if (currentRow.length > 0) rows.push(currentRow);
-        currentRow = [];
+        if (currentY !== null && Math.abs(item.transform[5] - currentY) > 6) {
+          if (currentRow.length > 0) rows.push(currentRow);
+          currentRow = [];
+        }
+
+        currentRow.push(item.str.trim());
+        currentY = item.transform[5];
       }
+      if (currentRow.length > 0) rows.push(currentRow);
 
-      currentRow.push(item.str.trim());
-      currentY = item.transform[5];
+      const worksheet = xlsxLib.utils.aoa_to_sheet(
+        rows.length > 0 ? rows : [["No tabular text detected"]]
+      );
+      xlsxLib.utils.book_append_sheet(workbook, worksheet, `Page ${i}`);
     }
-    if (currentRow.length > 0) rows.push(currentRow);
-
-    const worksheet = xlsxLib.utils.aoa_to_sheet(
-      rows.length > 0 ? rows : [["No tabular text detected"]]
-    );
-    xlsxLib.utils.book_append_sheet(workbook, worksheet, `Page ${i}`);
+  } finally {
+    if (typeof pdf.destroy === "function") {
+      pdf.destroy().catch(() => {});
+    }
   }
 
   const excelBuffer = xlsxLib.write(workbook, { bookType: "xlsx", type: "array" });
@@ -656,9 +693,6 @@ export async function pdfToExcel(file: File): Promise<Blob> {
   });
 }
 
-/**
- * Renders PDF pages into slide images and packages them into a PowerPoint (.pptx) presentation.
- */
 export async function pdfToPowerPoint(file: File): Promise<Blob> {
   let PptxGen = window.PptxGenJS;
   if (!PptxGen) {
@@ -674,32 +708,58 @@ export async function pdfToPowerPoint(file: File): Promise<Blob> {
 
   const pdfjs = await loadPdfJs();
   const pptx = new PptxGen();
-  pptx.layout = "LAYOUT_WIDE";
+  pptx.layout = "LAYOUT_WIDE"; // 13.33 x 7.5 inches
 
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
+  const canvas = document.createElement("canvas");
 
-  for (let i = 1; i <= pdf.numPages; i++) {
-    const page = await pdf.getPage(i);
-    const viewport = page.getViewport({ scale: 1.5 });
+  try {
+    const SLIDE_W = 13.33;
+    const SLIDE_H = 7.5;
+    const MAX_W = 12.5;
+    const MAX_H = 6.9;
 
-    const canvas = document.createElement("canvas");
-    canvas.width = viewport.width;
-    canvas.height = viewport.height;
-    const ctx = canvas.getContext("2d");
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const viewport = page.getViewport({ scale: 1.5 });
 
-    if (ctx) {
-      await page.render({ canvasContext: ctx, viewport }).promise;
-      const dataUrl = canvas.toDataURL("image/jpeg", 0.88);
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      const ctx = canvas.getContext("2d");
 
-      const slide = pptx.addSlide();
-      slide.addImage({
-        data: dataUrl,
-        x: 0.5,
-        y: 0.3,
-        w: 12.33,
-        h: 6.9,
-      });
+      if (ctx) {
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        await page.render({ canvasContext: ctx, viewport }).promise;
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.88);
+
+        // Preserve page aspect ratio centered on slide
+        const pageAspect = viewport.width / Math.max(1, viewport.height);
+        let drawW = MAX_W;
+        let drawH = drawW / pageAspect;
+        if (drawH > MAX_H) {
+          drawH = MAX_H;
+          drawW = drawH * pageAspect;
+        }
+        const drawX = (SLIDE_W - drawW) / 2;
+        const drawY = (SLIDE_H - drawH) / 2;
+
+        const slide = pptx.addSlide();
+        slide.addImage({
+          data: dataUrl,
+          x: drawX,
+          y: drawY,
+          w: drawW,
+          h: drawH,
+        });
+      }
+    }
+  } finally {
+    canvas.width = 0;
+    canvas.height = 0;
+    if (typeof pdf.destroy === "function") {
+      pdf.destroy().catch(() => {});
     }
   }
 

@@ -29,8 +29,6 @@ const CORE_INDEXED_SLUGS = new Set([
   "text-to-pdf",
   "compress-pdf-under-100kb",
   "compress-pdf-under-200kb",
-  "compress-pdf-to-100kb",
-  "compress-pdf-to-200kb",
   "compress-pdf-under-1mb",
 ]);
 

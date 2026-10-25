@@ -58,17 +58,18 @@ export default function RotatePdfPage() {
     setIsLoadingDoc(true);
     setFile(selected);
 
+    let pdf: any = null;
+    const canvas = document.createElement("canvas");
     try {
       const pdfjs = await loadPdfJs();
       const arrayBuffer = await selected.arrayBuffer();
-      const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
+      pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
       const loadedThumbnails: PageThumbnail[] = [];
 
       for (let i = 1; i <= pdf.numPages; i++) {
         setProgressText(`Rendering page ${i} of ${pdf.numPages}...`);
         const page = await pdf.getPage(i);
         const viewport = page.getViewport({ scale: 0.4 });
-        const canvas = document.createElement("canvas");
         canvas.width = viewport.width;
         canvas.height = viewport.height;
         const ctx = canvas.getContext("2d");
@@ -94,6 +95,11 @@ export default function RotatePdfPage() {
       setErrorMessage(msg);
       setFile(null);
     } finally {
+      canvas.width = 0;
+      canvas.height = 0;
+      if (pdf && typeof pdf.destroy === "function") {
+        pdf.destroy().catch(() => {});
+      }
       setIsLoadingDoc(false);
       setProgressText("");
     }

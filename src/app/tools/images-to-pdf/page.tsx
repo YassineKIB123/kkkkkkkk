@@ -26,7 +26,7 @@ interface ImageMeta {
 }
 
 export default function ImagesToPdfPage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [files, setFiles] = useState<File[]>([]);
   const [imageMetas, setImageMetas] = useState<ImageMeta[]>([]);
   const [previewIndex, setPreviewIndex] = useState<number>(0);
@@ -230,7 +230,7 @@ export default function ImagesToPdfPage() {
                           : "border border-slate-200 bg-slate-50 text-slate-600 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-400"
                       }`}
                     >
-                      Standard A4
+                      {language === "AR" ? "A4 قياسي" : language === "FR" ? "A4 standard" : language === "ES" ? "A4 estándar" : language === "RU" ? "Стандартный A4" : "Standard A4"}
                     </button>
                     <button
                       type="button"
@@ -241,13 +241,13 @@ export default function ImagesToPdfPage() {
                           : "border border-slate-200 bg-slate-50 text-slate-600 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-400"
                       }`}
                     >
-                      Fit Image Size
+                      {language === "AR" ? "حسب حجم الصورة" : language === "FR" ? "Ajuster à l'image" : language === "ES" ? "Ajustar a imagen" : language === "RU" ? "По размеру фото" : "Fit Image Size"}
                     </button>
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-slate-600 dark:text-slate-400 font-semibold">Orientation</label>
+                  <label className="text-slate-600 dark:text-slate-400 font-semibold">{language === "AR" ? "الاتجاه" : language === "FR" ? "Orientation" : language === "ES" ? "Orientación" : language === "RU" ? "Ориентация" : "Orientation"}</label>
                   <div className="grid grid-cols-2 gap-1.5">
                     <button
                       type="button"
@@ -259,7 +259,7 @@ export default function ImagesToPdfPage() {
                           : "border border-slate-200 bg-slate-50 text-slate-600 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-400"
                       }`}
                     >
-                      Portrait
+                      {language === "AR" ? "عمودي" : language === "FR" ? "Portrait" : language === "ES" ? "Vertical" : language === "RU" ? "Портретная" : "Portrait"}
                     </button>
                     <button
                       type="button"
@@ -271,7 +271,7 @@ export default function ImagesToPdfPage() {
                           : "border border-slate-200 bg-slate-50 text-slate-600 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-400"
                       }`}
                     >
-                      Landscape
+                      {language === "AR" ? "أفقي" : language === "FR" ? "Paysage" : language === "ES" ? "Horizontal" : language === "RU" ? "Альбомная" : "Landscape"}
                     </button>
                   </div>
                 </div>

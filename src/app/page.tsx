@@ -196,24 +196,8 @@ export default function HomePage() {
     () => [
       {
         id: "edit",
-        title:
-          selectedLanguage === "FR"
-            ? "Modifier Texte PDF"
-            : selectedLanguage === "ES"
-              ? "Editar Texto PDF"
-              : selectedLanguage === "RU"
-                ? "Редактировать PDF"
-                : selectedLanguage === "AR"
-                  ? "تعديل نص PDF"
-                  : "Edit PDF Text",
-        description:
-          selectedLanguage === "FR"
-            ? "Cliquez sur n'importe quel texte existant dans votre PDF pour le modifier, le remplacer ou l'effacer."
-            : selectedLanguage === "ES"
-              ? "Haz clic en cualquier texto existente de tu PDF para editarlo, reemplazarlo o borrarlo al instante."
-              : selectedLanguage === "AR"
-                ? "انقر على أي نص موجود داخل ملف PDF لتعديله أو استبداله أو مسحه مباشرة."
-                : "Click any existing text in your PDF to edit, replace, whiteout, or add new text directly in your browser.",
+        title: t.tools.editTitle,
+        description: t.tools.editDesc,
         href: "/tools/edit-pdf",
         formats: [".PDF"],
         category: "scan_edit" as const,
@@ -317,8 +301,8 @@ export default function HomePage() {
       },
       {
         id: "watermark",
-        title: "Watermark & Page Numbers",
-        description: "Stamp custom CONFIDENTIAL/DRAFT diagonal watermarks and 'Page X of Y' numbering.",
+        title: t.tools.watermarkTitle,
+        description: t.tools.watermarkDesc,
         href: "/tools/watermark-pdf",
         formats: [".PDF"],
         category: "scan_edit" as const,
@@ -329,8 +313,8 @@ export default function HomePage() {
       },
       {
         id: "sanitize",
-        title: "Sanitize PDF Metadata",
-        description: "Inspect and permanently purge hidden Author, Creator, XMP, and timestamp metadata.",
+        title: t.tools.sanitizeTitle,
+        description: t.tools.sanitizeDesc,
         href: "/tools/sanitize-pdf",
         formats: [".PDF"],
         category: "scan_edit" as const,
@@ -351,7 +335,7 @@ export default function HomePage() {
         iconColor: "text-cyan-600 dark:text-cyan-400",
       },
     ],
-    [t, selectedLanguage]
+    [t]
   );
 
   const filteredTools = useMemo(() => {
@@ -392,13 +376,13 @@ export default function HomePage() {
 
           <nav className="hidden md:flex items-center gap-4 xl:gap-5 text-xs font-semibold text-slate-600 dark:text-slate-300">
             <Link href="/tools/edit-pdf" className="hover:text-rose-600 transition-colors">
-              Edit PDF Text
+              {t.nav.edit}
             </Link>
             <Link href="/tools/compress-pdf" className="hover:text-rose-600 transition-colors">
               {t.tools.compressTitle}
             </Link>
             <Link href="/tools/sign-pdf" className="hover:text-rose-600 transition-colors">
-              Sign PDF
+              {t.nav.sign}
             </Link>
             <Link href="/tools/scan" className="hover:text-rose-600 transition-colors">
               {t.nav.scan}
@@ -515,7 +499,7 @@ export default function HomePage() {
                           className="flex items-center gap-2.5 rounded-lg p-2 text-slate-700 hover:bg-slate-50 hover:text-rose-600 dark:text-slate-300 dark:hover:bg-slate-800 transition-colors"
                         >
                           <FileEdit className="h-4 w-4 text-rose-500" />
-                          <span className="font-semibold text-xs">Edit PDF Text</span>
+                          <span className="font-semibold text-xs">{t.nav.edit}</span>
                         </Link>
                         <Link
                           href="/tools/scan"
@@ -549,7 +533,7 @@ export default function HomePage() {
               className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 text-white hover:bg-slate-800 dark:bg-rose-600 dark:hover:bg-rose-500 px-3.5 py-1.5 text-xs font-bold transition-all shadow-xs"
             >
               <Download className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Install App</span>
+              <span className="hidden sm:inline">{t.nav.installApp}</span>
             </button>
 
             <button

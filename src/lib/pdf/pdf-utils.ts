@@ -33,19 +33,7 @@ export async function loadPdfJs(): Promise<any> {
         resolve(window.pdfjsLib);
         return;
       }
-      existing.addEventListener("load", () => {
-        if (window.pdfjsLib) {
-          window.pdfjsLib.GlobalWorkerOptions.workerSrc = CDN_WORKER;
-          resolve(window.pdfjsLib);
-        } else {
-          reject(new Error("Failed to initialize PDF.js engine."));
-        }
-      });
-      existing.addEventListener("error", () => {
-        _pdfJsPromise = null;
-        reject(new Error("Could not load PDF rendering script."));
-      });
-      return;
+      existing.remove();
     }
 
     const script = document.createElement("script");
@@ -56,11 +44,13 @@ export async function loadPdfJs(): Promise<any> {
         window.pdfjsLib.GlobalWorkerOptions.workerSrc = CDN_WORKER;
         resolve(window.pdfjsLib);
       } else {
+        script.remove();
         _pdfJsPromise = null;
         reject(new Error("PDF.js failed to attach to window."));
       }
     };
     script.onerror = () => {
+      script.remove();
       _pdfJsPromise = null;
       reject(new Error("Network error while loading PDF engine."));
     };
@@ -68,6 +58,44 @@ export async function loadPdfJs(): Promise<any> {
   });
 
   return _pdfJsPromise;
+}
+
+function dataUrlToUint8Array(dataUrl: string): { bytes: Uint8Array; mime: string } {
+  const match = dataUrl.match(/^data:([^;,]+)?(?:;base64)?,(.*)$/);
+  if (!match) {
+    throw new Error("Invalid data URL format.");
+  }
+  const mime = (match[1] || "image/png").toLowerCase();
+  const base64 = match[2];
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return { bytes, mime };
+}
+
+async function normalizeDataUrlToPngBytes(dataUrl: string): Promise<Uint8Array> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, img.naturalWidth || img.width || 300);
+      canvas.height = Math.max(1, img.naturalHeight || img.height || 100);
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        reject(new Error("Canvas context unavailable."));
+        return;
+      }
+      ctx.drawImage(img, 0, 0);
+      const pngUrl = canvas.toDataURL("image/png");
+      canvas.width = 0;
+      canvas.height = 0;
+      resolve(dataUrlToUint8Array(pngUrl).bytes);
+    };
+    img.onerror = () => reject(new Error("Failed to decode signature image."));
+    img.src = dataUrl;
+  });
 }
 
 /**
@@ -113,65 +141,79 @@ export async function compressPDFDocument(
   }
 
   // Perform canvas raster re-encoding via PDF.js for true size reduction on image/scanned PDFs
+  let pdf: any = null;
+  const sharedCanvas = document.createElement("canvas");
   try {
     const pdfjs = await loadPdfJs();
-    const pdf = await pdfjs.getDocument({ data: buffer.slice(0) }).promise;
+    pdf = await pdfjs.getDocument({ data: buffer.slice(0) }).promise;
     const numPages = pdf.numPages;
 
-    // Choose scale & JPEG quality based on compression level and optional KB budget
     let scale = level === "extreme" ? 1.0 : 1.4;
     let quality = level === "extreme" ? 0.5 : 0.74;
 
     if (targetKb) {
       const targetBytesPerPage = (targetKb * 1024) / Math.max(1, numPages);
       if (targetBytesPerPage < 35000) {
-        scale = 0.85;
-        quality = 0.42;
+        scale = 0.82;
+        quality = 0.4;
       } else if (targetBytesPerPage < 75000) {
         scale = 1.05;
         quality = 0.55;
       }
     }
 
-    const rebuiltPdf = await PDFDocument.create();
+    const renderCompressedPass = async (passScale: number, passQuality: number) => {
+      const rebuiltPdf = await PDFDocument.create();
+      const ctx = sharedCanvas.getContext("2d");
 
-    for (let i = 1; i <= numPages; i++) {
-      onProgress?.(i, numPages);
-      const page = await pdf.getPage(i);
-      const baseViewport = page.getViewport({ scale: 1.0 });
-      const renderViewport = page.getViewport({ scale });
+      for (let i = 1; i <= numPages; i++) {
+        onProgress?.(i, numPages);
+        const page = await pdf.getPage(i);
+        const baseViewport = page.getViewport({ scale: 1.0 });
+        const renderViewport = page.getViewport({ scale: passScale });
 
-      const canvas = document.createElement("canvas");
-      canvas.width = Math.max(1, Math.floor(renderViewport.width));
-      canvas.height = Math.max(1, Math.floor(renderViewport.height));
-      const ctx = canvas.getContext("2d");
+        sharedCanvas.width = Math.max(1, Math.floor(renderViewport.width));
+        sharedCanvas.height = Math.max(1, Math.floor(renderViewport.height));
 
-      if (ctx) {
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        await page.render({ canvasContext: ctx, viewport: renderViewport }).promise;
+        if (ctx) {
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, sharedCanvas.width, sharedCanvas.height);
+          await page.render({ canvasContext: ctx, viewport: renderViewport }).promise;
 
-        const blob = await new Promise<Blob | null>((res) =>
-          canvas.toBlob((b) => res(b), "image/jpeg", quality)
-        );
+          const blob = await new Promise<Blob | null>((res) =>
+            sharedCanvas.toBlob((b) => res(b), "image/jpeg", passQuality)
+          );
 
-        if (blob) {
-          const jpgBytes = await blob.arrayBuffer();
-          const jpgImage = await rebuiltPdf.embedJpg(jpgBytes);
-          const pdfPage = rebuiltPdf.addPage([baseViewport.width, baseViewport.height]);
-          pdfPage.drawImage(jpgImage, {
-            x: 0,
-            y: 0,
-            width: baseViewport.width,
-            height: baseViewport.height,
-          });
+          if (blob) {
+            const jpgBytes = await blob.arrayBuffer();
+            const jpgImage = await rebuiltPdf.embedJpg(jpgBytes);
+            const pdfPage = rebuiltPdf.addPage([baseViewport.width, baseViewport.height]);
+            pdfPage.drawImage(jpgImage, {
+              x: 0,
+              y: 0,
+              width: baseViewport.width,
+              height: baseViewport.height,
+            });
+          }
         }
+      }
+
+      return await rebuiltPdf.save({ useObjectStreams: true });
+    };
+
+    let rasterCompressedBytes = await renderCompressedPass(scale, quality);
+
+    // If a strict targetKb was requested and pass 1 exceeded it, run a tighter second pass
+    if (targetKb && rasterCompressedBytes.length > targetKb * 1024) {
+      const ratio = (targetKb * 1024) / rasterCompressedBytes.length;
+      const tighterScale = Math.max(0.55, scale * Math.sqrt(ratio) * 0.92);
+      const tighterQuality = Math.max(0.28, quality * ratio * 0.9);
+      const secondPassBytes = await renderCompressedPass(tighterScale, tighterQuality);
+      if (secondPassBytes.length < rasterCompressedBytes.length) {
+        rasterCompressedBytes = secondPassBytes;
       }
     }
 
-    const rasterCompressedBytes = await rebuiltPdf.save({ useObjectStreams: true });
-
-    // Pick whichever representation achieved the smallest byte footprint
     const candidates = [
       new Uint8Array(buffer),
       streamCompressedBytes,
@@ -180,10 +222,15 @@ export async function compressPDFDocument(
 
     return candidates[0];
   } catch {
-    // Fallback if PDF.js rasterization is unavailable
     return streamCompressedBytes.length < file.size
       ? streamCompressedBytes
       : new Uint8Array(buffer);
+  } finally {
+    sharedCanvas.width = 0;
+    sharedCanvas.height = 0;
+    if (pdf && typeof pdf.destroy === "function") {
+      pdf.destroy().catch(() => {});
+    }
   }
 }
 
@@ -526,7 +573,7 @@ export interface SignaturePlacement {
 }
 
 /**
- * Embeds multiple PNG signatures/stamps across any pages of a PDF in a single pass,
+ * Embeds multiple PNG/JPEG/WebP signatures/stamps across any pages of a PDF in a single pass,
  * plus optional diagonal watermark text.
  */
 export async function embedSignaturesIntoPDF(
@@ -544,10 +591,15 @@ export async function embedSignaturesIntoPDF(
     if (cleanWatermark) {
       for (const page of pages) {
         const { width, height } = page.getSize();
+        const fontSize = Math.min(width, height) * 0.08;
+        const textWidth = font.widthOfTextAtSize(cleanWatermark, fontSize);
+        const rad = (35 * Math.PI) / 180;
+        const x = width / 2 - (textWidth / 2) * Math.cos(rad);
+        const y = height / 2 - (textWidth / 2) * Math.sin(rad);
         page.drawText(cleanWatermark, {
-          x: width * 0.18,
-          y: height * 0.45,
-          size: Math.min(width, height) * 0.08,
+          x,
+          y,
+          size: fontSize,
           font,
           color: rgb(0.85, 0.15, 0.25),
           opacity: 0.16,
@@ -564,14 +616,33 @@ export async function embedSignaturesIntoPDF(
     const page = pages[targetPageIndex];
     const { width: pageWidth, height: pageHeight } = page.getSize();
 
-    const response = await fetch(sig.signatureDataUrl);
-    const signatureBytes = await response.arrayBuffer();
-    const signatureImage = await pdfDoc.embedPng(signatureBytes);
+    let signatureImage: import("pdf-lib").PDFImage;
+    try {
+      const { bytes: rawBytes, mime } = dataUrlToUint8Array(sig.signatureDataUrl);
+      if (mime === "image/png") {
+        signatureImage = await pdfDoc.embedPng(rawBytes);
+      } else if (mime === "image/jpeg" || mime === "image/jpg") {
+        signatureImage = await pdfDoc.embedJpg(rawBytes);
+      } else {
+        const pngBytes = await normalizeDataUrlToPngBytes(sig.signatureDataUrl);
+        signatureImage = await pdfDoc.embedPng(pngBytes);
+      }
+    } catch {
+      const pngBytes = await normalizeDataUrlToPngBytes(sig.signatureDataUrl);
+      signatureImage = await pdfDoc.embedPng(pngBytes);
+    }
 
-    const xRatio = sig.position.xPercent > 1 ? sig.position.xPercent / 100 : sig.position.xPercent;
-    const yRatio = sig.position.yPercent > 1 ? sig.position.yPercent / 100 : sig.position.yPercent;
-    const wRatio = sig.position.widthPercent > 1 ? sig.position.widthPercent / 100 : sig.position.widthPercent;
-    const hRatio = sig.position.heightPercent > 1 ? sig.position.heightPercent / 100 : sig.position.heightPercent;
+    // All position fields are percentages in [0, 100] (unless all 4 values are <= 1 fractional ratios)
+    const isFractional =
+      sig.position.xPercent <= 1 &&
+      sig.position.yPercent <= 1 &&
+      sig.position.widthPercent <= 1 &&
+      sig.position.heightPercent <= 1;
+
+    const xRatio = isFractional ? sig.position.xPercent : sig.position.xPercent / 100;
+    const yRatio = isFractional ? sig.position.yPercent : sig.position.yPercent / 100;
+    const wRatio = isFractional ? sig.position.widthPercent : sig.position.widthPercent / 100;
+    const hRatio = isFractional ? sig.position.heightPercent : sig.position.heightPercent / 100;
 
     const drawWidth = wRatio * pageWidth;
     const drawHeight = hRatio * pageHeight;

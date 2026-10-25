@@ -328,6 +328,12 @@ export function ToolLayout({
               >
                 {t.nav.pricing}
               </Link>
+              <Link
+                href="/blog"
+                className="hover:text-rose-600 transition-colors font-semibold"
+              >
+                Guides
+              </Link>
 
               <div className="relative" ref={megaMenuRef}>
                 <button
@@ -795,6 +801,7 @@ export function ToolLayout({
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-between border-t border-slate-200 dark:border-slate-800 pt-6 gap-4 text-slate-500">
             <div className="flex flex-wrap items-center gap-4">
               <p>iKnowAPDF &copy; 2026. {t.footer.rights}</p>
+              <Link href="/blog" className="hover:text-rose-600 underline-offset-4 hover:underline font-semibold text-rose-600 dark:text-rose-400">Guides</Link>
               <Link href="/pricing" className="hover:text-rose-600 underline-offset-4 hover:underline font-semibold text-rose-600 dark:text-rose-400">{t.nav.pricing} ($5/mo Ad-Free)</Link>
               <Link href="/about" className="hover:text-rose-600 underline-offset-4 hover:underline">{t.common.about}</Link>
               <Link href="/contact" className="hover:text-rose-600 underline-offset-4 hover:underline">{t.common.contact}</Link>

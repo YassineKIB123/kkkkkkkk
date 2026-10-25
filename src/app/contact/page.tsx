@@ -2,6 +2,7 @@ import React from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Mail, ArrowLeft, ShieldCheck, Globe, Cpu } from "lucide-react";
+import { ContactForm } from "@/components/common/ContactForm";
 
 export const metadata: Metadata = {
   title: "Contact Support & Inquiries",
@@ -81,14 +82,15 @@ export default function ContactPage() {
             </ul>
           </section>
 
-          <section className="space-y-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+          <section className="space-y-4 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
             <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <ShieldCheck className="h-4 w-4 text-emerald-600" />
               <span>Contact Our Support Team</span>
             </h2>
             <p>
-              Have a question, bug report, DMCA/legal inquiry, or feature request? Reach out to our support team anytime and we will respond within 24–48 business hours:
+              Have a question, bug report, DMCA/legal inquiry, or feature request? Reach out to our team using the form below or via direct email. We respond to all inquiries within 24–48 business hours:
             </p>
+
             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-800/50 space-y-1">
               <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
                 Direct Email Support
@@ -99,6 +101,13 @@ export default function ContactPage() {
               >
                 support@iknowapdf.lol
               </a>
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 dark:border-slate-800 dark:bg-slate-900 space-y-3">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                Send an Online Message
+              </h3>
+              <ContactForm />
             </div>
           </section>
 

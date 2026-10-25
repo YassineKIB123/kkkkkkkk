@@ -146,6 +146,51 @@ export default function AboutPage() {
             </ul>
           </section>
 
+          {/* Engineering Leadership & E-E-A-T */}
+          <section className="space-y-4 border-t border-slate-100 dark:border-slate-800 pt-6">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <ShieldCheck className="h-5 w-5 text-rose-600" />
+              <span>Engineering Leadership & Editorial Board</span>
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+              Our software architecture and technical educational guides are maintained by experienced systems engineers specializing in WebAssembly runtime security, cryptography, and ISO document standards:
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+              <div className="rounded-2xl border border-slate-200/90 bg-slate-50/70 p-5 dark:border-slate-800 dark:bg-slate-800/40 space-y-2">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-rose-600 text-white font-extrabold flex items-center justify-center text-sm shadow-xs">
+                    A
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">Alex Vance</h3>
+                    <p className="text-[11px] font-semibold text-rose-600 dark:text-rose-400">Lead Document Security Engineer</p>
+                  </div>
+                </div>
+                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                  Specialist in WebAssembly document processing, cryptographic privacy, and client-side browser architectures. 12+ years in high-throughput document systems.
+                </p>
+                <p className="text-[10px] text-slate-400 font-medium">M.Sc. Computer Science • ISO 32000 Contributor</p>
+              </div>
+
+              <div className="rounded-2xl border border-slate-200/90 bg-slate-50/70 p-5 dark:border-slate-800 dark:bg-slate-800/40 space-y-2">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-slate-900 text-white font-extrabold flex items-center justify-center text-sm shadow-xs dark:bg-rose-950 dark:text-rose-200">
+                    Y
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">Yassine K.</h3>
+                    <p className="text-[11px] font-semibold text-rose-600 dark:text-rose-400">Founder & Principal Systems Architect</p>
+                  </div>
+                </div>
+                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                  Open-web advocate dedicated to zero-upload client-side tools that preserve global user privacy without paywalls or tracking.
+                </p>
+                <p className="text-[10px] text-slate-400 font-medium">B.Sc. Software Engineering • Web Performance Engineer</p>
+              </div>
+            </div>
+          </section>
+
           {/* Contact & Support */}
           <section className="space-y-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300 border-t border-slate-100 dark:border-slate-800 pt-6">
             <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">

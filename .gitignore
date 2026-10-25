@@ -23,7 +23,7 @@
 # misc
 .DS_Store
 *.pem
-repomix-output.xml
+repomix-output.*
 .wrangler/
 
 # debug

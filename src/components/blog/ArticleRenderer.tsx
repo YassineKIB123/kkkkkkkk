@@ -1,12 +1,79 @@
 import React from "react";
 import { ArticleBlock, ToolCtaConfig } from "@/lib/blog/types";
 import { ArticleToolCta } from "./ArticleToolCta";
-import { ShieldCheck, AlertCircle, Info, Lightbulb } from "lucide-react";
+import { ShieldCheck, AlertCircle, Info, Lightbulb, Terminal } from "lucide-react";
 
 interface ArticleRendererProps {
   blocks: ArticleBlock[];
   defaultToolCta: ToolCtaConfig;
 }
+
+const TOOL_MAP: Record<string, Partial<ToolCtaConfig>> = {
+  sanitize: {
+    toolId: "sanitize",
+    title: "Sanitize PDF Metadata & Flatten Forms Locally",
+    description: "Inspect and purge hidden author metadata, GPS streams, revisions, and interactive form fields in local RAM.",
+    buttonText: "Open PDF Sanitizer",
+    href: "/tools/sanitize-pdf",
+    highlightText: "Zero cloud egress guarantee",
+  },
+  sign: {
+    toolId: "sign",
+    title: "Sign PDF Contracts with SHA-256 Audit Certificate",
+    description: "Draw, type, or stamp legal signatures on contracts locally and append tamper-evident verification certificates.",
+    buttonText: "Open PDF Signer",
+    href: "/tools/sign-pdf",
+    highlightText: "Web Crypto SHA-256 Audit Trail",
+  },
+  compress: {
+    toolId: "compress",
+    title: "Compress PDF Online with Live Size Comparison",
+    description: "Choose Extreme, Recommended, or Lossless presets. 100% computed inside your device memory with instant byte savings.",
+    buttonText: "Open PDF Compressor",
+    href: "/tools/compress-pdf",
+    highlightText: "Instant client-side optimization",
+  },
+  merge: {
+    toolId: "merge",
+    title: "Merge Multiple PDFs into One Document",
+    description: "Combine multiple PDF files and preserve bookmarks, page trees, and formatting locally.",
+    buttonText: "Open PDF Merger",
+    href: "/tools/merge-pdf",
+    highlightText: "Zero server uploads",
+  },
+  split: {
+    toolId: "split",
+    title: "Split PDF Pages into Separate Documents",
+    description: "Extract specific page ranges or split large documents into individual files in browser memory.",
+    buttonText: "Open PDF Splitter",
+    href: "/tools/split-pdf",
+    highlightText: "Instant client-side split",
+  },
+  convert: {
+    toolId: "convert",
+    title: "Convert PDF Files Locally",
+    description: "Convert PDFs to Word, Excel, PowerPoint, images, or archival standards with zero cloud exposure.",
+    buttonText: "Open PDF Converter",
+    href: "/tools/convert",
+    highlightText: "100% client-side privacy",
+  },
+  scan: {
+    toolId: "scan",
+    title: "Scan & OCR Documents to PDF",
+    description: "Capture, crop, and run client-side OCR on documents directly in your browser.",
+    buttonText: "Open Scanner & OCR",
+    href: "/tools/scan",
+    highlightText: "Hardware-accelerated OCR",
+  },
+  edit: {
+    toolId: "edit",
+    title: "Edit PDF Text, Annotations & Forms",
+    description: "Modify text, add shapes, whiteout sections, and fill interactive forms in browser RAM.",
+    buttonText: "Open PDF Editor",
+    href: "/tools/edit-pdf",
+    highlightText: "Real-time canvas editor",
+  },
+};
 
 export function ArticleRenderer({ blocks, defaultToolCta }: ArticleRendererProps) {
   return (
@@ -43,6 +110,31 @@ export function ArticleRenderer({ blocks, defaultToolCta }: ArticleRendererProps
               >
                 {block.text}
               </h3>
+            );
+
+          case "code":
+            return (
+              <div
+                key={index}
+                className="my-6 overflow-hidden rounded-2xl border border-slate-800 bg-slate-950 text-slate-100 shadow-sm"
+              >
+                {block.title && (
+                  <div className="flex items-center justify-between border-b border-slate-800 bg-slate-900/90 px-4 py-2 text-xs font-mono text-slate-400">
+                    <span className="flex items-center gap-2 font-semibold text-slate-300">
+                      <Terminal className="h-3.5 w-3.5 text-rose-500" />
+                      {block.title}
+                    </span>
+                    {block.language && (
+                      <span className="uppercase text-[10px] tracking-wider text-slate-500">
+                        {block.language}
+                      </span>
+                    )}
+                  </div>
+                )}
+                <pre className="overflow-x-auto p-4 text-xs sm:text-[13px] font-mono leading-relaxed text-emerald-300/95">
+                  <code>{block.code}</code>
+                </pre>
+              </div>
             );
 
           case "callout": {
@@ -100,21 +192,22 @@ export function ArticleRenderer({ blocks, defaultToolCta }: ArticleRendererProps
               </div>
             );
 
-          case "toolCta":
-            return (
-              <ArticleToolCta
-                key={index}
-                cta={
-                  block.customTitle
-                    ? {
-                        ...defaultToolCta,
-                        title: block.customTitle,
-                        description: block.customDesc || defaultToolCta.description,
-                      }
-                    : defaultToolCta
+          case "toolCta": {
+            const baseCta: ToolCtaConfig =
+              block.toolId && TOOL_MAP[block.toolId]
+                ? { ...defaultToolCta, ...TOOL_MAP[block.toolId] }
+                : defaultToolCta;
+
+            const finalCta: ToolCtaConfig = block.customTitle
+              ? {
+                  ...baseCta,
+                  title: block.customTitle,
+                  description: block.customDesc || baseCta.description,
                 }
-              />
-            );
+              : baseCta;
+
+            return <ArticleToolCta key={index} cta={finalCta} />;
+          }
 
           case "list":
             return block.ordered ? (

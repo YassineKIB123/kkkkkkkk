@@ -28,6 +28,7 @@ export type ArticleBlock =
       text: string;
     }
   | { type: "step"; number: number; title: string; text: string }
+  | { type: "code"; title?: string; language?: string; code: string }
   | { type: "toolCta"; toolId?: string; customTitle?: string; customDesc?: string }
   | { type: "comparisonTable"; headers: string[]; rows: string[][] }
   | { type: "list"; items: string[]; ordered?: boolean }

@@ -32,6 +32,7 @@ import {
   Upload,
   BookmarkCheck,
   Stamp,
+  ShieldCheck,
 } from "lucide-react";
 
 interface SignaturePosition {
@@ -71,6 +72,7 @@ export default function SignPdfPage() {
     });
   }, []);
   const [watermarkText, setWatermarkText] = useState<string>("");
+  const [appendAuditPage, setAppendAuditPage] = useState<boolean>(false);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"draw" | "type" | "upload">("draw");
@@ -487,7 +489,8 @@ export default function SignPdfPage() {
           signatureDataUrl: s.dataUrl,
           position: s.position,
         })),
-        watermarkText
+        watermarkText,
+        appendAuditPage
       );
 
       const fileName = `signed_${file.name.replace(/\.pdf$/i, "")}_${Date.now()}.pdf`;
@@ -628,6 +631,23 @@ export default function SignPdfPage() {
                 className="w-full sm:w-80 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-900 placeholder-slate-400 focus:border-rose-500 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-white"
               />
             </div>
+
+            {/* Optional Cryptographic Audit Trail Certificate Toggle */}
+            <label className="flex items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50/50 px-4 py-2.5 text-xs dark:border-emerald-900/50 dark:bg-emerald-950/30 cursor-pointer">
+              <div className="flex items-center gap-2 text-slate-700 dark:text-slate-200 font-semibold">
+                <input
+                  type="checkbox"
+                  checked={appendAuditPage}
+                  onChange={(e) => setAppendAuditPage(e.target.checked)}
+                  className="rounded accent-emerald-600"
+                />
+                <ShieldCheck className="h-4 w-4 text-emerald-600" />
+                <span>Append Tamper-Evident SHA-256 Audit Certificate Page</span>
+              </div>
+              <span className="text-[11px] text-emerald-700 dark:text-emerald-400 font-mono hidden sm:inline">
+                ESIGN & eIDAS SES Audit Trail
+              </span>
+            </label>
 
             {/* Page Navigation & Hint */}
             <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">

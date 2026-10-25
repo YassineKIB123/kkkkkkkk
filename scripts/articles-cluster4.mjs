@@ -9,7 +9,7 @@ export const cluster4Articles = [
     category: "archiving",
     tags: ["PDF/A", "Archiving", "ISO 19005", "Convert PDF", "Legal Compliance"],
     publishedAt: "2026-06-02",
-    updatedAt: "2026-10-23",
+    updatedAt: "2026-10-25",
     authorId: "alex-vance",
     toolCta: {
       toolId: "convert",
@@ -48,28 +48,50 @@ export const cluster4Articles = [
         text: "To qualify as an authentic PDF/A document, several strict modifications must occur: every font glyph used in the document must be 100% embedded in the binary payload, standardized ICC color profiles (/OutputIntents) must be attached, and all dynamic features—including JavaScript calculation macros, embedded audio/video, and encryption dictionaries—must be permanently stripped."
       },
       {
+        type: "heading3",
+        id: "output-intent-inspection",
+        text: "Anatomy of the PDF/A OutputIntent Color Profile Dictionary"
+      },
+      {
+        type: "code",
+        title: "ISO 19005-1 § 6.2.2 Output Intent Dictionary for PDF/A-1b",
+        language: "pdf",
+        code: `% ISO 19005-1 Mandatory Output Intent Dictionary
+12 0 obj
+<<
+  /Type /OutputIntent
+  /S /GTS_PDFA1
+  /OutputCondition (sRGB IEC61966-2.1)
+  /OutputConditionIdentifier (sRGB IEC61966-2.1)
+  /RegistryName (http://www.color.org)
+  /Info (sRGB IEC61966-2.1)
+  /DestOutputProfile 15 0 R
+>>
+endobj`
+      },
+      {
         type: "callout",
         variant: "info",
-        title: "Government Mandate",
+        title: "Government & Judicial Mandate",
         text: "Federal court systems, municipal land registries, and state archives across North America and Europe strictly mandate PDF/A compliance for all permanent official filings."
       },
       {
         type: "step",
         number: 1,
         title: "Load File into Archival Engine",
-        text: "Select your standard PDF in iKnowAPDF's converter."
+        text: "Select your standard PDF in iKnowAPDF converter. Files are parsed inside local browser RAM."
       },
       {
         type: "step",
         number: 2,
         title: "Embed Output Intents and Font Glyphs",
-        text: "The engine embeds standardized sRGB or Fogra39 color profiles and resolves missing font subsets."
+        text: "The engine embeds standardized sRGB color profiles, resolves font subsets, and strips dynamic JavaScript."
       },
       {
         type: "step",
         number: 3,
         title: "Export Archival PDF/A",
-        text: "Download your permanent, future-proof document verified for long-term storage."
+        text: "Download your permanent, future-proof document verified for long-term storage across decades."
       },
       {
         type: "toolCta",
@@ -85,13 +107,22 @@ export const cluster4Articles = [
           {
             question: "Why does PDF/A-1b require flattening transparency?",
             answer: "Because PDF 1.4 (on which PDF/A-1 is based) did not standardize blending modes and alpha channels. To ensure exact visual reproduction, transparencies are flattened into solid vector or raster elements."
+          },
+          {
+            question: "How can I verify that my converted PDF is truly PDF/A compliant?",
+            answer: "You can validate the output file using industry-standard open-source conformance validators such as VeraPDF or the Adobe Acrobat Preflight panel."
+          },
+          {
+            question: "Does converting to PDF/A alter my document content or layout?",
+            answer: "No. The visual layout, typography, and page numbers remain completely intact. The conversion only standardizes color profiles, font subsets, and container metadata."
           }
         ]
       }
     ],
     relatedSlugs: [
       "flatten-interactive-pdf-form-fields",
-      "merge-pdf-preserve-bookmarks-form-fields"
+      "merge-pdf-preserve-bookmarks-form-fields",
+      "sanitize-pdf-metadata-redaction"
     ]
   },
   {
@@ -102,7 +133,7 @@ export const cluster4Articles = [
     category: "archiving",
     tags: ["OCR", "Scanned PDF", "Tesseract", "WebAssembly", "Searchable PDF"],
     publishedAt: "2026-06-10",
-    updatedAt: "2026-10-24",
+    updatedAt: "2026-10-25",
     authorId: "alex-vance",
     toolCta: {
       toolId: "scan",
@@ -127,10 +158,27 @@ export const cluster4Articles = [
         text: "By compiling the battle-tested C++ Tesseract OCR engine to WebAssembly with SIMD (Single Instruction, Multiple Data) acceleration and running it inside background Web Workers, your browser executes image thresholding, line segmentation, and character classification locally without freezing your interface."
       },
       {
+        type: "heading3",
+        id: "invisible-text-layer-code",
+        text: "How Invisible Text Layers Are Rendered (Operator 3 Tr)"
+      },
+      {
+        type: "code",
+        title: "Invisible Searchable Text Stream in PDF Content",
+        language: "pdf",
+        code: `% Invisible Searchable Text Layer behind scanned bitmap
+BT
+  /F1 10 Tf
+  3 Tr          % 3 Tr = "Neither fill nor stroke text" (Render text invisibly)
+  1 0 0 1 72 710 Tm
+  (INVOICE #94821 - TOTAL AMOUNT DUE: $4,850.00) Tj
+ET`
+      },
+      {
         type: "callout",
         variant: "security",
         title: "The Invisible Searchable Layer",
-        text: "Client-side OCR injects an invisible text layer (rendered with operator `3 Tr`) directly behind the scanned page bitmap. You see the authentic original paper scan, but you can effortlessly highlight words, copy text, and search keywords."
+        text: "Client-side OCR injects an invisible text layer (rendered with operator 3 Tr) directly behind the scanned page bitmap. You see the authentic original paper scan, but you can effortlessly highlight words, copy text, and search keywords."
       },
       {
         type: "step",
@@ -164,13 +212,22 @@ export const cluster4Articles = [
           {
             question: "Does local OCR slow down my device?",
             answer: "No. The processing executes in isolated Web Workers, keeping your browser tabs, scrolling, and UI responsive throughout."
+          },
+          {
+            question: "What languages are supported in client-side OCR?",
+            answer: "The engine supports English, Spanish, French, German, and Arabic language models loaded on-demand in browser memory."
+          },
+          {
+            question: "Can I extract the recognized text directly into plain text or Word?",
+            answer: "Yes. In addition to creating searchable PDFs, you can copy recognized text directly to your clipboard or export it to .txt."
           }
         ]
       }
     ],
     relatedSlugs: [
       "convert-pdf-to-pdfa-archival-standard",
-      "flatten-interactive-pdf-form-fields"
+      "flatten-interactive-pdf-form-fields",
+      "sanitize-pdf-metadata-redaction"
     ]
   },
   {
@@ -181,7 +238,7 @@ export const cluster4Articles = [
     category: "archiving",
     tags: ["Merge PDF", "Bookmarks", "AcroForm", "Table of Contents", "Combine PDF"],
     publishedAt: "2026-06-18",
-    updatedAt: "2026-10-24",
+    updatedAt: "2026-10-25",
     authorId: "alex-vance",
     toolCta: {
       toolId: "merge",
@@ -209,6 +266,25 @@ export const cluster4Articles = [
           "Resolving AcroForm Namespace Collisions: Form fields must be dynamically namespaced (e.g., prefixing field IDs with Doc1 and Doc2) to prevent shared dictionary synchronization errors.",
           "Page Tree Normalization: Independent /Pages root dictionaries must be balanced into clean B-trees so readers can navigate large 500-page merged documents smoothly."
         ]
+      },
+      {
+        type: "heading3",
+        id: "outlines-dictionary-inspection",
+        text: "Rebuilding Outline Hierarchies (/Outlines) Across Merged Pages"
+      },
+      {
+        type: "code",
+        title: "ISO 32000-1 § 12.3.3 Rebuilding Bookmark Outlines",
+        language: "pdf",
+        code: `% Merged Bookmark Item with Recomputed Target Page Pointer
+18 0 obj
+<<
+  /Title (Chapter 2: Financial Exhibits)
+  /Parent 2 0 R
+  /Next 19 0 R
+  /Dest [ 35 0 R /XYZ 0 792 0 ]  % Target page object after offset re-indexing
+>>
+endobj`
       },
       {
         type: "step",
@@ -242,13 +318,22 @@ export const cluster4Articles = [
           {
             question: "Will merging signed PDFs preserve the digital signatures?",
             answer: "No. Any operation that changes page numbers, modifies byte offsets, or stitches files alters the document binary, which breaks pre-existing digital signature hashes by design."
+          },
+          {
+            question: "Can I reorder individual pages from different documents before merging?",
+            answer: "Yes. Our visual merger allows you to interleave, rotate, and delete specific pages from any source document before generating the combined file."
+          },
+          {
+            question: "Is there a limit on how many PDFs I can merge at once?",
+            answer: "Because processing runs directly in your local workstation RAM via WebAssembly, you can merge dozens of files with hundreds of pages without server timeout restrictions."
           }
         ]
       }
     ],
     relatedSlugs: [
       "flatten-interactive-pdf-form-fields",
-      "convert-pdf-to-pdfa-archival-standard"
+      "convert-pdf-to-pdfa-archival-standard",
+      "sanitize-pdf-metadata-redaction"
     ]
   },
   {
@@ -257,16 +342,16 @@ export const cluster4Articles = [
     seoTitle: "Flatten PDF Forms to Uneditable Records — Complete Guide",
     description: "Learn how to permanently bake interactive AcroForm fields, checkboxes, and signatures into page content streams to prevent tampering.",
     category: "archiving",
-    tags: ["Flatten PDF", "AcroForm", "Read Only", "Form Fields", "Archiving"],
+    tags: ["Flatten PDF", "AcroForm", "Read Only", "Form Fields", "Archiving", "Sanitize PDF"],
     publishedAt: "2026-06-25",
-    updatedAt: "2026-10-24",
+    updatedAt: "2026-10-25",
     authorId: "alex-vance",
     toolCta: {
-      toolId: "edit",
-      title: "Flatten PDF Forms and Annotations Locally",
-      description: "Convert fillable fields and annotations into permanent, unalterable vector graphics in your browser.",
-      buttonText: "Flatten PDF Now",
-      href: "/tools/edit-pdf",
+      toolId: "sanitize",
+      title: "Flatten PDF Form Fields Locally",
+      description: "Bake fillable /AcroForm fields and annotations permanently into static vector streams in your browser.",
+      buttonText: "Flatten PDF Forms Now",
+      href: "/tools/sanitize-pdf",
       highlightText: "Bakes inputs into permanent content streams"
     },
     blocks: [
@@ -299,16 +384,43 @@ export const cluster4Articles = [
         ]
       },
       {
+        type: "heading3",
+        id: "acroform-appearance-stream-code",
+        text: "Comparing Interactive /Widget Annotations vs. Flattened Vector Operators"
+      },
+      {
+        type: "code",
+        title: "ISO 32000-1 § 12.7.3 AcroForm Widget Transformation",
+        language: "pdf",
+        code: `% Before Flattening: Interactive Widget Annotation in /Annots
+<<
+  /Type /Annot
+  /Subtype /Widget
+  /FT /Tx
+  /T (ApplicantFullName)
+  /V (Sarah Jenkins)
+  /AP << /N 24 0 R >>  % Appearance stream rendered on top of page
+>>
+
+% After Flattening in /tools/sanitize-pdf:
+% The /Annots widget is purged and /N operators are painted directly into /Contents:
+BT
+  /F1 12 Tf
+  1 0 0 1 120 650 Tm
+  (Sarah Jenkins) Tj
+ET`
+      },
+      {
         type: "step",
         number: 1,
-        title: "Open the Completed Fillable Form",
-        text: "Drag your filled PDF into the iKnowAPDF Editor."
+        title: "Open the Completed Fillable Form in /tools/sanitize-pdf",
+        text: "Drag your filled PDF into iKnowAPDF Sanitize PDF."
       },
       {
         type: "step",
         number: 2,
-        title: "Execute Form Stream Flattening",
-        text: "The engine merges widget appearance streams directly into the base page canvas."
+        title: "Enable 'Flatten Interactive Forms'",
+        text: "Check 'Flatten Interactive Forms' to bake all form inputs, checkmarks, and calculations permanently into static page content streams."
       },
       {
         type: "step",
@@ -318,7 +430,7 @@ export const cluster4Articles = [
       },
       {
         type: "toolCta",
-        toolId: "edit"
+        toolId: "sanitize"
       },
       {
         type: "faq",
@@ -330,13 +442,22 @@ export const cluster4Articles = [
           {
             question: "Does flattening reduce PDF file size?",
             answer: "Yes, typically. Eliminating interactive widget dictionaries, calculation scripts, and redundant state dictionaries often shrinks the overall file size significantly."
+          },
+          {
+            question: "Does flattening preserve electronic signatures placed on the form?",
+            answer: "Yes. Visual signature marks and timestamps are baked into the page streams, preventing any subsequent alteration of the signature image."
+          },
+          {
+            question: "Will calculations in form fields still run after flattening?",
+            answer: "No. Calculation macros (/AcroForm JavaScript) are removed during flattening, freezing all calculated amounts at their final values permanently."
           }
         ]
       }
     ],
     relatedSlugs: [
       "merge-pdf-preserve-bookmarks-form-fields",
-      "convert-pdf-to-pdfa-archival-standard"
+      "convert-pdf-to-pdfa-archival-standard",
+      "sanitize-pdf-metadata-redaction"
     ]
   }
 ];

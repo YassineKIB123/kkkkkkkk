@@ -45,6 +45,50 @@ export function getRelatedArticles(currentSlug: string, count = 3): BlogPost[] {
   return [...directMatches, ...categoryMatches].slice(0, count);
 }
 
+/**
+ * Returns relevant engineering guides for a given toolId so every tool page
+ * links directly to its cluster articles (bidirectional SEO linking).
+ */
+export function getArticlesForTool(toolId?: string, count = 3): BlogPost[] {
+  const all = getAllArticles();
+  if (!toolId) return all.slice(0, count);
+
+  const TOOL_CATEGORY_MAP: Record<string, ArticleCategory[]> = {
+    compress: ["compression", "security"],
+    sanitize: ["security", "legal"],
+    edit: ["security", "archiving", "legal"],
+    sign: ["legal", "security"],
+    merge: ["archiving", "compression"],
+    split: ["compression", "archiving"],
+    rotate: ["archiving"],
+    scan: ["archiving", "security"],
+    convert: ["archiving", "compression"],
+    imagesToPdf: ["archiving", "compression"],
+    pdfToImages: ["archiving", "compression"],
+    watermark: ["security", "legal"],
+  };
+
+  const exactMatches = all.filter((a) => a.toolCta.toolId === toolId);
+  if (exactMatches.length >= count) {
+    return exactMatches.slice(0, count);
+  }
+
+  const preferredCategories = TOOL_CATEGORY_MAP[toolId] || ["security", "compression"];
+  const catMatches = all.filter(
+    (a) =>
+      preferredCategories.includes(a.category) &&
+      !exactMatches.some((m) => m.slug === a.slug)
+  );
+
+  const combined = [...exactMatches, ...catMatches];
+  if (combined.length >= count) {
+    return combined.slice(0, count);
+  }
+
+  const fallback = all.filter((a) => !combined.some((c) => c.slug === a.slug));
+  return [...combined, ...fallback].slice(0, count);
+}
+
 export function extractHeadings(article: BlogPost): TocHeading[] {
   const headings: TocHeading[] = [];
   for (const block of article.blocks) {
@@ -70,6 +114,8 @@ export function calculateReadingTime(article: BlogPost): string {
       wordCount +=
         block.title.split(/\s+/).filter(Boolean).length +
         block.text.split(/\s+/).filter(Boolean).length;
+    } else if (block.type === "code") {
+      wordCount += block.code.split(/\s+/).filter(Boolean).length;
     } else if (block.type === "list") {
       for (const item of block.items) {
         wordCount += item.split(/\s+/).filter(Boolean).length;

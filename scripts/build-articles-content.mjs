@@ -17,11 +17,8 @@ const AUTHORS = [
     name: "Alex Vance",
     role: "Lead Document Security Engineer",
     avatar: "/favicon.ico",
-    bio: "Specialist in WebAssembly document processing, cryptographic privacy, and client-side browser architectures. Former browser security researcher with 12+ years optimizing high-throughput document engines.",
-    credentials: "M.Sc. in Computer Science, ISO 32000 Technical Contributor",
-    twitter: "https://twitter.com/iknowapdf",
-    linkedin: "https://linkedin.com/company/iknowapdf",
-    github: "https://github.com/iknowapdf"
+    bio: "Specialist in WebAssembly document processing, cryptographic privacy, and client-side browser architectures. Former browser security researcher with 12+ years optimizing high-throughput ISO 32000 document engines.",
+    credentials: "M.Sc. in Computer Science, ISO 32000 & WebAssembly Security Specialist"
   },
   {
     id: "yassine-k",
@@ -29,10 +26,7 @@ const AUTHORS = [
     role: "Founder & Principal Systems Architect",
     avatar: "/favicon.ico",
     bio: "Systems architect and open-web advocate dedicated to building uncompromising, zero-upload client-side tools that preserve user privacy across the globe.",
-    credentials: "B.Sc. in Software Engineering, Full-Stack WASM & Web Performance Engineer",
-    twitter: "https://twitter.com/iknowapdf",
-    linkedin: "https://linkedin.com/company/iknowapdf",
-    github: "https://github.com/iknowapdf"
+    credentials: "B.Sc. in Software Engineering, Full-Stack WASM & Web Performance Engineer"
   }
 ];
 

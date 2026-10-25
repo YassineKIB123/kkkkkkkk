@@ -4,10 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "prebuild": "node scripts/generate-sitemaps.mjs",
+    "prebuild": "node scripts/build-articles-content.mjs && node scripts/generate-sitemaps.mjs",
     "build": "node -e \"try { fs.rmSync('.next', { recursive: true, force: true }) } catch {}\" && next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "pack": "npx repomix",
+    "pack:compress": "npx repomix --compress"
   },
   "dependencies": {
     "clsx": "^2.1.1",

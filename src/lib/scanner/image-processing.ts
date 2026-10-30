@@ -5,15 +5,6 @@ export interface Point {
 
 export type FilterType = "original" | "magic" | "bw" | "grayscale";
 
-export interface EdgeSnapper {
-  snap: (
-    normX: number,
-    normY: number,
-    snapRadiusPx: number,
-    containerWidth: number,
-    containerHeight: number
-  ) => { x: number; y: number; snapped: boolean };
-}
 
 /**
  * Perceptual color distance combining Euclidean RGB distance and opponent-color
@@ -128,162 +119,6 @@ function estimatePaperColor(
     g: sumG / (count || 1),
     b: sumB / (count || 1),
   };
-}
-
-/**
- * Builds an edge/corner gradient map on a lightweight canvas for real-time
- * magnetic snapping during manual pin dragging.
- */
-export function createEdgeSnapper(image: HTMLImageElement): EdgeSnapper {
-  try {
-    const sampleW = 280;
-    const aspect = (image.naturalHeight || 1) / (image.naturalWidth || 1);
-    const sampleH = Math.max(80, Math.round(sampleW * aspect));
-
-    const canvas = document.createElement("canvas");
-    canvas.width = sampleW;
-    canvas.height = sampleH;
-    const ctx = canvas.getContext("2d", { willReadFrequently: true });
-    if (!ctx) {
-      return {
-        snap: (normX, normY) => ({ x: normX, y: normY, snapped: false }),
-      };
-    }
-
-    ctx.drawImage(image, 0, 0, sampleW, sampleH);
-    const imgData = ctx.getImageData(0, 0, sampleW, sampleH);
-    const blurred = computeBoxBlur3x3(imgData.data, sampleW, sampleH);
-    const paper = estimatePaperColor(blurred, sampleW, sampleH);
-
-    // Perceptual boundary + corner strength map
-    const edgeScore = new Float32Array(sampleW * sampleH);
-    for (let y = 2; y < sampleH - 2; y++) {
-      for (let x = 2; x < sampleW - 2; x++) {
-        const lIdx = (y * sampleW + (x - 2)) * 3;
-        const rIdx = (y * sampleW + (x + 2)) * 3;
-        const uIdx = ((y - 2) * sampleW + x) * 3;
-        const dIdx = ((y + 2) * sampleW + x) * 3;
-
-        const gx = perceptualColorDist(
-          blurred[rIdx],
-          blurred[rIdx + 1],
-          blurred[rIdx + 2],
-          blurred[lIdx],
-          blurred[lIdx + 1],
-          blurred[lIdx + 2]
-        );
-        const gy = perceptualColorDist(
-          blurred[dIdx],
-          blurred[dIdx + 1],
-          blurred[dIdx + 2],
-          blurred[uIdx],
-          blurred[uIdx + 1],
-          blurred[uIdx + 2]
-        );
-
-        // Boost corner intersections where both horizontal and vertical gradients exist
-        const cornerBoost = Math.min(gx, gy) * 0.65;
-
-        // Check whether one side matches paper and the other side is non-paper background
-        const dL = perceptualColorDist(
-          blurred[lIdx],
-          blurred[lIdx + 1],
-          blurred[lIdx + 2],
-          paper.r,
-          paper.g,
-          paper.b
-        );
-        const dR = perceptualColorDist(
-          blurred[rIdx],
-          blurred[rIdx + 1],
-          blurred[rIdx + 2],
-          paper.r,
-          paper.g,
-          paper.b
-        );
-        const dU = perceptualColorDist(
-          blurred[uIdx],
-          blurred[uIdx + 1],
-          blurred[uIdx + 2],
-          paper.r,
-          paper.g,
-          paper.b
-        );
-        const dD = perceptualColorDist(
-          blurred[dIdx],
-          blurred[dIdx + 1],
-          blurred[dIdx + 2],
-          paper.r,
-          paper.g,
-          paper.b
-        );
-
-        const minPaperDist = Math.min(dL, dR, dU, dD);
-        const maxBgDist = Math.max(dL, dR, dU, dD);
-        // True paper boundary has one side close to paper and the opposite side far from paper
-        const boundaryWeight =
-          minPaperDist < 55 && maxBgDist > minPaperDist + 15 ? 1.35 : 0.75;
-
-        edgeScore[y * sampleW + x] = (gx + gy + cornerBoost) * boundaryWeight;
-      }
-    }
-
-    return {
-      snap: (normX, normY, snapRadiusPx, containerWidth, containerHeight) => {
-        const rMap = Math.max(
-          3,
-          Math.round((snapRadiusPx / (containerWidth || 1)) * sampleW)
-        );
-        const cx = Math.round(normX * sampleW);
-        const cy = Math.round(normY * sampleH);
-
-        let bestX = -1;
-        let bestY = -1;
-        let maxWeighted = 0;
-        let rawAtBest = 0;
-
-        for (let dy = -rMap; dy <= rMap; dy++) {
-          const y = cy + dy;
-          if (y < 2 || y >= sampleH - 2) continue;
-          for (let dx = -rMap; dx <= rMap; dx++) {
-            const distSq = dx * dx + dy * dy;
-            if (distSq > rMap * rMap) continue;
-            const x = cx + dx;
-            if (x < 2 || x >= sampleW - 2) continue;
-
-            const raw = edgeScore[y * sampleW + x];
-            // Distance decay prevents jumping laterally along an edge far from cursor
-            const distRatio = Math.sqrt(distSq) / (rMap || 1);
-            const weighted = raw * (1 - 0.35 * distRatio);
-
-            if (weighted > maxWeighted) {
-              maxWeighted = weighted;
-              rawAtBest = raw;
-              bestX = x;
-              bestY = y;
-            }
-          }
-        }
-
-        if (rawAtBest > 32 && bestX >= 0) {
-          const candNormX = bestX / sampleW;
-          const candNormY = bestY / sampleH;
-          const distPx = Math.hypot(
-            (candNormX - normX) * (containerWidth || 1),
-            (candNormY - normY) * (containerHeight || 1)
-          );
-          if (distPx <= snapRadiusPx) {
-            return { x: candNormX, y: candNormY, snapped: true };
-          }
-        }
-        return { x: normX, y: normY, snapped: false };
-      },
-    };
-  } catch {
-    return {
-      snap: (normX, normY) => ({ x: normX, y: normY, snapped: false }),
-    };
-  }
 }
 
 /**
@@ -898,54 +733,127 @@ export function applyMagicColor(
   ctx.putImageData(imgData, 0, 0);
 }
 
+export interface BWThresholdOptions {
+  sensitivity?: number;
+  noiseFloor?: number;
+  softness?: number;
+}
+
+/**
+ * Upgraded Integral-Image (Summed-Area Table) Adaptive Binarization Filter.
+ * Eliminates legacy 24x24 checkerboard block artifacts with continuous
+ * scale-invariant O(1) area sampling, 2nd-98th percentile dynamic contrast
+ * normalization, and sub-pixel edge anti-aliasing for razor-sharp typography.
+ */
 export function applyBWThreshold(
   ctx: CanvasRenderingContext2D,
   width: number,
-  height: number
+  height: number,
+  options: BWThresholdOptions = {}
 ): void {
   const imgData = ctx.getImageData(0, 0, width, height);
   const data = imgData.data;
-  const blockSize = 24;
-  const offset = 8;
+  const sensitivity = options.sensitivity ?? 0.11;
+  const noiseFloor = options.noiseFloor ?? 5;
+  const softness = Math.max(1, options.softness ?? 6);
 
-  const numBlocksX = Math.ceil(width / blockSize);
-  const numBlocksY = Math.ceil(height / blockSize);
-  const blockSums = new Float64Array(numBlocksX * numBlocksY);
-  const blockCounts = new Int32Array(numBlocksX * numBlocksY);
+  const totalPixels = width * height;
+  if (totalPixels === 0) return;
 
-  for (let y = 0; y < height; y++) {
-    const by = (y / blockSize) | 0;
-    const rowOffset = y * width;
-    for (let x = 0; x < width; x++) {
-      const bx = (x / blockSize) | 0;
-      const bIdx = by * numBlocksX + bx;
-      const idx = (rowOffset + x) * 4;
-      const lum = 0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2];
-      blockSums[bIdx] += lum;
-      blockCounts[bIdx]++;
+  const luma = new Uint8Array(totalPixels);
+  const hist = new Uint32Array(256);
+
+  // Step 1: Integer perceptual luminance (77R + 150G + 29B >> 8) & histogram
+  for (let i = 0, p = 0; i < totalPixels; i++, p += 4) {
+    const y = (77 * data[p] + 150 * data[p + 1] + 29 * data[p + 2]) >> 8;
+    luma[i] = y;
+    hist[y]++;
+  }
+
+  // Step 2: 2nd and 98th percentile dynamic range stretching
+  const lowTarget = Math.floor(totalPixels * 0.02);
+  const highTarget = Math.floor(totalPixels * 0.98);
+  let cumulative = 0;
+  let pLow = 0;
+  let pHigh = 255;
+
+  for (let v = 0; v < 256; v++) {
+    cumulative += hist[v];
+    if (cumulative <= lowTarget) pLow = v;
+    if (cumulative >= highTarget) {
+      pHigh = v;
+      break;
     }
   }
 
-  const blockMeans = new Float32Array(numBlocksX * numBlocksY);
-  for (let i = 0; i < blockMeans.length; i++) {
-    blockMeans[i] = blockCounts[i] ? blockSums[i] / blockCounts[i] : 128;
-  }
+  const span = Math.max(24, pHigh - pLow);
+  const normScale = 255 / span;
+
+  // Step 3: Zero-padded Summed-Area Table (Integral Image) in a single pass
+  const stride = width + 1;
+  const integral = new Uint32Array(stride * (height + 1));
 
   for (let y = 0; y < height; y++) {
-    const by = (y / blockSize) | 0;
-    const rowOffset = y * width;
+    let rowSum = 0;
+    const srcRowOffset = y * width;
+    const prevIntRowOffset = y * stride;
+    const currIntRowOffset = (y + 1) * stride;
+
     for (let x = 0; x < width; x++) {
-      const bx = (x / blockSize) | 0;
-      const bIdx = by * numBlocksX + bx;
-      const threshold = blockMeans[bIdx] - offset;
+      let normVal = ((luma[srcRowOffset + x] - pLow) * normScale + 0.5) | 0;
+      if (normVal < 0) normVal = 0;
+      else if (normVal > 255) normVal = 255;
 
-      const idx = (rowOffset + x) * 4;
-      const lum = 0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2];
-      const val = lum < threshold ? 0 : 255;
+      luma[srcRowOffset + x] = normVal;
+      rowSum += normVal;
+      integral[currIntRowOffset + x + 1] = integral[prevIntRowOffset + x + 1] + rowSum;
+    }
+  }
 
-      data[idx] = val;
-      data[idx + 1] = val;
-      data[idx + 2] = val;
+  // Step 4: Scale-invariant adaptive window radius & O(1) per-pixel local thresholding
+  const radius = Math.max(16, Math.round(Math.max(width, height) / 35));
+  const keepRatio = 1 - sensitivity;
+  const invBand = 255 / (2 * softness);
+
+  for (let y = 0; y < height; y++) {
+    const y1 = y - radius < 0 ? 0 : y - radius;
+    const y2 = y + radius >= height ? height - 1 : y + radius;
+    const boxH = y2 - y1 + 1;
+
+    const rowTop = y1 * stride;
+    const rowBottom = (y2 + 1) * stride;
+    const srcRowOffset = y * width;
+
+    for (let x = 0; x < width; x++) {
+      const x1 = x - radius < 0 ? 0 : x - radius;
+      const x2 = x + radius >= width ? width - 1 : x + radius;
+      const area = (x2 - x1 + 1) * boxH;
+
+      const sum =
+        integral[rowBottom + x2 + 1] -
+        integral[rowTop + x2 + 1] -
+        integral[rowBottom + x1] +
+        integral[rowTop + x1];
+
+      const localMean = sum / area;
+      const threshold = localMean * keepRatio - noiseFloor;
+      const pixelVal = luma[srcRowOffset + x];
+      const diff = pixelVal - threshold;
+
+      let outVal;
+      if (diff <= -softness) {
+        outVal = 0;
+      } else if (diff >= softness) {
+        outVal = 255;
+      } else {
+        outVal = ((diff + softness) * invBand + 0.5) | 0;
+      }
+
+      const rgbaIdx = (srcRowOffset + x) * 4;
+      data[rgbaIdx] = outVal;
+      data[rgbaIdx + 1] = outVal;
+      data[rgbaIdx + 2] = outVal;
+      data[rgbaIdx + 3] = 255;
     }
   }
 

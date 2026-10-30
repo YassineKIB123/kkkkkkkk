@@ -5,3 +5,4 @@ User-agent: Mediapartners-Google
 Allow: /
 
 Sitemap: https://iknowapdf.lol/sitemap.xml
+Sitemap: https://iknowapdf.lol/sitemap-main.xml

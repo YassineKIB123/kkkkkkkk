@@ -1,4 +1,4 @@
-﻿import fs from "fs";
+import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -13,9 +13,9 @@ if (!fs.existsSync(PUBLIC_DIR)) {
   fs.mkdirSync(PUBLIC_DIR, { recursive: true });
 }
 
-// Remove old sitemap chunks
+// Remove old sitemap chunks (preserve sitemap-main.xml)
 for (const existing of fs.readdirSync(PUBLIC_DIR)) {
-  if (/^sitemap_\d+\.xml$/.test(existing) || existing === "sitemap-main.xml") {
+  if (/^sitemap_\d+\.xml$/.test(existing)) {
     fs.unlinkSync(path.join(PUBLIC_DIR, existing));
   }
 }
@@ -23,7 +23,7 @@ for (const existing of fs.readdirSync(PUBLIC_DIR)) {
 const today = new Date().toISOString().split("T")[0];
 
 const CORE_URLS = [
-  { loc: `${SITE_URL}`, priority: "1.0", changefreq: "daily" },
+  { loc: `${SITE_URL}/`, priority: "1.0", changefreq: "daily" },
   { loc: `${SITE_URL}/blog`, priority: "0.90", changefreq: "daily" },
   { loc: `${SITE_URL}/about`, priority: "0.80", changefreq: "monthly" },
   { loc: `${SITE_URL}/contact`, priority: "0.70", changefreq: "monthly" },
@@ -93,8 +93,12 @@ for (const item of CORE_URLS) {
 }
 
 xml += `</urlset>\n`;
-fs.writeFileSync(path.join(PUBLIC_DIR, "sitemap.xml"), xml, "utf-8");
-console.log(`Saved clean public/sitemap.xml (${CORE_URLS.length} URLs)`);
 
-const robotsTxt = `User-agent: *\nAllow: /\n\nUser-agent: Mediapartners-Google\nAllow: /\n\nSitemap: ${SITE_URL}/sitemap.xml\n`;
+// Write both primary sitemap and cache-busting sitemap-main.xml
+fs.writeFileSync(path.join(PUBLIC_DIR, "sitemap.xml"), xml, "utf-8");
+fs.writeFileSync(path.join(PUBLIC_DIR, "sitemap-main.xml"), xml, "utf-8");
+console.log(`Saved clean public/sitemap.xml and public/sitemap-main.xml (${CORE_URLS.length} URLs)`);
+
+const robotsTxt = `User-agent: *\nAllow: /\n\nUser-agent: Mediapartners-Google\nAllow: /\n\nSitemap: ${SITE_URL}/sitemap.xml\nSitemap: ${SITE_URL}/sitemap-main.xml\n`;
 fs.writeFileSync(path.join(PUBLIC_DIR, "robots.txt"), robotsTxt, "utf-8");
+console.log("Updated public/robots.txt with both sitemap references");

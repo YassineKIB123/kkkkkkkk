@@ -5,10 +5,292 @@ export interface Point {
 
 export type FilterType = "original" | "magic" | "bw" | "grayscale";
 
+export interface EdgeSnapper {
+  snap: (
+    normX: number,
+    normY: number,
+    snapRadiusPx: number,
+    containerWidth: number,
+    containerHeight: number
+  ) => { x: number; y: number; snapped: boolean };
+}
+
 /**
- * Automatic document edge/corner detector on a downscaled preview canvas.
- * Uses luminance contrast & Sobel gradient thresholding to locate the document quad
- * and falls back gracefully to a 10% inset box if no high-contrast boundary is found.
+ * Perceptual color distance combining Euclidean RGB distance and opponent-color
+ * chrominance (R-G and (R+G)/2 - B) so colored papers (pink, yellow, blue)
+ * contrast strongly against white, grey, wood, or dark backgrounds.
+ */
+function perceptualColorDist(
+  r1: number,
+  g1: number,
+  b1: number,
+  r2: number,
+  g2: number,
+  b2: number
+): number {
+  const dR = r1 - r2;
+  const dG = g1 - g2;
+  const dB = b1 - b2;
+  const rgbDist = Math.sqrt(dR * dR + dG * dG + dB * dB);
+
+  const rg1 = r1 - g1;
+  const rg2 = r2 - g2;
+  const yb1 = 0.5 * (r1 + g1) - b1;
+  const yb2 = 0.5 * (r2 + g2) - b2;
+  const dRg = rg1 - rg2;
+  const dYb = yb1 - yb2;
+  const chromaDist = Math.sqrt(dRg * dRg + dYb * dYb);
+
+  return rgbDist + 1.2 * chromaDist;
+}
+
+/**
+ * Applies a 3x3 box blur on RGBA image data into a packed RGB Uint8ClampedArray
+ * to suppress halftone print dots, paper grain, and sensor noise.
+ */
+function computeBoxBlur3x3(
+  data: Uint8ClampedArray,
+  width: number,
+  height: number
+): Uint8ClampedArray {
+  const blurred = new Uint8ClampedArray(width * height * 3);
+  for (let y = 0; y < height; y++) {
+    const y0 = Math.max(0, y - 1);
+    const y2 = Math.min(height - 1, y + 1);
+    for (let x = 0; x < width; x++) {
+      const x0 = Math.max(0, x - 1);
+      const x2 = Math.min(width - 1, x + 1);
+      let r = 0,
+        g = 0,
+        b = 0,
+        count = 0;
+      for (let yy = y0; yy <= y2; yy++) {
+        for (let xx = x0; xx <= x2; xx++) {
+          const idx = (yy * width + xx) * 4;
+          r += data[idx];
+          g += data[idx + 1];
+          b += data[idx + 2];
+          count++;
+        }
+      }
+      const bIdx = (y * width + x) * 3;
+      blurred[bIdx] = r / count;
+      blurred[bIdx + 1] = g / count;
+      blurred[bIdx + 2] = b / count;
+    }
+  }
+  return blurred;
+}
+
+/**
+ * Estimates the pure paper substrate color from the central region by taking
+ * the 55th–88th luminance percentile, ignoring dark ink text and table lines.
+ */
+function estimatePaperColor(
+  blurred: Uint8ClampedArray,
+  width: number,
+  height: number
+): { r: number; g: number; b: number } {
+  const samples: { r: number; g: number; b: number; lum: number }[] = [];
+  const xStart = Math.floor(width * 0.28);
+  const xEnd = Math.floor(width * 0.72);
+  const yStart = Math.floor(height * 0.28);
+  const yEnd = Math.floor(height * 0.72);
+
+  for (let y = yStart; y <= yEnd; y += 4) {
+    for (let x = xStart; x <= xEnd; x += 4) {
+      const idx = (y * width + x) * 3;
+      const r = blurred[idx];
+      const g = blurred[idx + 1];
+      const b = blurred[idx + 2];
+      const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+      samples.push({ r, g, b, lum });
+    }
+  }
+
+  if (samples.length === 0) return { r: 240, g: 240, b: 240 };
+  samples.sort((a, b) => a.lum - b.lum);
+
+  const lo = Math.floor(samples.length * 0.55);
+  const hi = Math.max(lo + 1, Math.floor(samples.length * 0.88));
+  let sumR = 0,
+    sumG = 0,
+    sumB = 0,
+    count = 0;
+  for (let i = lo; i < hi && i < samples.length; i++) {
+    sumR += samples[i].r;
+    sumG += samples[i].g;
+    sumB += samples[i].b;
+    count++;
+  }
+  return {
+    r: sumR / (count || 1),
+    g: sumG / (count || 1),
+    b: sumB / (count || 1),
+  };
+}
+
+/**
+ * Builds an edge/corner gradient map on a lightweight canvas for real-time
+ * magnetic snapping during manual pin dragging.
+ */
+export function createEdgeSnapper(image: HTMLImageElement): EdgeSnapper {
+  try {
+    const sampleW = 280;
+    const aspect = (image.naturalHeight || 1) / (image.naturalWidth || 1);
+    const sampleH = Math.max(80, Math.round(sampleW * aspect));
+
+    const canvas = document.createElement("canvas");
+    canvas.width = sampleW;
+    canvas.height = sampleH;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    if (!ctx) {
+      return {
+        snap: (normX, normY) => ({ x: normX, y: normY, snapped: false }),
+      };
+    }
+
+    ctx.drawImage(image, 0, 0, sampleW, sampleH);
+    const imgData = ctx.getImageData(0, 0, sampleW, sampleH);
+    const blurred = computeBoxBlur3x3(imgData.data, sampleW, sampleH);
+    const paper = estimatePaperColor(blurred, sampleW, sampleH);
+
+    // Perceptual boundary + corner strength map
+    const edgeScore = new Float32Array(sampleW * sampleH);
+    for (let y = 2; y < sampleH - 2; y++) {
+      for (let x = 2; x < sampleW - 2; x++) {
+        const lIdx = (y * sampleW + (x - 2)) * 3;
+        const rIdx = (y * sampleW + (x + 2)) * 3;
+        const uIdx = ((y - 2) * sampleW + x) * 3;
+        const dIdx = ((y + 2) * sampleW + x) * 3;
+
+        const gx = perceptualColorDist(
+          blurred[rIdx],
+          blurred[rIdx + 1],
+          blurred[rIdx + 2],
+          blurred[lIdx],
+          blurred[lIdx + 1],
+          blurred[lIdx + 2]
+        );
+        const gy = perceptualColorDist(
+          blurred[dIdx],
+          blurred[dIdx + 1],
+          blurred[dIdx + 2],
+          blurred[uIdx],
+          blurred[uIdx + 1],
+          blurred[uIdx + 2]
+        );
+
+        // Boost corner intersections where both horizontal and vertical gradients exist
+        const cornerBoost = Math.min(gx, gy) * 0.65;
+
+        // Check whether one side matches paper and the other side is non-paper background
+        const dL = perceptualColorDist(
+          blurred[lIdx],
+          blurred[lIdx + 1],
+          blurred[lIdx + 2],
+          paper.r,
+          paper.g,
+          paper.b
+        );
+        const dR = perceptualColorDist(
+          blurred[rIdx],
+          blurred[rIdx + 1],
+          blurred[rIdx + 2],
+          paper.r,
+          paper.g,
+          paper.b
+        );
+        const dU = perceptualColorDist(
+          blurred[uIdx],
+          blurred[uIdx + 1],
+          blurred[uIdx + 2],
+          paper.r,
+          paper.g,
+          paper.b
+        );
+        const dD = perceptualColorDist(
+          blurred[dIdx],
+          blurred[dIdx + 1],
+          blurred[dIdx + 2],
+          paper.r,
+          paper.g,
+          paper.b
+        );
+
+        const minPaperDist = Math.min(dL, dR, dU, dD);
+        const maxBgDist = Math.max(dL, dR, dU, dD);
+        // True paper boundary has one side close to paper and the opposite side far from paper
+        const boundaryWeight =
+          minPaperDist < 55 && maxBgDist > minPaperDist + 15 ? 1.35 : 0.75;
+
+        edgeScore[y * sampleW + x] = (gx + gy + cornerBoost) * boundaryWeight;
+      }
+    }
+
+    return {
+      snap: (normX, normY, snapRadiusPx, containerWidth, containerHeight) => {
+        const rMap = Math.max(
+          3,
+          Math.round((snapRadiusPx / (containerWidth || 1)) * sampleW)
+        );
+        const cx = Math.round(normX * sampleW);
+        const cy = Math.round(normY * sampleH);
+
+        let bestX = -1;
+        let bestY = -1;
+        let maxWeighted = 0;
+        let rawAtBest = 0;
+
+        for (let dy = -rMap; dy <= rMap; dy++) {
+          const y = cy + dy;
+          if (y < 2 || y >= sampleH - 2) continue;
+          for (let dx = -rMap; dx <= rMap; dx++) {
+            const distSq = dx * dx + dy * dy;
+            if (distSq > rMap * rMap) continue;
+            const x = cx + dx;
+            if (x < 2 || x >= sampleW - 2) continue;
+
+            const raw = edgeScore[y * sampleW + x];
+            // Distance decay prevents jumping laterally along an edge far from cursor
+            const distRatio = Math.sqrt(distSq) / (rMap || 1);
+            const weighted = raw * (1 - 0.35 * distRatio);
+
+            if (weighted > maxWeighted) {
+              maxWeighted = weighted;
+              rawAtBest = raw;
+              bestX = x;
+              bestY = y;
+            }
+          }
+        }
+
+        if (rawAtBest > 32 && bestX >= 0) {
+          const candNormX = bestX / sampleW;
+          const candNormY = bestY / sampleH;
+          const distPx = Math.hypot(
+            (candNormX - normX) * (containerWidth || 1),
+            (candNormY - normY) * (containerHeight || 1)
+          );
+          if (distPx <= snapRadiusPx) {
+            return { x: candNormX, y: candNormY, snapped: true };
+          }
+        }
+        return { x: normX, y: normY, snapped: false };
+      },
+    };
+  } catch {
+    return {
+      snap: (normX, normY) => ({ x: normX, y: normY, snapped: false }),
+    };
+  }
+}
+
+/**
+ * Robust document edge & corner detector.
+ * Works on all document colors (white, pink, yellow, dark, lined) across light or dark backgrounds.
+ * Uses 3x3 noise suppression, percentile-based paper substrate estimation, chrominance-aware
+ * outer-to-inner step transition scoring, and deterministic RANSAC line intersection.
  */
 export function detectDocumentCorners(image: HTMLImageElement): Point[] {
   const FALLBACK: Point[] = [
@@ -19,79 +301,329 @@ export function detectDocumentCorners(image: HTMLImageElement): Point[] {
   ];
 
   try {
-    const SAMPLE_SIZE = 220;
+    const sampleW = 300;
+    const aspect = (image.naturalHeight || 1) / (image.naturalWidth || 1);
+    const sampleH = Math.max(100, Math.round(sampleW * aspect));
+
     const canvas = document.createElement("canvas");
-    canvas.width = SAMPLE_SIZE;
-    canvas.height = SAMPLE_SIZE;
-    const ctx = canvas.getContext("2d");
+    canvas.width = sampleW;
+    canvas.height = sampleH;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
     if (!ctx) return FALLBACK;
 
-    ctx.drawImage(image, 0, 0, SAMPLE_SIZE, SAMPLE_SIZE);
-    const { data } = ctx.getImageData(0, 0, SAMPLE_SIZE, SAMPLE_SIZE);
+    ctx.drawImage(image, 0, 0, sampleW, sampleH);
+    const { data } = ctx.getImageData(0, 0, sampleW, sampleH);
 
-    const lum = new Float32Array(SAMPLE_SIZE * SAMPLE_SIZE);
-    let sumLum = 0;
-    for (let i = 0; i < lum.length; i++) {
-      const idx = i * 4;
-      const l = 0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2];
-      lum[i] = l;
-      sumLum += l;
+    // 1. Box blur 3x3 on RGB to suppress text halftone and fine paper grain
+    const blurred = computeBoxBlur3x3(data, sampleW, sampleH);
+
+    // 2. Pure paper substrate color estimation (ignores dark text/lines inside the page)
+    const paper = estimatePaperColor(blurred, sampleW, sampleH);
+    const cx = Math.floor(sampleW / 2);
+    const cy = Math.floor(sampleH / 2);
+
+    // Helper to evaluate step transition from outside (desk) to inside (paper)
+    const evaluateStepScore = (
+      x: number,
+      y: number,
+      stepX: number,
+      stepY: number,
+      progressFromBorder: number
+    ): number => {
+      // Local directional gradient across +-2 pixels
+      const outNearIdx = ((y - stepY * 2) * sampleW + (x - stepX * 2)) * 3;
+      const inNearIdx = ((y + stepY * 2) * sampleW + (x + stepX * 2)) * 3;
+      const gDir = perceptualColorDist(
+        blurred[inNearIdx],
+        blurred[inNearIdx + 1],
+        blurred[inNearIdx + 2],
+        blurred[outNearIdx],
+        blurred[outNearIdx + 1],
+        blurred[outNearIdx + 2]
+      );
+
+      if (gDir < 12) return 0;
+
+      // Inside window (2..8px toward document center): find best match to paper substrate
+      let minInPaperDist = Infinity;
+      let bestInR = blurred[inNearIdx];
+      let bestInG = blurred[inNearIdx + 1];
+      let bestInB = blurred[inNearIdx + 2];
+
+      for (let k = 2; k <= 8; k += 2) {
+        const ix = Math.max(0, Math.min(sampleW - 1, x + stepX * k));
+        const iy = Math.max(0, Math.min(sampleH - 1, y + stepY * k));
+        const idx = (iy * sampleW + ix) * 3;
+        const r = blurred[idx];
+        const g = blurred[idx + 1];
+        const b = blurred[idx + 2];
+        const dPaper = perceptualColorDist(r, g, b, paper.r, paper.g, paper.b);
+        if (dPaper < minInPaperDist) {
+          minInPaperDist = dPaper;
+          bestInR = r;
+          bestInG = g;
+          bestInB = b;
+        }
+      }
+
+      // Outside window (2..8px toward image border): average background color
+      let outR = 0,
+        outG = 0,
+        outB = 0,
+        outCount = 0;
+      for (let k = 2; k <= 8; k += 2) {
+        const ox = Math.max(0, Math.min(sampleW - 1, x - stepX * k));
+        const oy = Math.max(0, Math.min(sampleH - 1, y - stepY * k));
+        const idx = (oy * sampleW + ox) * 3;
+        outR += blurred[idx];
+        outG += blurred[idx + 1];
+        outB += blurred[idx + 2];
+        outCount++;
+      }
+      outR /= outCount || 1;
+      outG /= outCount || 1;
+      outB /= outCount || 1;
+
+      const outPaperDist = perceptualColorDist(
+        outR,
+        outG,
+        outB,
+        paper.r,
+        paper.g,
+        paper.b
+      );
+      const stepDist = perceptualColorDist(
+        outR,
+        outG,
+        outB,
+        bestInR,
+        bestInG,
+        bestInB
+      );
+
+      // Reject internal text strokes where outside is already on the paper and inside is ink
+      if (minInPaperDist > 68 || minInPaperDist > outPaperDist + 8) {
+        return 0;
+      }
+
+      const transitionGain = Math.max(0, outPaperDist - minInPaperDist);
+      const paperMatchWeight = Math.exp(
+        -(minInPaperDist * minInPaperDist) / (2 * 45 * 45)
+      );
+      const outwardBias = 1 + 0.35 * (1 - progressFromBorder);
+
+      return (
+        (gDir * 1.3 + stepDist * 1.2 + transitionGain * 1.6) *
+        paperMatchWeight *
+        outwardBias
+      );
+    };
+
+    // 3. Scan across 4 cardinal sectors from outer border inward toward center
+    const topHits: Point[] = [];
+    const botHits: Point[] = [];
+    const leftHits: Point[] = [];
+    const rightHits: Point[] = [];
+
+    const startX = Math.floor(sampleW * 0.16);
+    const endX = Math.floor(sampleW * 0.84);
+    const startY = Math.floor(sampleH * 0.16);
+    const endY = Math.floor(sampleH * 0.84);
+
+    // Top edge: scan downward from top border (y = 4 .. cy)
+    for (let x = startX; x <= endX; x += 3) {
+      let bestY = -1;
+      let maxScore = 0;
+      for (let y = 4; y <= cy - 6; y++) {
+        const progress = (y - 4) / Math.max(1, cy - 4);
+        const score = evaluateStepScore(x, y, 0, 1, progress);
+        if (score > maxScore) {
+          maxScore = score;
+          bestY = y;
+        }
+      }
+      if (bestY > 0 && maxScore > 32) topHits.push({ x, y: bestY });
     }
-    const meanLum = sumLum / lum.length;
-    const threshold = meanLum * 1.08;
 
-    // Locate extreme corners (x+y min/max, x-y min/max) among high-luminance / edge pixels
-    let tlScore = Infinity,
-      trScore = -Infinity,
-      brScore = -Infinity,
-      blScore = Infinity;
-    let tl: Point = { x: 0.1, y: 0.1 };
-    let tr: Point = { x: 0.9, y: 0.1 };
-    let br: Point = { x: 0.9, y: 0.9 };
-    let bl: Point = { x: 0.1, y: 0.9 };
-    let count = 0;
+    // Bottom edge: scan upward from bottom border (y = sampleH - 5 .. cy)
+    for (let x = startX; x <= endX; x += 3) {
+      let bestY = -1;
+      let maxScore = 0;
+      for (let y = sampleH - 5; y >= cy + 6; y--) {
+        const progress = (sampleH - 5 - y) / Math.max(1, sampleH - 5 - cy);
+        const score = evaluateStepScore(x, y, 0, -1, progress);
+        if (score > maxScore) {
+          maxScore = score;
+          bestY = y;
+        }
+      }
+      if (bestY > 0 && maxScore > 32) botHits.push({ x, y: bestY });
+    }
 
-    const margin = Math.floor(SAMPLE_SIZE * 0.04);
-    for (let y = margin; y < SAMPLE_SIZE - margin; y++) {
-      for (let x = margin; x < SAMPLE_SIZE - margin; x++) {
-        const idx = y * SAMPLE_SIZE + x;
-        const gx = Math.abs(lum[idx + 1] - lum[idx - 1]);
-        const gy = Math.abs(lum[idx + SAMPLE_SIZE] - lum[idx - SAMPLE_SIZE]);
-        const grad = gx + gy;
+    // Left edge: scan rightward from left border (x = 4 .. cx)
+    for (let y = startY; y <= endY; y += 3) {
+      let bestX = -1;
+      let maxScore = 0;
+      for (let x = 4; x <= cx - 6; x++) {
+        const progress = (x - 4) / Math.max(1, cx - 4);
+        const score = evaluateStepScore(x, y, 1, 0, progress);
+        if (score > maxScore) {
+          maxScore = score;
+          bestX = x;
+        }
+      }
+      if (bestX > 0 && maxScore > 32) leftHits.push({ x: bestX, y });
+    }
 
-        if (lum[idx] > threshold && grad > 22) {
-          count++;
-          const nx = x / SAMPLE_SIZE;
-          const ny = y / SAMPLE_SIZE;
+    // Right edge: scan leftward from right border (x = sampleW - 5 .. cx)
+    for (let y = startY; y <= endY; y += 3) {
+      let bestX = -1;
+      let maxScore = 0;
+      for (let x = sampleW - 5; x >= cx + 6; x--) {
+        const progress = (sampleW - 5 - x) / Math.max(1, sampleW - 5 - cx);
+        const score = evaluateStepScore(x, y, -1, 0, progress);
+        if (score > maxScore) {
+          maxScore = score;
+          bestX = x;
+        }
+      }
+      if (bestX > 0 && maxScore > 32) rightHits.push({ x: bestX, y });
+    }
 
-          if (nx + ny < tlScore) {
-            tlScore = nx + ny;
-            tl = { x: nx, y: ny };
-          }
-          if (nx - ny > trScore) {
-            trScore = nx - ny;
-            tr = { x: nx, y: ny };
-          }
-          if (nx + ny > brScore) {
-            brScore = nx + ny;
-            br = { x: nx, y: ny };
-          }
-          if (nx - ny < blScore) {
-            blScore = nx - ny;
-            bl = { x: nx, y: ny };
+    interface LineModel {
+      m: number;
+      c: number;
+      isHoriz: boolean;
+    }
+
+    // Deterministic RANSAC + least-squares line fitter
+    function fitLine(pts: Point[], isHoriz: boolean): LineModel | null {
+      if (pts.length < 4) return null;
+      let bestInliers: Point[] = [];
+      let bestLine: LineModel | null = null;
+
+      const n = pts.length;
+      for (let i = 0; i < n; i++) {
+        for (let j = i + 2; j < n; j += Math.max(1, Math.floor(n / 12))) {
+          const p1 = pts[i];
+          const p2 = pts[j];
+          if (isHoriz) {
+            if (Math.abs(p2.x - p1.x) < 12) continue;
+            const m = (p2.y - p1.y) / (p2.x - p1.x);
+            const c = p1.y - m * p1.x;
+            const denom = Math.hypot(m, 1);
+            const inliers = pts.filter(
+              (p) => Math.abs(m * p.x - p.y + c) / denom < 2.8
+            );
+            if (inliers.length > bestInliers.length) {
+              bestInliers = inliers;
+              bestLine = { m, c, isHoriz };
+            }
+          } else {
+            if (Math.abs(p2.y - p1.y) < 12) continue;
+            const m = (p2.x - p1.x) / (p2.y - p1.y);
+            const c = p1.x - m * p1.y;
+            const denom = Math.hypot(m, 1);
+            const inliers = pts.filter(
+              (p) => Math.abs(m * p.y - p.x + c) / denom < 2.8
+            );
+            if (inliers.length > bestInliers.length) {
+              bestInliers = inliers;
+              bestLine = { m, c, isHoriz };
+            }
           }
         }
       }
+
+      if (bestInliers.length >= 4) {
+        if (isHoriz) {
+          let sumX = 0,
+            sumY = 0;
+          for (const p of bestInliers) {
+            sumX += p.x;
+            sumY += p.y;
+          }
+          const mx = sumX / bestInliers.length;
+          const my = sumY / bestInliers.length;
+          let num = 0,
+            den = 0;
+          for (const p of bestInliers) {
+            num += (p.x - mx) * (p.y - my);
+            den += (p.x - mx) * (p.x - mx);
+          }
+          if (Math.abs(den) > 1e-4) {
+            const m = num / den;
+            const c = my - m * mx;
+            return { m, c, isHoriz };
+          }
+        } else {
+          let sumX = 0,
+            sumY = 0;
+          for (const p of bestInliers) {
+            sumX += p.x;
+            sumY += p.y;
+          }
+          const mx = sumX / bestInliers.length;
+          const my = sumY / bestInliers.length;
+          let num = 0,
+            den = 0;
+          for (const p of bestInliers) {
+            num += (p.y - my) * (p.x - mx);
+            den += (p.y - my) * (p.y - my);
+          }
+          if (Math.abs(den) > 1e-4) {
+            const m = num / den;
+            const c = mx - m * my;
+            return { m, c, isHoriz };
+          }
+        }
+      }
+      return bestLine;
     }
 
-    // Validate quad area (at least 18% of frame)
-    const widthEst = Math.hypot(tr.x - tl.x, tr.y - tl.y);
-    const heightEst = Math.hypot(bl.x - tl.x, bl.y - tl.y);
-    if (count < 40 || widthEst < 0.35 || heightEst < 0.35) {
-      return FALLBACK;
+    function intersect(lh: LineModel | null, lv: LineModel | null): Point | null {
+      if (!lh || !lv) return null;
+      const denom = 1 - lh.m * lv.m;
+      if (Math.abs(denom) < 1e-4) return null;
+      const y = (lh.m * lv.c + lh.c) / denom;
+      const x = lv.m * y + lv.c;
+      return { x: x / sampleW, y: y / sampleH };
     }
 
-    return [tl, tr, br, bl];
+    const lTop = fitLine(topHits, true);
+    const lBot = fitLine(botHits, true);
+    const lLeft = fitLine(leftHits, false);
+    const lRight = fitLine(rightHits, false);
+
+    const tl = intersect(lTop, lLeft);
+    const tr = intersect(lTop, lRight);
+    const br = intersect(lBot, lRight);
+    const bl = intersect(lBot, lLeft);
+
+    if (!tl || !tr || !br || !bl) return FALLBACK;
+
+    const clamp = (v: number) => Math.max(0.01, Math.min(0.99, v));
+    const res: Point[] = [
+      { x: clamp(tl.x), y: clamp(tl.y) },
+      { x: clamp(tr.x), y: clamp(tr.y) },
+      { x: clamp(br.x), y: clamp(br.y) },
+      { x: clamp(bl.x), y: clamp(bl.y) },
+    ];
+
+    // Ensure valid ordering and reasonable area (Gauss shoelace formula)
+    const area =
+      0.5 *
+      Math.abs(
+        res[0].x * res[1].y -
+          res[1].x * res[0].y +
+          (res[1].x * res[2].y - res[2].x * res[1].y) +
+          (res[2].x * res[3].y - res[3].x * res[2].y) +
+          (res[3].x * res[0].y - res[0].x * res[3].y)
+      );
+
+    if (area < 0.12 || area > 0.98) return FALLBACK;
+
+    return res;
   } catch {
     return FALLBACK;
   }

@@ -9,6 +9,8 @@ import {
   warpPerspective,
   processCanvasWithFilter,
   detectDocumentCorners,
+  createEdgeSnapper,
+  EdgeSnapper,
   FilterType,
 } from "@/lib/scanner/image-processing";
 import { canvasesToPDF, downloadBlob } from "@/lib/pdf/pdf-utils";
@@ -28,6 +30,7 @@ import {
   Trash2,
   ArrowLeft,
   Sparkles,
+  Magnet,
 } from "lucide-react";
 
 export interface CornerPoint {
@@ -75,6 +78,12 @@ export default function ScanToPdfPage() {
 
   const [containerDimensions, setContainerDimensions] = useState({ width: 0, height: 0 });
 
+  const [isMagneticSnap, setIsMagneticSnap] = useState(true);
+  const [isSnapped, setIsSnapped] = useState(false);
+  const edgeSnapperRef = useRef<EdgeSnapper | null>(null);
+  const loupeCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const shouldAutoDetectRef = useRef<boolean>(true);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -92,6 +101,7 @@ export default function ScanToPdfPage() {
         const reader = new FileReader();
         reader.onload = (ev) => {
           if (typeof ev.target?.result === "string") {
+            shouldAutoDetectRef.current = true;
             setCurrentImageSrc(ev.target.result);
             setCorners(DEFAULT_CORNERS);
             setCurrentStep("crop");
@@ -174,6 +184,7 @@ export default function ScanToPdfPage() {
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     const capturedDataUrl = canvas.toDataURL("image/jpeg", 0.95);
 
+    shouldAutoDetectRef.current = true;
     setCurrentImageSrc(capturedDataUrl);
     setCorners(DEFAULT_CORNERS);
     setCurrentStep("crop");
@@ -187,6 +198,7 @@ export default function ScanToPdfPage() {
     const reader = new FileReader();
     reader.onload = (event) => {
       if (typeof event.target?.result === "string") {
+        shouldAutoDetectRef.current = true;
         setCurrentImageSrc(event.target.result);
         setCorners(DEFAULT_CORNERS);
         setCurrentStep("crop");
@@ -201,14 +213,25 @@ export default function ScanToPdfPage() {
       const rect = editorContainerRef.current.getBoundingClientRect();
       setContainerDimensions({ width: rect.width, height: rect.height });
     }
-    if (imageRef.current) {
-      const detected = detectDocumentCorners(imageRef.current);
-      setCorners(detected);
-    }
   }, []);
+
+  const handleImageLoad = useCallback(() => {
+    updateContainerSize();
+    if (imageRef.current) {
+      edgeSnapperRef.current = createEdgeSnapper(imageRef.current);
+      if (shouldAutoDetectRef.current) {
+        const detected = detectDocumentCorners(imageRef.current);
+        setCorners(detected);
+        shouldAutoDetectRef.current = false;
+      }
+    }
+  }, [updateContainerSize]);
 
   const handleAutoDetectEdges = () => {
     if (imageRef.current) {
+      if (!edgeSnapperRef.current) {
+        edgeSnapperRef.current = createEdgeSnapper(imageRef.current);
+      }
       setCorners(detectDocumentCorners(imageRef.current));
     }
   };
@@ -223,32 +246,119 @@ export default function ScanToPdfPage() {
       if (activeCornerIdx === null || !editorContainerRef.current) return;
 
       const rect = editorContainerRef.current.getBoundingClientRect();
-      const normX = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-      const normY = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height));
+      const rawNormX = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+      const rawNormY = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height));
+
+      let finalX = rawNormX;
+      let finalY = rawNormY;
+      let snapped = false;
+
+      if (isMagneticSnap && edgeSnapperRef.current) {
+        const snapRes = edgeSnapperRef.current.snap(
+          rawNormX,
+          rawNormY,
+          18,
+          rect.width,
+          rect.height
+        );
+        if (snapRes.snapped) {
+          finalX = snapRes.x;
+          finalY = snapRes.y;
+          snapped = true;
+        }
+      }
+
+      setIsSnapped(snapped);
 
       setCorners((prev) => {
         const next = [...prev];
-        next[activeCornerIdx] = { x: normX, y: normY };
+        next[activeCornerIdx] = { x: finalX, y: finalY };
         return next;
       });
     },
-    [activeCornerIdx]
+    [activeCornerIdx, isMagneticSnap]
   );
 
   const handlePointerUp = useCallback(() => {
     setActiveCornerIdx(null);
+    setIsSnapped(false);
   }, []);
 
   useEffect(() => {
     if (activeCornerIdx !== null) {
       window.addEventListener("pointermove", handlePointerMove);
       window.addEventListener("pointerup", handlePointerUp);
+      window.addEventListener("pointercancel", handlePointerUp);
     }
     return () => {
       window.removeEventListener("pointermove", handlePointerMove);
       window.removeEventListener("pointerup", handlePointerUp);
+      window.removeEventListener("pointercancel", handlePointerUp);
     };
   }, [activeCornerIdx, handlePointerMove, handlePointerUp]);
+
+  // Real-time Loupe magnification canvas update with clamped source bounds
+  useEffect(() => {
+    if (activeCornerIdx === null || !imageRef.current || !loupeCanvasRef.current) return;
+    const canvas = loupeCanvasRef.current;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const img = imageRef.current;
+    const corner = corners[activeCornerIdx];
+    if (!corner || containerDimensions.width <= 0 || containerDimensions.height <= 0) return;
+
+    const sx = corner.x * img.naturalWidth;
+    const sy = corner.y * img.naturalHeight;
+    const zoom = 2.8;
+    const cropW = (canvas.width / zoom) * (img.naturalWidth / containerDimensions.width);
+    const cropH = (canvas.height / zoom) * (img.naturalHeight / containerDimensions.height);
+
+    ctx.fillStyle = "#0f172a";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+
+    const halfW = cropW / 2;
+    const halfH = cropH / 2;
+    const srcX0 = Math.max(0, sx - halfW);
+    const srcY0 = Math.max(0, sy - halfH);
+    const srcX1 = Math.min(img.naturalWidth, sx + halfW);
+    const srcY1 = Math.min(img.naturalHeight, sy + halfH);
+    const srcW = srcX1 - srcX0;
+    const srcH = srcY1 - srcY0;
+
+    if (srcW > 0 && srcH > 0) {
+      const dstX0 = ((srcX0 - (sx - halfW)) / cropW) * canvas.width;
+      const dstY0 = ((srcY0 - (sy - halfH)) / cropH) * canvas.height;
+      const dstW = (srcW / cropW) * canvas.width;
+      const dstH = (srcH / cropH) * canvas.height;
+
+      ctx.drawImage(img, srcX0, srcY0, srcW, srcH, dstX0, dstY0, dstW, dstH);
+    }
+
+    // Draw perspective boundary rays inside the loupe for alignment feedback
+    const prevCorner = corners[(activeCornerIdx + 3) % 4];
+    const nextCorner = corners[(activeCornerIdx + 1) % 4];
+    const toLoupeCoord = (pt: CornerPoint) => ({
+      x: canvas.width / 2 + (pt.x - corner.x) * containerDimensions.width * zoom,
+      y: canvas.height / 2 + (pt.y - corner.y) * containerDimensions.height * zoom,
+    });
+
+    const pPrev = toLoupeCoord(prevCorner);
+    const pNext = toLoupeCoord(nextCorner);
+
+    ctx.save();
+    ctx.strokeStyle = isSnapped ? "rgba(16, 185, 129, 0.9)" : "rgba(225, 29, 72, 0.85)";
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 2]);
+    ctx.beginPath();
+    ctx.moveTo(pPrev.x, pPrev.y);
+    ctx.lineTo(canvas.width / 2, canvas.height / 2);
+    ctx.lineTo(pNext.x, pNext.y);
+    ctx.stroke();
+    ctx.restore();
+  }, [activeCornerIdx, corners, containerDimensions, isSnapped]);
 
   const getPixelCoord = (corner: CornerPoint) => ({
     x: corner.x * containerDimensions.width,
@@ -328,6 +438,7 @@ export default function ScanToPdfPage() {
   const handleBackToAdjustCorners = () => {
     const page = scannedPages[activePageIndex];
     if (page) {
+      shouldAutoDetectRef.current = false;
       setCurrentImageSrc(page.sourceImageSrc);
       setCorners(page.corners);
     }
@@ -474,6 +585,20 @@ export default function ScanToPdfPage() {
 
                 <button
                   type="button"
+                  onClick={() => setIsMagneticSnap((prev) => !prev)}
+                  className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors shadow-2xs ${
+                    isMagneticSnap
+                      ? "border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300"
+                      : "border-slate-200 bg-white text-slate-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400 hover:bg-slate-50"
+                  }`}
+                  title={isMagneticSnap ? "Magnetic edge snapping is active" : "Magnetic edge snapping is paused"}
+                >
+                  <Magnet className="h-3.5 w-3.5" />
+                  <span>Magnet: {isMagneticSnap ? "On" : "Off"}</span>
+                </button>
+
+                <button
+                  type="button"
                   onClick={() => setCorners(DEFAULT_CORNERS)}
                   className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 transition-colors shadow-2xs"
                 >
@@ -492,7 +617,7 @@ export default function ScanToPdfPage() {
               </div>
             </div>
 
-            <div className="relative flex justify-center rounded-2xl border border-slate-200 bg-slate-100 dark:border-slate-800 dark:bg-slate-950 p-3 sm:p-4 overflow-hidden select-none">
+            <div className="relative flex justify-center rounded-2xl border border-slate-200 bg-slate-100 dark:border-slate-800 dark:bg-slate-950 p-3 sm:p-4 overflow-visible select-none">
               <div
                 ref={editorContainerRef}
                 className="relative inline-block max-w-full touch-none"
@@ -502,7 +627,7 @@ export default function ScanToPdfPage() {
                   ref={imageRef}
                   src={currentImageSrc}
                   alt="Scan Subject"
-                  onLoad={updateContainerSize}
+                  onLoad={handleImageLoad}
                   className="max-h-[62vh] w-auto max-w-full rounded-lg object-contain shadow-lg pointer-events-none"
                 />
 
@@ -526,6 +651,66 @@ export default function ScanToPdfPage() {
                   </svg>
                 )}
 
+                {/* FLOATING MAGNIFYING LOUPE */}
+                {activeCornerIdx !== null && containerDimensions.width > 0 && (
+                  <div
+                    style={{
+                      left: `${Math.max(54, Math.min(containerDimensions.width - 54, getPixelCoord(corners[activeCornerIdx]).x))}px`,
+                      top: `${
+                        getPixelCoord(corners[activeCornerIdx]).y < 130
+                          ? getPixelCoord(corners[activeCornerIdx]).y + 78
+                          : getPixelCoord(corners[activeCornerIdx]).y - 78
+                      }px`,
+                    }}
+                    className="absolute -translate-x-1/2 -translate-y-1/2 pointer-events-none z-50 flex flex-col items-center select-none"
+                  >
+                    <div className="relative h-24 w-24 rounded-full border-2 border-white dark:border-slate-700 bg-slate-900 shadow-2xl ring-2 ring-rose-500/50 overflow-hidden flex items-center justify-center">
+                      <canvas
+                        ref={loupeCanvasRef}
+                        width={96}
+                        height={96}
+                        className="h-full w-full object-cover"
+                      />
+                      {/* Precision Reticle Crosshair */}
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <div
+                          className={`h-[1px] w-full ${
+                            isSnapped ? "bg-emerald-400" : "bg-rose-500"
+                          } opacity-80`}
+                        />
+                        <div
+                          className={`w-[1px] h-full ${
+                            isSnapped ? "bg-emerald-400" : "bg-rose-500"
+                          } opacity-80`}
+                        />
+                        <div
+                          className={`absolute h-4 w-4 rounded-full border border-dashed ${
+                            isSnapped ? "border-emerald-400" : "border-rose-400"
+                          } bg-transparent`}
+                        />
+                        <div
+                          className={`absolute h-1 w-1 rounded-full ${
+                            isSnapped ? "bg-emerald-400" : "bg-white"
+                          }`}
+                        />
+                      </div>
+
+                      {/* Snap badge */}
+                      {isSnapped && (
+                        <div className="absolute top-1.5 inset-x-0 flex justify-center pointer-events-none">
+                          <span className="rounded-full bg-emerald-600/95 px-1.5 py-0.5 text-[8px] font-bold tracking-wider text-white uppercase shadow-xs">
+                            Snapped
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="mt-1 rounded bg-slate-900/90 backdrop-blur-xs px-2 py-0.5 text-[10px] font-mono text-white shadow-md">
+                      {CORNER_LABELS[activeCornerIdx]}
+                    </div>
+                  </div>
+                )}
+
                 {containerDimensions.width > 0 &&
                   corners.map((corner, idx) => {
                     const pt = getPixelCoord(corner);
@@ -544,23 +729,30 @@ export default function ScanToPdfPage() {
                           top: `${pt.y}px`,
                           touchAction: "none",
                         }}
-                        className="absolute -translate-x-1/2 -translate-y-1/2 cursor-grab active:cursor-grabbing p-4 z-20"
+                        className="group absolute -translate-x-1/2 -translate-y-1/2 cursor-grab active:cursor-grabbing p-3.5 z-20"
                       >
+                        {/* Sleek precision handle */}
                         <div
-                          className={`flex h-6 w-6 items-center justify-center rounded-full border-2 transition-transform ${
+                          className={`relative flex h-3.5 w-3.5 items-center justify-center rounded-full border-[1.5px] transition-transform ${
                             isActive
-                              ? "border-rose-600 bg-rose-600 scale-125 shadow-md"
-                              : "border-rose-600 bg-white shadow-md hover:scale-110"
+                              ? isSnapped
+                                ? "border-emerald-500 bg-white/40 ring-4 ring-emerald-400/40 scale-125"
+                                : "border-rose-600 bg-white/40 ring-4 ring-rose-500/40 scale-125"
+                              : "border-rose-600 bg-white/60 dark:bg-slate-900/60 shadow-xs ring-1 ring-white/90 dark:ring-black/90 hover:scale-125"
                           }`}
                         >
                           <div
-                            className={`h-1.5 w-1.5 rounded-full ${
-                              isActive ? "bg-white" : "bg-rose-600"
+                            className={`h-1 w-1 rounded-full ${
+                              isActive
+                                ? isSnapped
+                                  ? "bg-emerald-500"
+                                  : "bg-rose-600"
+                                : "bg-rose-600"
                             }`}
                           />
                         </div>
 
-                        <span className="pointer-events-none absolute left-7 top-1/2 -translate-y-1/2 whitespace-nowrap rounded bg-slate-900 px-1.5 py-0.5 text-[9px] font-mono text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                        <span className="pointer-events-none absolute left-6 top-1/2 -translate-y-1/2 whitespace-nowrap rounded bg-slate-900 px-1.5 py-0.5 text-[9px] font-mono text-white opacity-0 group-hover:opacity-100 transition-opacity">
                           {CORNER_LABELS[idx]}
                         </span>
                       </div>

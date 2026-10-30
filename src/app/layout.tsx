@@ -13,7 +13,7 @@ const ADSENSE_ID = process.env.NEXT_PUBLIC_ADSENSE_ID || "ca-pub-515287859349407
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   alternates: {
-    canonical: SITE_URL,
+    canonical: '/',
   },
   verification: {
     google: "TX_b_Rg1BBdC31WpXrXvxkBgRWD0LJ2tilIg3Iw9CV0",
@@ -41,7 +41,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: SITE_URL,
+    url: `${SITE_URL}/`,
     siteName: "iKnowAPDF",
     title: "iKnowAPDF — Free, Fast & 100% Private PDF Tools",
     description:
@@ -75,7 +75,7 @@ export default function RootLayout({
     "@context": "https://schema.org",
     "@type": "WebApplication",
     name: "iKnowAPDF",
-    url: SITE_URL,
+    url: `${SITE_URL}/`,
     applicationCategory: "BusinessApplication",
     operatingSystem: "All",
     browserRequirements:

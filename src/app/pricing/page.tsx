@@ -73,12 +73,12 @@ export default function PricingPage() {
     const fields: Record<string, string> = {
       cmd: "_xclick",
       business: "fenangplay@gmail.com",
-      item_name: "iKnowAPDF Ad-Free Monthly Pass",
-      amount: "5.00",
+      item_name: selectedPlan.name,
+      amount: selectedPlan.amount,
       currency_code: "USD",
       no_shipping: "1",
       no_note: "1",
-      return: window.location.origin + "/pricing?payment=completed",
+      return: window.location.origin + "/pricing?payment=completed&plan=" + selectedPlan.id,
       cancel_return: window.location.origin + "/pricing?payment=cancelled",
       rm: "1",
       landing_page: method === "card" ? "Billing" : "Login",
@@ -188,6 +188,7 @@ export default function PricingPage() {
   const handleResetPass = () => {
     try {
       localStorage.removeItem("iknowapdf_ad_free");
+    localStorage.removeItem("iknowapdf_pro_until");
       localStorage.removeItem("iknowapdf_ad_free_order");
       setIsAdFree(false);
       setVerifiedOrder(null);
@@ -334,7 +335,7 @@ export default function PricingPage() {
         <section className="text-center max-w-3xl mx-auto space-y-4">
           <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-slate-900 dark:text-white">
             Simple, Honest Pricing.{" "}
-            <span className="text-rose-600">Zero Ads for $5/mo</span>.
+            <span className="text-rose-600">Choose Your Pro Pass</span>.
           </h1>
 
           <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 leading-relaxed max-w-2xl mx-auto">
@@ -343,26 +344,26 @@ export default function PricingPage() {
         </section>
 
         {/* Pricing Cards Grid */}
-        <section className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto items-stretch">
+        <section className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-6xl mx-auto items-stretch">
           {/* Card 1: Free Forever */}
-          <div className="flex flex-col justify-between rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-xs dark:border-slate-800 dark:bg-slate-900 transition-all">
-            <div className="space-y-6">
+          <div className="flex flex-col justify-between rounded-3xl border border-slate-200 bg-white p-6 sm:p-7 shadow-xs dark:border-slate-800 dark:bg-slate-900 transition-all">
+            <div className="space-y-5">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+                  <h2 className="text-lg font-bold text-slate-900 dark:text-white">
                     Free Forever
                   </h2>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                    For everyday document tasks
+                    For everyday personal tasks
                   </p>
                 </div>
-                <span className="rounded-full bg-slate-100 dark:bg-slate-800 px-3 py-1 text-[11px] font-bold text-slate-600 dark:text-slate-300">
+                <span className="rounded-full bg-slate-100 dark:bg-slate-800 px-2.5 py-0.5 text-[10px] font-bold text-slate-600 dark:text-slate-300">
                   Standard
                 </span>
               </div>
 
-              <div className="flex items-baseline gap-2 border-b border-slate-100 dark:border-slate-800 pb-6">
-                <span className="text-5xl font-black text-slate-900 dark:text-white">
+              <div className="flex items-baseline gap-2 border-b border-slate-100 dark:border-slate-800 pb-5">
+                <span className="text-4xl font-black text-slate-900 dark:text-white">
                   $0
                 </span>
                 <span className="text-xs font-semibold text-slate-500">
@@ -371,35 +372,35 @@ export default function PricingPage() {
               </div>
 
               {/* Features List */}
-              <ul className="space-y-3.5 text-xs text-slate-600 dark:text-slate-300">
-                <li className="flex items-center gap-3">
+              <ul className="space-y-3 text-xs text-slate-600 dark:text-slate-300">
+                <li className="flex items-center gap-2.5">
+                  <Check className="h-4 w-4 text-emerald-500 shrink-0" />
+                  <span><strong>15 operations</strong> per day (resets at midnight)</span>
+                </li>
+                <li className="flex items-center gap-2.5">
                   <Check className="h-4 w-4 text-emerald-500 shrink-0" />
                   <span>All 15+ Client-Side PDF Tools</span>
                 </li>
-                <li className="flex items-center gap-3">
+                <li className="flex items-center gap-2.5">
                   <Check className="h-4 w-4 text-emerald-500 shrink-0" />
-                  <span>100% Local In-Browser Processing (Zero uploads)</span>
+                  <span>100% In-Browser Privacy (0 bytes uploaded)</span>
                 </li>
-                <li className="flex items-center gap-3">
-                  <Check className="h-4 w-4 text-emerald-500 shrink-0" />
-                  <span>Unlimited file sizes and document pages</span>
-                </li>
-                <li className="flex items-center gap-3">
+                <li className="flex items-center gap-2.5">
                   <Check className="h-4 w-4 text-emerald-500 shrink-0" />
                   <span>Clean, watermark-free PDF exports</span>
                 </li>
-                <li className="flex items-center gap-3">
+                <li className="flex items-center gap-2.5">
                   <Check className="h-4 w-4 text-emerald-500 shrink-0" />
-                  <span>Offline Progressive Web App (PWA) support</span>
+                  <span>Offline Progressive Web App (PWA)</span>
                 </li>
-                <li className="flex items-center gap-3 text-slate-400 dark:text-slate-500">
-                  <span className="h-1.5 w-1.5 rounded-full bg-slate-400 shrink-0 ml-1.5 mr-1" />
-                  <span>Supported by standard Google AdSense banners</span>
+                <li className="flex items-center gap-2.5 text-slate-400 dark:text-slate-500">
+                  <span className="h-1.5 w-1.5 rounded-full bg-slate-400 shrink-0 ml-1.5 mr-0.5" />
+                  <span>Supported by standard banner ads</span>
                 </li>
               </ul>
             </div>
 
-            <div className="pt-8">
+            <div className="pt-6">
               <Link
                 href="/"
                 className="inline-flex w-full items-center justify-center rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 py-3 text-xs font-bold text-slate-800 dark:text-slate-100 transition-colors"
@@ -409,112 +410,189 @@ export default function PricingPage() {
             </div>
           </div>
 
-          {/* Card 2: Ad-Free Monthly Pass ($5) */}
-          <div className="relative flex flex-col justify-between rounded-3xl border-2 border-rose-600 bg-white p-6 sm:p-8 shadow-xl shadow-rose-600/10 dark:shadow-rose-950/40 dark:border-rose-500 dark:bg-slate-900 transition-all">
-            {/* Top Pill */}
-            <div className="absolute -top-3.5 right-6 rounded-full bg-rose-600 px-3.5 py-1 text-[10px] font-extrabold uppercase tracking-wider text-white shadow-xs">
-              ✨ $5 / Month • Cancel Anytime
+          {/* Card 2: 7-Day Pro Pass ($3.99 - One-Time) */}
+          <div className="relative flex flex-col justify-between rounded-3xl border border-amber-300 dark:border-amber-700/60 bg-gradient-to-b from-amber-50/40 via-white to-white dark:from-amber-950/20 dark:via-slate-900 dark:to-slate-900 p-6 sm:p-7 shadow-md dark:shadow-slate-950 transition-all">
+            <div className="absolute -top-3 right-5 rounded-full bg-amber-500 px-3 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-white shadow-xs">
+              &� One-Time  " Zero Recurring
             </div>
 
-            <div className="space-y-6">
+            <div className="space-y-5">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                    <span>Ad-Free Monthly</span>
+                  <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+                    7-Day Pro Pass
                   </h2>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                    For power users, professionals, and supporters
+                    For short projects, tax prep, & crunch weeks
                   </p>
                 </div>
-                <span className="rounded-full bg-rose-50 dark:bg-rose-950/60 px-3 py-1 text-[11px] font-bold text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900">
-                  Monthly Plan
+                <span className="rounded-full bg-amber-100 dark:bg-amber-950/60 px-2.5 py-0.5 text-[10px] font-bold text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-900">
+                  Weekly Pass
                 </span>
               </div>
 
-              <div className="flex items-baseline gap-2 border-b border-slate-100 dark:border-slate-800 pb-6">
-                <span className="text-5xl font-black text-slate-900 dark:text-white">
-                  $5
+              <div className="flex items-baseline gap-2 border-b border-slate-100 dark:border-slate-800 pb-5">
+                <span className="text-4xl font-black text-slate-900 dark:text-white">
+                  $3.99
                 </span>
-                <span className="text-xs font-bold text-rose-600">
-                  / month • pay with PayPal
+                <span className="text-xs font-bold text-amber-600 dark:text-amber-400">
+                  / 7 days  " one-time payment
                 </span>
               </div>
 
               {/* Features List */}
-              <ul className="space-y-3.5 text-xs text-slate-700 dark:text-slate-200 font-medium">
-                <li className="flex items-center gap-3">
-                  <CheckCircle2 className="h-4 w-4 text-rose-600 shrink-0" />
-                  <span>
-                    <strong>100% Ad-Free Experience:</strong> Zero banners or video popups
-                  </span>
+              <ul className="space-y-3 text-xs text-slate-700 dark:text-slate-200 font-medium">
+                <li className="flex items-center gap-2.5">
+                  <CheckCircle2 className="h-4 w-4 text-amber-500 shrink-0" />
+                  <span><strong>Unlimited operations</strong> for 7 full days</span>
                 </li>
-                <li className="flex items-center gap-3">
-                  <CheckCircle2 className="h-4 w-4 text-rose-600 shrink-0" />
-                  <span>
-                    <strong>Zero Ad Tracking:</strong> Zero requests to ad networks
-                  </span>
+                <li className="flex items-center gap-2.5">
+                  <CheckCircle2 className="h-4 w-4 text-amber-500 shrink-0" />
+                  <span><strong>100% Ad-Free Experience:</strong> Zero banners or popups</span>
                 </li>
-                <li className="flex items-center gap-3">
-                  <CheckCircle2 className="h-4 w-4 text-rose-600 shrink-0" />
-                  <span>
-                    <strong>Faster Performance:</strong> Cleaner pages and lower battery usage
-                  </span>
+                <li className="flex items-center gap-2.5">
+                  <CheckCircle2 className="h-4 w-4 text-amber-500 shrink-0" />
+                  <span><strong>Zero Subscriptions:</strong> Never rebilled, no cancel needed</span>
                 </li>
-                <li className="flex items-center gap-3">
-                  <CheckCircle2 className="h-4 w-4 text-rose-600 shrink-0" />
-                  <span>
-                    <strong>All Devices Included:</strong> Use on desktop, laptop, tablet, & phone
-                  </span>
+                <li className="flex items-center gap-2.5">
+                  <CheckCircle2 className="h-4 w-4 text-amber-500 shrink-0" />
+                  <span><strong>Faster Performance:</strong> Maximum WebAssembly speed</span>
                 </li>
-                <li className="flex items-center gap-3">
-                  <CheckCircle2 className="h-4 w-4 text-rose-600 shrink-0" />
-                  <span>
-                    <strong>Instant PayPal Verification:</strong> Pass activates automatically
-                  </span>
+                <li className="flex items-center gap-2.5">
+                  <CheckCircle2 className="h-4 w-4 text-amber-500 shrink-0" />
+                  <span><strong>All Devices Included:</strong> Desktop, tablet & phone</span>
                 </li>
-                <li className="flex items-center gap-3">
-                  <CheckCircle2 className="h-4 w-4 text-rose-600 shrink-0" />
-                  <span>
-                    <strong>Cancel Anytime:</strong> No contracts or cancellation fees
-                  </span>
+                <li className="flex items-center gap-2.5">
+                  <CheckCircle2 className="h-4 w-4 text-amber-500 shrink-0" />
+                  <span><strong>Instant Activation:</strong> PayPal balance or any Card</span>
                 </li>
               </ul>
             </div>
 
-            <div className="pt-8 space-y-2.5">
+            <div className="pt-6 space-y-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedPlan({
+                    id: "7day",
+                    name: "iKnowAPDF 7-Day Pro Pass",
+                    amount: "3.99",
+                    period: "one-time",
+                  });
+                  setCheckoutStep("checkout");
+                  setShowCheckoutModal(true);
+                }}
+                className="w-full flex items-center justify-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-400 py-3 text-xs font-extrabold text-slate-950 transition-all shadow-md shadow-amber-500/20 cursor-pointer"
+              >
+                <CreditCard className="h-4 w-4" />
+                <span>Get 7-Day Pass ($3.99)</span>
+              </button>
+              <p className="text-center text-[10px] text-slate-400">
+                �= One-time charge  " No recurring subscription
+              </p>
+            </div>
+          </div>
+
+          {/* Card 3: Ad-Free Monthly Pass ($5) */}
+          <div className="relative flex flex-col justify-between rounded-3xl border-2 border-rose-600 bg-white p-6 sm:p-7 shadow-xl shadow-rose-600/10 dark:shadow-rose-950/40 dark:border-rose-500 dark:bg-slate-900 transition-all">
+            {/* Top Pill */}
+            <div className="absolute -top-3 right-5 rounded-full bg-rose-600 px-3 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-white shadow-xs">
+              '( Most Popular  " Cancel Anytime
+            </div>
+
+            <div className="space-y-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <span>Monthly Pro Pass</span>
+                  </h2>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    For power users, professionals, & teams
+                  </p>
+                </div>
+                <span className="rounded-full bg-rose-50 dark:bg-rose-950/60 px-2.5 py-0.5 text-[10px] font-bold text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900">
+                  Monthly Plan
+                </span>
+              </div>
+
+              <div className="flex items-baseline gap-2 border-b border-slate-100 dark:border-slate-800 pb-5">
+                <span className="text-4xl font-black text-slate-900 dark:text-white">
+                  $5
+                </span>
+                <span className="text-xs font-bold text-rose-600">
+                  / month  " pay with PayPal
+                </span>
+              </div>
+
+              {/* Features List */}
+              <ul className="space-y-3 text-xs text-slate-700 dark:text-slate-200 font-medium">
+                <li className="flex items-center gap-2.5">
+                  <CheckCircle2 className="h-4 w-4 text-rose-600 shrink-0" />
+                  <span><strong>Unlimited operations</strong> permanently</span>
+                </li>
+                <li className="flex items-center gap-2.5">
+                  <CheckCircle2 className="h-4 w-4 text-rose-600 shrink-0" />
+                  <span><strong>100% Ad-Free Experience:</strong> Zero banners or popups</span>
+                </li>
+                <li className="flex items-center gap-2.5">
+                  <CheckCircle2 className="h-4 w-4 text-rose-600 shrink-0" />
+                  <span><strong>Zero Ad Tracking:</strong> 100% private, zero network calls</span>
+                </li>
+                <li className="flex items-center gap-2.5">
+                  <CheckCircle2 className="h-4 w-4 text-rose-600 shrink-0" />
+                  <span><strong>Faster Performance:</strong> Cleaner pages & instant processing</span>
+                </li>
+                <li className="flex items-center gap-2.5">
+                  <CheckCircle2 className="h-4 w-4 text-rose-600 shrink-0" />
+                  <span><strong>All Devices Included:</strong> Desktop, laptop, tablet, & phone</span>
+                </li>
+                <li className="flex items-center gap-2.5">
+                  <CheckCircle2 className="h-4 w-4 text-rose-600 shrink-0" />
+                  <span><strong>Cancel Anytime:</strong> 1 click from your PayPal dashboard</span>
+                </li>
+              </ul>
+            </div>
+
+            <div className="pt-6 space-y-2">
               {isAdFree ? (
-                <div className="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4 dark:border-emerald-900/60 dark:bg-emerald-950/40 space-y-2 text-center">
-                  <div className="flex items-center justify-center gap-2 text-sm font-bold text-emerald-700 dark:text-emerald-400">
+                <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-3.5 dark:border-emerald-900/60 dark:bg-emerald-950/40 space-y-1.5 text-center">
+                  <div className="flex items-center justify-center gap-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-400">
                     <CheckCircle2 className="h-4 w-4" />
-                    <span>Ad-Free Pass Active</span>
+                    <span>Pro Pass Active</span>
                   </div>
-                  <p className="text-[11px] text-slate-600 dark:text-slate-400">
-                    All ads and trackers are disabled across every tool.
+                  <p className="text-[10px] text-slate-600 dark:text-slate-400">
+                    All ads and limits are removed across every tool.
                   </p>
                   <button
                     type="button"
                     onClick={handleResetPass}
-                    className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 transition-colors pt-1 cursor-pointer"
+                    className="inline-flex items-center gap-1 text-[10px] font-semibold text-slate-500 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 transition-colors cursor-pointer"
                   >
                     <RotateCcw className="h-3 w-3" />
-                    <span>Reset pass (test checkout again)</span>
+                    <span>Reset pass</span>
                   </button>
                 </div>
               ) : (
                 <button
                   type="button"
                   onClick={() => {
+                    setSelectedPlan({
+                      id: "monthly",
+                      name: "iKnowAPDF Monthly Pro Pass",
+                      amount: "5.00",
+                      period: "month",
+                    });
                     setCheckoutStep("checkout");
                     setShowCheckoutModal(true);
                   }}
-                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-rose-600 hover:bg-rose-500 py-3.5 text-xs font-extrabold text-white transition-all shadow-md shadow-rose-600/30 cursor-pointer"
+                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-rose-600 hover:bg-rose-500 py-3 text-xs font-extrabold text-white transition-all shadow-md shadow-rose-600/30 cursor-pointer"
                 >
                   <CreditCard className="h-4 w-4" />
-                  <span>Get Ad-Free Pass ($5/mo)</span>
+                  <span>Get Monthly Pro ($5/mo)</span>
                 </button>
               )}
-              <p className="text-center text-[11px] text-slate-400">
-                🔒 Protected by PayPal Buyer Protection • Cancel anytime
+              <p className="text-center text-[10px] text-slate-400">
+                �= Protected by PayPal Buyer Protection  " Cancel anytime
               </p>
             </div>
           </div>

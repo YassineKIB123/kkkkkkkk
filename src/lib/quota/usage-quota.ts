@@ -34,6 +34,10 @@ function computeIntegritySig(date: string, used: number, bonus: number, rewards:
 export function isUserPro(): boolean {
   if (typeof window === "undefined") return false;
   try {
+    const until = localStorage.getItem("iknowapdf_pro_until");
+    if (until && Number(until) > Date.now()) {
+      return true;
+    }
     return localStorage.getItem("iknowapdf_ad_free") === "true";
   } catch {
     return false;

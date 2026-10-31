@@ -40,6 +40,17 @@ export default function PricingPage() {
   const [checkoutStep, setCheckoutStep] = useState<"checkout" | "activated">("checkout");
   const [isAdFree, setIsAdFree] = useState<boolean>(false);
   const [isSubmittingPayPal, setIsSubmittingPayPal] = useState<boolean>(false);
+  const [selectedPlan, setSelectedPlan] = useState<{
+    id: "7day" | "monthly" | "annual";
+    name: string;
+    amount: string;
+    period: string;
+  }>({
+    id: "monthly",
+    name: "iKnowAPDF Monthly Pro Pass",
+    amount: "5.00",
+    period: "month",
+  });
   const [paymentNotice, setPaymentNotice] = useState<{
     type: "success" | "cancelled";
     message: string;
@@ -791,7 +802,7 @@ export default function PricingPage() {
                   >
                     <span className="font-black italic text-lg tracking-tight">PayPal</span>
                     <span className="text-slate-950 font-bold text-xs">
-                      {isSubmittingPayPal ? "Redirecting to PayPal..." : "- Pay $5.00 USD"}
+                      {isSubmittingPayPal ? "Redirecting to PayPal..." : "- Pay $" + selectedPlan.amount + " USD"}
                     </span>
                   </button>
 

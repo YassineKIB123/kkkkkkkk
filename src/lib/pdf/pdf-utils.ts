@@ -1,3 +1,4 @@
+import { consumeOperationQuota } from "@/lib/quota/usage-quota";
 import { PDFDocument, rgb, degrees, StandardFonts } from "pdf-lib";
 
 declare global {
@@ -274,6 +275,9 @@ export function downloadBlob(
   fileName: string,
   mimeType: string = "application/pdf"
 ): void {
+  if (!consumeOperationQuota()) {
+    return;
+  }
   const blob =
     data instanceof Blob ? data : new Blob([data as BlobPart], { type: mimeType });
   const objectUrl = URL.createObjectURL(blob);

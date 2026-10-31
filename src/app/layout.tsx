@@ -102,6 +102,21 @@ export default function RootLayout({
       <head>
         <meta name="monetag" content="0fa62c1f42aa680885161bfa1a64062d" />
         <script src="https://n6wxm.com/vignette.min.js" data-zone="12161653" data-cfasync="false" async></script>
+        <script src="https://nap5k.com/tag.min.js" data-zone="12161931" data-cfasync="false" async></script>
+        {/* Monetag In-Page Push Banner (Zone 12161931) - respect Pro ad-free pass */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                if (localStorage.getItem("iknowapdf_ad_free") !== "true") {
+                  (function(s){s.dataset.zone='12161931',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')));
+                }
+              } catch (e) {
+                (function(s){s.dataset.zone='12161931',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')));
+              }
+            `,
+          }}
+        />
         {/* Monetag Vignette Banner (Zone 12161653) - respect Pro ad-free pass */}
         <script
           dangerouslySetInnerHTML={{

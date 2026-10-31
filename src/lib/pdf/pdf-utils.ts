@@ -1,4 +1,4 @@
-import { consumeOperationQuota } from "@/lib/quota/usage-quota";
+import { consumeOperationQuota, setPendingDownload, consumePendingDownload } from "@/lib/quota/usage-quota";
 import { PDFDocument, rgb, degrees, StandardFonts } from "pdf-lib";
 
 declare global {
@@ -276,6 +276,7 @@ export function downloadBlob(
   mimeType: string = "application/pdf"
 ): void {
   if (!consumeOperationQuota()) {
+    setPendingDownload({ data, fileName, mimeType });
     return;
   }
   const blob =
@@ -814,4 +815,15 @@ export async function embedSignatureIntoPDF(
   return embedSignaturesIntoPDF(pdfFile, [
     { pageNumber, signatureDataUrl, position },
   ]);
+}
+
+/**
+ * Releases and triggers download for any queued file after unlocking bonus quota or upgrading to Pro.
+ */
+export function flushPendingDownloadAfterUnlock(): void {
+  const pending = consumePendingDownload();
+  if (!pending) return;
+  if (consumeOperationQuota()) {
+    downloadBlob(pending.data, pending.fileName, pending.mimeType);
+  }
 }

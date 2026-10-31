@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { isUserPro } from "@/lib/quota/usage-quota";
 
 declare global {
   interface Window {
@@ -30,16 +31,18 @@ export function AdBanner({
   useEffect(() => {
     const checkAdFree = () => {
       try {
-        setIsAdFree(localStorage.getItem("iknowapdf_ad_free") === "true");
+        setIsAdFree(isUserPro());
       } catch {}
     };
 
     checkAdFree();
     window.addEventListener("ad_free_status_changed", checkAdFree);
+    window.addEventListener("iknowapdf_quota_updated", checkAdFree);
     window.addEventListener("storage", checkAdFree);
 
     return () => {
       window.removeEventListener("ad_free_status_changed", checkAdFree);
+      window.removeEventListener("iknowapdf_quota_updated", checkAdFree);
       window.removeEventListener("storage", checkAdFree);
     };
   }, []);

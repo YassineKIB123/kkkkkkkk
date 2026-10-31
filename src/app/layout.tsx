@@ -1,4 +1,4 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { LanguageProvider } from "@/context/LanguageContext";
@@ -9,12 +9,13 @@ const inter = Inter({ subsets: ["latin", "cyrillic"] });
 
 const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL || "https://iknowapdf.lol";
-const ADSENSE_ID = process.env.NEXT_PUBLIC_ADSENSE_ID || "ca-pub-5152878593494077";
+const ADSENSE_ID =
+  process.env.NEXT_PUBLIC_ADSENSE_ID || "ca-pub-5152878593494077";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   alternates: {
-    canonical: '/',
+    canonical: "/",
   },
   verification: {
     google: "TX_b_Rg1BBdC31WpXrXvxkBgRWD0LJ2tilIg3Iw9CV0",
@@ -65,7 +66,7 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
-  };
+};
 
 export default function RootLayout({
   children,
@@ -101,33 +102,52 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         <meta name="monetag" content="0fa62c1f42aa680885161bfa1a64062d" />
-        <script src="https://n6wxm.com/vignette.min.js" data-zone="12161653" data-cfasync="false" async></script>
-        <script src="https://nap5k.com/tag.min.js" data-zone="12161931" data-cfasync="false" async></script>
-        {/* Monetag In-Page Push Banner (Zone 12161931) - respect Pro ad-free pass */}
+        {/* Single unified, CWV-friendly Monetag loader that strictly respects Pro & 7-Day Pass status */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
-              try {
-                if (localStorage.getItem("iknowapdf_ad_free") !== "true") {
-                  (function(s){s.dataset.zone='12161931',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')));
+              (function() {
+                function hasActiveProPass() {
+                  try {
+                    var until = localStorage.getItem("iknowapdf_pro_until");
+                    if (until) {
+                      if (Number(until) > Date.now()) return true;
+                      localStorage.removeItem("iknowapdf_pro_until");
+                      localStorage.removeItem("iknowapdf_ad_free");
+                      return false;
+                    }
+                    return localStorage.getItem("iknowapdf_ad_free") === "true";
+                  } catch (e) {
+                    return false;
+                  }
                 }
-              } catch (e) {
-                (function(s){s.dataset.zone='12161931',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')));
-              }
-            `,
-          }}
-        />
-        {/* Monetag Vignette Banner (Zone 12161653) - respect Pro ad-free pass */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              try {
-                if (localStorage.getItem("iknowapdf_ad_free") !== "true") {
-                  (function(s){s.dataset.zone='12161653',s.src='https://n6wxm.com/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')));
+                if (hasActiveProPass()) return;
+                function injectMonetag() {
+                  if (hasActiveProPass()) return;
+                  var target = [document.documentElement, document.body].filter(Boolean).pop();
+                  if (!target) return;
+                  var s1 = document.createElement("script");
+                  s1.dataset.zone = "12161931";
+                  s1.setAttribute("data-cfasync", "false");
+                  s1.async = true;
+                  s1.src = "https://nap5k.com/tag.min.js";
+                  target.appendChild(s1);
+
+                  var s2 = document.createElement("script");
+                  s2.dataset.zone = "12161653";
+                  s2.setAttribute("data-cfasync", "false");
+                  s2.async = true;
+                  s2.src = "https://n6wxm.com/vignette.min.js";
+                  target.appendChild(s2);
                 }
-              } catch (e) {
-                (function(s){s.dataset.zone='12161653',s.src='https://n6wxm.com/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')));
-              }
+                if ("requestIdleCallback" in window) {
+                  window.requestIdleCallback(injectMonetag, { timeout: 1800 });
+                } else {
+                  window.addEventListener("load", function() {
+                    setTimeout(injectMonetag, 800);
+                  });
+                }
+              })();
             `,
           }}
         />
@@ -155,5 +175,3 @@ export default function RootLayout({
     </html>
   );
 }
-
-

@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { BuyCoffeeButton } from "@/components/common/BuyCoffeeModal";
+import { isUserPro } from "@/lib/quota/usage-quota";
 
 declare global {
   interface Window {
@@ -67,6 +68,10 @@ export default function PricingPage() {
     if (typeof window === "undefined") return;
     setIsSubmittingPayPal(true);
 
+    try {
+      sessionStorage.setItem("iknowapdf_pending_plan", selectedPlan.id);
+    } catch {}
+
     const form = document.createElement("form");
     form.method = "POST";
     form.action = "https://www.paypal.com/cgi-bin/webscr";
@@ -76,6 +81,8 @@ export default function PricingPage() {
       cmd: "_xclick",
       business: "fenangplay@gmail.com",
       item_name: selectedPlan.name,
+      item_number: selectedPlan.id,
+      custom: selectedPlan.id,
       amount: selectedPlan.amount,
       currency_code: "USD",
       no_shipping: "1",
@@ -106,25 +113,54 @@ export default function PricingPage() {
     try {
       const searchParams = new URLSearchParams(window.location.search);
       const paymentStatus = searchParams.get("payment");
+      const quickCheckout = searchParams.get("checkout");
+      const rawPlan =
+        searchParams.get("plan") ||
+        searchParams.get("custom") ||
+        searchParams.get("item_number") ||
+        sessionStorage.getItem("iknowapdf_pending_plan");
       const rawTx = searchParams.get("tx") || searchParams.get("txn_id");
       const rawAmt = searchParams.get("amt");
       const safeTx = rawTx && /^[a-zA-Z0-9_-]{1,32}$/.test(rawTx) ? rawTx : null;
       const safeAmt = rawAmt && /^\d+(\.\d{1,2})?$/.test(rawAmt) ? rawAmt : null;
 
-      if (paymentStatus === "completed" || paymentStatus === "success" || safeTx) {
+      if (quickCheckout === "7day" || quickCheckout === "monthly") {
+        const is7Day = quickCheckout === "7day";
+        setSelectedPlan({
+          id: is7Day ? "7day" : "monthly",
+          name: is7Day
+            ? "iKnowAPDF 7-Day Pro Pass"
+            : "iKnowAPDF Monthly Pro Pass",
+          amount: is7Day ? "3.99" : "5.00",
+          period: is7Day ? "one-time" : "month",
+        });
+        setCheckoutStep("checkout");
+        setShowCheckoutModal(true);
+        window.history.replaceState({}, document.title, window.location.pathname);
+      } else if (paymentStatus === "completed" || paymentStatus === "success" || safeTx) {
+        const is7DayPlan = rawPlan === "7day" || safeAmt === "3.99";
         const orderId = safeTx || ("PP-" + Date.now().toString(36).toUpperCase());
+        const resolvedAmount = safeAmt ? ("$" + safeAmt) : (is7DayPlan ? "$3.99" : "$5.00");
         localStorage.setItem("iknowapdf_ad_free", "true");
+        if (is7DayPlan) {
+          const sevenDaysMs = Date.now() + 7 * 24 * 60 * 60 * 1000;
+          localStorage.setItem("iknowapdf_pro_until", String(sevenDaysMs));
+        } else {
+          localStorage.removeItem("iknowapdf_pro_until");
+        }
         localStorage.setItem(
           "iknowapdf_ad_free_order",
           JSON.stringify({
             orderId,
-            amount: safeAmt ? ("$" + safeAmt) : "$5.00",
+            planId: is7DayPlan ? "7day" : "monthly",
+            amount: resolvedAmount,
             status: "COMPLETED",
             verified: true,
             payerEmail: "fenangplay@gmail.com",
             activatedAt: new Date().toISOString(),
           })
         );
+        sessionStorage.removeItem("iknowapdf_pending_plan");
         setTimeout(() => {
           setIsAdFree(true);
           setVerifiedOrder({
@@ -135,6 +171,7 @@ export default function PricingPage() {
           setCheckoutStep("activated");
           setShowCheckoutModal(true);
           window.dispatchEvent(new Event("ad_free_status_changed"));
+          window.dispatchEvent(new Event("iknowapdf_quota_updated"));
         }, 0);
 
         // Clean query string from browser address bar
@@ -152,7 +189,7 @@ export default function PricingPage() {
 
     const checkStatus = () => {
       try {
-        const active = localStorage.getItem("iknowapdf_ad_free") === "true";
+        const active = isUserPro();
         setIsAdFree(active);
         const savedOrder = localStorage.getItem("iknowapdf_ad_free_order");
         if (savedOrder) {
@@ -165,9 +202,11 @@ export default function PricingPage() {
 
     checkStatus();
     window.addEventListener("ad_free_status_changed", checkStatus);
+    window.addEventListener("iknowapdf_quota_updated", checkStatus);
     window.addEventListener("storage", checkStatus);
     return () => {
       window.removeEventListener("ad_free_status_changed", checkStatus);
+      window.removeEventListener("iknowapdf_quota_updated", checkStatus);
       window.removeEventListener("storage", checkStatus);
     };
   }, []);
@@ -195,6 +234,7 @@ export default function PricingPage() {
       setIsAdFree(false);
       setVerifiedOrder(null);
       window.dispatchEvent(new Event("ad_free_status_changed"));
+      window.dispatchEvent(new Event("iknowapdf_quota_updated"));
     } catch {}
   };
 
@@ -853,10 +893,14 @@ export default function PricingPage() {
                   </div>
                   <div>
                     <h3 className="text-lg font-bold text-slate-900 dark:text-white">
-                      Ad-Free Monthly Pass
+                      {selectedPlan.name}
                     </h3>
                     <p className="text-xs text-slate-500 dark:text-slate-400">
-                      $5.00 USD / month - Official PayPal Checkout
+                      ${selectedPlan.amount} USD{" "}
+                      {selectedPlan.period === "one-time"
+                        ? "(7-Day Pass • One-Time)"
+                        : `/ ${selectedPlan.period}`}{" "}
+                      — Official PayPal Checkout
                     </p>
                   </div>
                 </div>
@@ -864,15 +908,19 @@ export default function PricingPage() {
                 <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950/60 space-y-2 text-xs">
                   <div className="flex justify-between font-semibold text-slate-700 dark:text-slate-300">
                     <span>Plan</span>
-                    <span>iKnowAPDF Ad-Free Pass</span>
+                    <span>{selectedPlan.name}</span>
                   </div>
                   <div className="flex justify-between font-semibold text-slate-700 dark:text-slate-300">
                     <span>Recipient</span>
-                    <span className="font-mono text-slate-900 dark:text-slate-100 font-bold">fenangplay@gmail.com</span>
+                    <span className="font-mono text-slate-900 dark:text-slate-100 font-bold">
+                      fenangplay@gmail.com
+                    </span>
                   </div>
                   <div className="flex justify-between font-bold text-sm text-slate-900 dark:text-white border-t border-slate-200 dark:border-slate-800 pt-2">
                     <span>Amount</span>
-                    <span className="text-rose-600 text-base">$5.00 USD</span>
+                    <span className="text-rose-600 text-base">
+                      ${selectedPlan.amount} USD
+                    </span>
                   </div>
                 </div>
 

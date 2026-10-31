@@ -6,11 +6,30 @@ const QUOTA_STORAGE_KEY = "iknowapdf_daily_quota_v1";
 const QUOTA_SECRET_SALT = "iknowapdf-client-integrity-2026-v1";
 
 export interface DailyQuotaState {
-  date: string; // YYYY-MM-DD
+  date: string; // YYYY-MM-DD in local time
   used: number;
   bonusUnlocked: number;
   rewardsClaimed: number;
+  lastUpdatedMs: number;
   sig: string;
+}
+
+export interface PendingDownloadItem {
+  data: Uint8Array | Blob;
+  fileName: string;
+  mimeType: string;
+}
+
+let _pendingDownload: PendingDownloadItem | null = null;
+
+export function setPendingDownload(item: PendingDownloadItem | null): void {
+  _pendingDownload = item;
+}
+
+export function consumePendingDownload(): PendingDownloadItem | null {
+  const item = _pendingDownload;
+  _pendingDownload = null;
+  return item;
 }
 
 function getLocalTodayString(): string {
@@ -18,11 +37,16 @@ function getLocalTodayString(): string {
   const year = now.getFullYear();
   const month = String(now.getMonth() + 1).padStart(2, "0");
   const day = String(now.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+  return year + "-" + month + "-" + day;
 }
 
-function computeIntegritySig(date: string, used: number, bonus: number, rewards: number): string {
-  const raw = `${date}:${used}:${bonus}:${rewards}:${QUOTA_SECRET_SALT}`;
+function computeIntegritySig(
+  date: string,
+  used: number,
+  bonus: number,
+  rewards: number
+): string {
+  const raw = date + ":" + used + ":" + bonus + ":" + rewards + ":" + QUOTA_SECRET_SALT;
   let hash = 2166136261;
   for (let i = 0; i < raw.length; i++) {
     hash ^= raw.charCodeAt(i);
@@ -31,12 +55,24 @@ function computeIntegritySig(date: string, used: number, bonus: number, rewards:
   return (hash >>> 0).toString(36);
 }
 
+/**
+ * Checks whether the user has an active 7-Day Pass or Monthly Pro Pass.
+ * Automatically cleans up expired time-bound passes.
+ */
 export function isUserPro(): boolean {
   if (typeof window === "undefined") return false;
   try {
-    const until = localStorage.getItem("iknowapdf_pro_until");
-    if (until && Number(until) > Date.now()) {
-      return true;
+    const untilRaw = localStorage.getItem("iknowapdf_pro_until");
+    if (untilRaw) {
+      const untilMs = Number(untilRaw);
+      if (!Number.isNaN(untilMs) && untilMs > Date.now()) {
+        return true;
+      }
+      // Time-limited pass has expired -> clean up flags
+      localStorage.removeItem("iknowapdf_pro_until");
+      localStorage.removeItem("iknowapdf_ad_free");
+      localStorage.removeItem("iknowapdf_ad_free_order");
+      return false;
     }
     return localStorage.getItem("iknowapdf_ad_free") === "true";
   } catch {
@@ -46,11 +82,13 @@ export function isUserPro(): boolean {
 
 export function getQuotaState(): DailyQuotaState {
   const today = getLocalTodayString();
+  const nowMs = Date.now();
   const defaultState: DailyQuotaState = {
     date: today,
     used: 0,
     bonusUnlocked: 0,
     rewardsClaimed: 0,
+    lastUpdatedMs: nowMs,
     sig: computeIntegritySig(today, 0, 0, 0),
   };
 
@@ -61,11 +99,7 @@ export function getQuotaState(): DailyQuotaState {
     if (!raw) return defaultState;
     const parsed = JSON.parse(raw) as DailyQuotaState;
 
-    if (parsed.date !== today) {
-      saveQuotaState(defaultState);
-      return defaultState;
-    }
-
+    // Verify integrity hash first
     const expectedSig = computeIntegritySig(
       parsed.date,
       parsed.used,
@@ -78,10 +112,22 @@ export function getQuotaState(): DailyQuotaState {
         used: DAILY_FREE_LIMIT,
         bonusUnlocked: 0,
         rewardsClaimed: MAX_DAILY_REWARDS,
+        lastUpdatedMs: nowMs,
         sig: computeIntegritySig(today, DAILY_FREE_LIMIT, 0, MAX_DAILY_REWARDS),
       };
       saveQuotaState(penalized);
       return penalized;
+    }
+
+    // Guard against backward system clock rollback (> 2 hours backward)
+    if (parsed.lastUpdatedMs && nowMs < parsed.lastUpdatedMs - 2 * 3600 * 1000) {
+      return parsed;
+    }
+
+    // Reset on new calendar day
+    if (parsed.date !== today) {
+      saveQuotaState(defaultState);
+      return defaultState;
     }
 
     return parsed;
@@ -95,6 +141,7 @@ function saveQuotaState(state: DailyQuotaState): void {
   try {
     const signed: DailyQuotaState = {
       ...state,
+      lastUpdatedMs: Date.now(),
       sig: computeIntegritySig(
         state.date,
         state.used,
@@ -103,7 +150,9 @@ function saveQuotaState(state: DailyQuotaState): void {
       ),
     };
     localStorage.setItem(QUOTA_STORAGE_KEY, JSON.stringify(signed));
-    window.dispatchEvent(new CustomEvent("iknowapdf_quota_updated", { detail: signed }));
+    window.dispatchEvent(
+      new CustomEvent("iknowapdf_quota_updated", { detail: signed })
+    );
   } catch {}
 }
 

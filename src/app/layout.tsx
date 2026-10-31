@@ -101,6 +101,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         <meta name="monetag" content="0fa62c1f42aa680885161bfa1a64062d" />
+        <script src="https://n6wxm.com/vignette.min.js" data-zone="12161653" data-cfasync="false" async></script>
         {/* Monetag Vignette Banner (Zone 12161653) - respect Pro ad-free pass */}
         <script
           dangerouslySetInnerHTML={{

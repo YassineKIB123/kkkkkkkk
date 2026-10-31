@@ -101,6 +101,20 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         <meta name="monetag" content="0fa62c1f42aa680885161bfa1a64062d" />
+        {/* Monetag Vignette Banner (Zone 12161653) - respect Pro ad-free pass */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                if (localStorage.getItem("iknowapdf_ad_free") !== "true") {
+                  (function(s){s.dataset.zone='12161653',s.src='https://n6wxm.com/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')));
+                }
+              } catch (e) {
+                (function(s){s.dataset.zone='12161653',s.src='https://n6wxm.com/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')));
+              }
+            `,
+          }}
+        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

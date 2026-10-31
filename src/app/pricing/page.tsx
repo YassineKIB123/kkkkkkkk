@@ -18,6 +18,8 @@ import {
   HelpCircle,
   Heart,
   Lock,
+  Zap,
+  Sparkles,
   RotateCcw,
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
@@ -412,8 +414,9 @@ export default function PricingPage() {
 
           {/* Card 2: 7-Day Pro Pass ($3.99 - One-Time) */}
           <div className="relative flex flex-col justify-between rounded-3xl border border-amber-300 dark:border-amber-700/60 bg-gradient-to-b from-amber-50/40 via-white to-white dark:from-amber-950/20 dark:via-slate-900 dark:to-slate-900 p-6 sm:p-7 shadow-md dark:shadow-slate-950 transition-all">
-            <div className="absolute -top-3 right-5 rounded-full bg-amber-500 px-3 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-white shadow-xs">
-              &� One-Time  " Zero Recurring
+            <div className="absolute -top-3 right-5 flex items-center gap-1 rounded-full bg-amber-500 px-3 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-white shadow-xs">
+              <Zap className="h-3 w-3" />
+              <span>One-Time &bull; Zero Recurring</span>
             </div>
 
             <div className="space-y-5">
@@ -436,7 +439,7 @@ export default function PricingPage() {
                   $3.99
                 </span>
                 <span className="text-xs font-bold text-amber-600 dark:text-amber-400">
-                  / 7 days  " one-time payment
+                  / 7 days &bull; one-time payment
                 </span>
               </div>
 
@@ -487,8 +490,9 @@ export default function PricingPage() {
                 <CreditCard className="h-4 w-4" />
                 <span>Get 7-Day Pass ($3.99)</span>
               </button>
-              <p className="text-center text-[10px] text-slate-400">
-                �= One-time charge  " No recurring subscription
+              <p className="flex items-center justify-center gap-1 text-center text-[10px] text-slate-400">
+                <Lock className="h-3 w-3 text-slate-400 shrink-0" />
+                <span>One-time charge &bull; No recurring subscription</span>
               </p>
             </div>
           </div>
@@ -496,8 +500,9 @@ export default function PricingPage() {
           {/* Card 3: Ad-Free Monthly Pass ($5) */}
           <div className="relative flex flex-col justify-between rounded-3xl border-2 border-rose-600 bg-white p-6 sm:p-7 shadow-xl shadow-rose-600/10 dark:shadow-rose-950/40 dark:border-rose-500 dark:bg-slate-900 transition-all">
             {/* Top Pill */}
-            <div className="absolute -top-3 right-5 rounded-full bg-rose-600 px-3 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-white shadow-xs">
-              '( Most Popular  " Cancel Anytime
+            <div className="absolute -top-3 right-5 flex items-center gap-1 rounded-full bg-rose-600 px-3 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-white shadow-xs">
+              <Sparkles className="h-3 w-3" />
+              <span>Most Popular &bull; Cancel Anytime</span>
             </div>
 
             <div className="space-y-5">
@@ -520,7 +525,7 @@ export default function PricingPage() {
                   $5
                 </span>
                 <span className="text-xs font-bold text-rose-600">
-                  / month  " pay with PayPal
+                  / month &bull; pay with PayPal
                 </span>
               </div>
 
@@ -591,8 +596,9 @@ export default function PricingPage() {
                   <span>Get Monthly Pro ($5/mo)</span>
                 </button>
               )}
-              <p className="text-center text-[10px] text-slate-400">
-                �= Protected by PayPal Buyer Protection  " Cancel anytime
+              <p className="flex items-center justify-center gap-1 text-center text-[10px] text-slate-400">
+                <ShieldCheck className="h-3 w-3 text-slate-400 shrink-0" />
+                <span>Protected by PayPal Buyer Protection &bull; Cancel anytime</span>
               </p>
             </div>
           </div>

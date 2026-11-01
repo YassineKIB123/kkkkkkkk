@@ -57,14 +57,18 @@ export function UsageLimitModal() {
       adIntervalRef.current = null;
     }
 
-    const success = claimRewardedAdBonus(adStartRef.current);
-    setIsWatchingAd(false);
-    if (success) {
-      setQuotaInfo(getRemainingOperations());
-      setIsOpen(false);
-      // Automatically trigger the user's queued PDF download!
-      flushPendingDownloadAfterUnlock();
-    }
+    const timer = setTimeout(() => {
+      const success = claimRewardedAdBonus(adStartRef.current);
+      setIsWatchingAd(false);
+      if (success) {
+        setQuotaInfo(getRemainingOperations());
+        setIsOpen(false);
+        // Automatically trigger the user's queued PDF download!
+        flushPendingDownloadAfterUnlock();
+      }
+    }, 0);
+
+    return () => clearTimeout(timer);
   }, [isWatchingAd, adSecondsLeft]);
 
   // Live countdown to midnight reset

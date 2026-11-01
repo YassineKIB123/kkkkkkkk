@@ -126,16 +126,18 @@ export default function PricingPage() {
 
       if (quickCheckout === "7day" || quickCheckout === "monthly") {
         const is7Day = quickCheckout === "7day";
-        setSelectedPlan({
-          id: is7Day ? "7day" : "monthly",
-          name: is7Day
-            ? "iKnowAPDF 7-Day Pro Pass"
-            : "iKnowAPDF Monthly Pro Pass",
-          amount: is7Day ? "3.99" : "5.00",
-          period: is7Day ? "one-time" : "month",
-        });
-        setCheckoutStep("checkout");
-        setShowCheckoutModal(true);
+        setTimeout(() => {
+          setSelectedPlan({
+            id: is7Day ? "7day" : "monthly",
+            name: is7Day
+              ? "iKnowAPDF 7-Day Pro Pass"
+              : "iKnowAPDF Monthly Pro Pass",
+            amount: is7Day ? "3.99" : "5.00",
+            period: is7Day ? "one-time" : "month",
+          });
+          setCheckoutStep("checkout");
+          setShowCheckoutModal(true);
+        }, 0);
         window.history.replaceState({}, document.title, window.location.pathname);
       } else if (paymentStatus === "completed" || paymentStatus === "success" || safeTx) {
         const is7DayPlan = rawPlan === "7day" || safeAmt === "3.99";

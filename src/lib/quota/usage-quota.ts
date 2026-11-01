@@ -99,35 +99,27 @@ export function getQuotaState(): DailyQuotaState {
     if (!raw) return defaultState;
     const parsed = JSON.parse(raw) as DailyQuotaState;
 
-    // Verify integrity hash first
+    // Reset on new calendar day first
+    if (parsed.date !== today) {
+      saveQuotaState(defaultState);
+      return defaultState;
+    }
+
+    // Verify integrity hash; on schema changes or corruption reset cleanly
     const expectedSig = computeIntegritySig(
       parsed.date,
-      parsed.used,
-      parsed.bonusUnlocked,
-      parsed.rewardsClaimed
+      parsed.used ?? 0,
+      parsed.bonusUnlocked ?? 0,
+      parsed.rewardsClaimed ?? 0
     );
     if (parsed.sig !== expectedSig) {
-      const penalized: DailyQuotaState = {
-        date: today,
-        used: DAILY_FREE_LIMIT,
-        bonusUnlocked: 0,
-        rewardsClaimed: MAX_DAILY_REWARDS,
-        lastUpdatedMs: nowMs,
-        sig: computeIntegritySig(today, DAILY_FREE_LIMIT, 0, MAX_DAILY_REWARDS),
-      };
-      saveQuotaState(penalized);
-      return penalized;
+      saveQuotaState(defaultState);
+      return defaultState;
     }
 
     // Guard against backward system clock rollback (> 2 hours backward)
     if (parsed.lastUpdatedMs && nowMs < parsed.lastUpdatedMs - 2 * 3600 * 1000) {
       return parsed;
-    }
-
-    // Reset on new calendar day
-    if (parsed.date !== today) {
-      saveQuotaState(defaultState);
-      return defaultState;
     }
 
     return parsed;

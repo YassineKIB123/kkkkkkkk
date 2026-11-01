@@ -103,13 +103,13 @@ export default async function LocalizedPseoPage({ params }: PageProps) {
             "@type": "ListItem",
             position: 1,
             name: "Home",
-            item: `${BASE_SITE_URL}${prefix}`,
+            item: BASE_SITE_URL,
           },
           {
             "@type": "ListItem",
             position: 2,
             name: page.baseSlug.replace(/-/g, " "),
-            item: `${BASE_SITE_URL}${prefix}/tools/${page.baseSlug}`,
+            item: `${BASE_SITE_URL}${prefix}/${page.baseSlug}`,
           },
           {
             "@type": "ListItem",

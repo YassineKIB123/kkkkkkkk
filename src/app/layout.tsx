@@ -11,6 +11,7 @@ const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL || "https://iknowapdf.lol";
 const ADSENSE_ID =
   process.env.NEXT_PUBLIC_ADSENSE_ID || "ca-pub-5152878593494077";
+const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_ID;
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -101,60 +102,23 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <meta name="monetag" content="0fa62c1f42aa680885161bfa1a64062d" />
-        {/* Single unified, CWV-friendly Monetag loader that strictly respects Pro & 7-Day Pass status */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                function hasActiveProPass() {
-                  try {
-                    var until = localStorage.getItem("iknowapdf_pro_until");
-                    if (until) {
-                      if (Number(until) > Date.now()) return true;
-                      localStorage.removeItem("iknowapdf_pro_until");
-                      localStorage.removeItem("iknowapdf_ad_free");
-                      return false;
-                    }
-                    return localStorage.getItem("iknowapdf_ad_free") === "true";
-                  } catch (e) {
-                    return false;
-                  }
-                }
-                if (hasActiveProPass()) return;
-                function injectMonetag() {
-                  if (hasActiveProPass()) return;
-                  var target = [document.documentElement, document.body].filter(Boolean).pop();
-                  if (!target) return;
-                  var s1 = document.createElement("script");
-                  s1.dataset.zone = "12161931";
-                  s1.setAttribute("data-cfasync", "false");
-                  s1.async = true;
-                  s1.src = "https://nap5k.com/tag.min.js";
-                  target.appendChild(s1);
-
-                  var s2 = document.createElement("script");
-                  s2.dataset.zone = "12161653";
-                  s2.setAttribute("data-cfasync", "false");
-                  s2.async = true;
-                  s2.src = "https://n6wxm.com/vignette.min.js";
-                  target.appendChild(s2);
-                }
-                if ("requestIdleCallback" in window) {
-                  window.requestIdleCallback(injectMonetag, { timeout: 1800 });
-                } else {
-                  window.addEventListener("load", function() {
-                    setTimeout(injectMonetag, 800);
-                  });
-                }
-              })();
-            `,
-          }}
-        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
+        {GA_MEASUREMENT_ID && (
+          <>
+            <script
+              async
+              src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
+            />
+            <script
+              dangerouslySetInnerHTML={{
+                __html: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${GA_MEASUREMENT_ID}');`,
+              }}
+            />
+          </>
+        )}
         {ADSENSE_ID && (
           <script
             async

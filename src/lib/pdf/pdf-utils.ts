@@ -823,7 +823,5 @@ export async function embedSignatureIntoPDF(
 export function flushPendingDownloadAfterUnlock(): void {
   const pending = consumePendingDownload();
   if (!pending) return;
-  if (consumeOperationQuota()) {
-    downloadBlob(pending.data, pending.fileName, pending.mimeType);
-  }
+  downloadBlob(pending.data, pending.fileName, pending.mimeType);
 }

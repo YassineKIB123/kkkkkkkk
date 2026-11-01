@@ -193,19 +193,7 @@
     <priority>0.90</priority>
   </url>
   <url>
-    <loc>https://iknowapdf.lol/compress-pdf-to-100kb</loc>
-    <lastmod>2026-11-01</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.90</priority>
-  </url>
-  <url>
     <loc>https://iknowapdf.lol/compress-pdf-under-100kb</loc>
-    <lastmod>2026-11-01</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.90</priority>
-  </url>
-  <url>
-    <loc>https://iknowapdf.lol/compress-pdf-to-200kb</loc>
     <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
@@ -236,12 +224,6 @@
   </url>
   <url>
     <loc>https://iknowapdf.lol/compress-pdf-under-2mb</loc>
-    <lastmod>2026-11-01</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.90</priority>
-  </url>
-  <url>
-    <loc>https://iknowapdf.lol/compress-pdf-without-losing-quality</loc>
     <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>

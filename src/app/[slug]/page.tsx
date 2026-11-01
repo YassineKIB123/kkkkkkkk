@@ -7,6 +7,7 @@ import {
   getPseoPage,
   BASE_SITE_URL,
   isIndexedPseoSlug,
+  getCanonicalToolPath,
 } from "@/lib/pseo/pseo-data";
 import { PseoToolRenderer } from "@/components/pseo/PseoToolRenderer";
 import { ToolLayout } from "@/components/tools/ToolLayout";
@@ -24,6 +25,9 @@ const DEDICATED_TOOL_CANONICAL_MAP: Record<string, string> = {
   "scan-pdf": "/tools/scan",
   "watermark-pdf": "/tools/watermark-pdf",
   "sanitize-pdf": "/tools/sanitize-pdf",
+  "compress-pdf-to-100kb": "/compress-pdf-under-100kb",
+  "compress-pdf-to-200kb": "/compress-pdf-under-200kb",
+  "compress-pdf-without-losing-quality": "/compress-pdf-lossless-quality",
 };
 
 interface PageProps {
@@ -45,7 +49,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const url = `${BASE_SITE_URL}/${slug}`;
   const dedicatedPath = DEDICATED_TOOL_CANONICAL_MAP[slug];
   const canonicalUrl = dedicatedPath ? `${BASE_SITE_URL}${dedicatedPath}` : url;
-  const shouldIndex = isIndexedPseoSlug(slug);
+  const isDuplicateSlug = Boolean(
+    slug === "compress-pdf-to-100kb" ||
+    slug === "compress-pdf-to-200kb" ||
+    slug === "compress-pdf-without-losing-quality"
+  );
+  const shouldIndex = isIndexedPseoSlug(slug) && !isDuplicateSlug;
 
   return {
     title: {
@@ -59,12 +68,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     alternates: {
       canonical: canonicalUrl,
       languages: {
-        en: url,
+        en: canonicalUrl,
         fr: `${BASE_SITE_URL}/fr/${slug}`,
         es: `${BASE_SITE_URL}/es/${slug}`,
         ru: `${BASE_SITE_URL}/ru/${slug}`,
         ar: `${BASE_SITE_URL}/ar/${slug}`,
-        "x-default": url,
+        "x-default": canonicalUrl,
       },
     },
     openGraph: {
@@ -117,7 +126,7 @@ export default async function PseoSlugPage({ params }: PageProps) {
             "@type": "ListItem",
             position: 2,
             name: page.baseSlug.replace(/-/g, " "),
-            item: `${BASE_SITE_URL}/tools/${page.baseSlug}`,
+            item: `${BASE_SITE_URL}${getCanonicalToolPath(page.baseSlug)}`,
           },
           {
             "@type": "ListItem",

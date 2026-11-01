@@ -857,17 +857,14 @@ export const INDEXED_PSEO_SLUGS = [
   "pdf-to-text",
   "text-to-pdf",
 
-  // 2. High-Volume Target-Size Compression Cluster (12)
+  // 2. High-Volume Target-Size Compression Cluster (Clean canonical list)
   "compress-pdf-under-50kb",
-  "compress-pdf-to-100kb",
   "compress-pdf-under-100kb",
-  "compress-pdf-to-200kb",
   "compress-pdf-under-200kb",
   "compress-pdf-under-300kb",
   "compress-pdf-under-500kb",
   "compress-pdf-under-1mb",
   "compress-pdf-under-2mb",
-  "compress-pdf-without-losing-quality",
   "compress-pdf-lossless-quality",
   "compress-pdf-without-watermark",
 
@@ -1261,6 +1258,28 @@ function getLocalizedFaqs(
   ];
 }
 
+/**
+ * Resolves the exact canonical route path for a base tool.
+ * Distinguishes dedicated /tools/ subpaths, the /tools/scan path, and root-level conversions.
+ */
+export function getCanonicalToolPath(baseSlug: string): string {
+  if (baseSlug === "scan-pdf") return "/tools/scan";
+  const dedicatedSubdirTools = new Set([
+    "compress-pdf",
+    "merge-pdf",
+    "split-pdf",
+    "rotate-pdf",
+    "sign-pdf",
+    "edit-pdf",
+    "watermark-pdf",
+    "sanitize-pdf",
+  ]);
+  if (dedicatedSubdirTools.has(baseSlug)) {
+    return `/tools/${baseSlug}`;
+  }
+  return `/${baseSlug}`;
+}
+
 function buildPageRecord(
   tool: (typeof CORE_TOOLS)[0],
   mod: PseoModifier | undefined,
@@ -1298,7 +1317,7 @@ function buildPageRecord(
   const relatedSlugs = CORE_TOOLS.filter((t) => t.type !== tool.type)
     .slice(0, 8)
     .map((t) => ({
-      href: `${prefix}/tools/${t.baseSlug}`,
+      href: locale === "en" ? getCanonicalToolPath(t.baseSlug) : `/${locale}/${t.baseSlug}`,
       label: t.names[locale],
     }));
 
@@ -1311,24 +1330,16 @@ function buildPageRecord(
       label: `${toolName} ${m[locale]}`,
     }));
 
-  const otherVariations = compatibleMods
-    .filter((m) => m.id !== mod?.id && !isIndexedPseoSlug(buildPseoSlug(tool.baseSlug, m.id)))
-    .map((m) => ({
-      href: `${prefix}/${buildPseoSlug(tool.baseSlug, m.id)}`,
-      label: `${toolName} ${m[locale]}`,
-    }));
-
   const variationLinks = [
     ...(mod
       ? [
           {
-            href: `${prefix}/tools/${tool.baseSlug}`,
+            href: locale === "en" ? getCanonicalToolPath(tool.baseSlug) : `/${locale}/${tool.baseSlug}`,
             label: toolName,
           },
         ]
       : []),
     ...indexedVariations,
-    ...otherVariations,
   ].slice(0, 16);
 
   return {

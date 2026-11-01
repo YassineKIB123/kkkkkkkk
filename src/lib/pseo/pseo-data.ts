@@ -582,6 +582,17 @@ export const MODIFIERS: PseoModifier[] = [
     category: "use-case",
   },
   {
+    id: "under-50kb",
+    en: "to Under 50 KB",
+    fr: "à Moins de 50 Ko",
+    es: "a Menos de 50 KB",
+    ru: "до 50 КБ",
+    ar: "إلى أقل من 50 كيلوبايت",
+    category: "size",
+    targetKb: 50,
+    compatibleTools: ["compress"],
+  },
+  {
     id: "to-100kb",
     en: "to 100 KB",
     fr: "\u00e0 100 Ko",
@@ -623,6 +634,17 @@ export const MODIFIERS: PseoModifier[] = [
     ar: "إلى أقل من 200 كيلوبايت",
     category: "size",
     targetKb: 200,
+    compatibleTools: ["compress", "scan", "jpg-to-pdf", "png-to-pdf", "word-to-pdf"],
+  },
+  {
+    id: "under-300kb",
+    en: "to Under 300 KB",
+    fr: "à Moins de 300 Ko",
+    es: "a Menos de 300 KB",
+    ru: "до 300 КБ",
+    ar: "إلى أقل من 300 كيلوبايت",
+    category: "size",
+    targetKb: 300,
     compatibleTools: ["compress", "scan", "jpg-to-pdf", "png-to-pdf", "word-to-pdf"],
   },
   {
@@ -742,6 +764,16 @@ export const MODIFIERS: PseoModifier[] = [
     compatibleTools: ["compress", "merge", "split", "rotate", "jpg-to-pdf", "png-to-pdf", "pdf-to-jpg", "pdf-to-png"],
   },
   {
+    id: "without-losing-quality",
+    en: "Without Losing Quality",
+    fr: "Sans Perte de Qualité",
+    es: "Sin Perder Calidad",
+    ru: "без потери качества",
+    ar: "بدون فقدان الجودة",
+    category: "quality",
+    compatibleTools: ["compress", "merge", "split", "rotate", "jpg-to-pdf", "png-to-pdf", "pdf-to-jpg", "pdf-to-png"],
+  },
+  {
     id: "editable-text",
     en: "with Editable Formatting",
     fr: "avec Formatage Modifiable",
@@ -808,6 +840,112 @@ export function isModifierCompatible(toolType: ToolType, mod: PseoModifier): boo
 export function buildPseoSlug(baseSlug: string, modifierId?: string): string {
   if (!modifierId) return baseSlug;
   return `${baseSlug}-${modifierId}`;
+}
+
+export const INDEXED_PSEO_SLUGS = [
+  // 1. Core Format Conversion Cluster (12)
+  "pdf-to-word",
+  "word-to-pdf",
+  "pdf-to-excel",
+  "excel-to-pdf",
+  "pdf-to-powerpoint",
+  "powerpoint-to-pdf",
+  "jpg-to-pdf",
+  "pdf-to-jpg",
+  "png-to-pdf",
+  "pdf-to-png",
+  "pdf-to-text",
+  "text-to-pdf",
+
+  // 2. High-Volume Target-Size Compression Cluster (12)
+  "compress-pdf-under-50kb",
+  "compress-pdf-to-100kb",
+  "compress-pdf-under-100kb",
+  "compress-pdf-to-200kb",
+  "compress-pdf-under-200kb",
+  "compress-pdf-under-300kb",
+  "compress-pdf-under-500kb",
+  "compress-pdf-under-1mb",
+  "compress-pdf-under-2mb",
+  "compress-pdf-without-losing-quality",
+  "compress-pdf-lossless-quality",
+  "compress-pdf-without-watermark",
+
+  // 3. Portal, Job, & Official Documentation Compress Cluster (12)
+  "compress-pdf-for-email",
+  "compress-pdf-for-passports-and-visas",
+  "compress-pdf-for-job-applications",
+  "compress-pdf-for-court-filings",
+  "compress-pdf-for-scholarships",
+  "compress-pdf-for-invoices",
+  "compress-pdf-for-bank-statements",
+  "compress-pdf-for-tax-forms",
+  "compress-pdf-for-students",
+  "compress-pdf-for-teachers",
+  "compress-pdf-for-lawyers",
+  "compress-pdf-for-real-estate",
+
+  // 4. Merge PDF Use Cases & Platforms (9)
+  "merge-pdf-for-lawyers",
+  "merge-pdf-for-bank-statements",
+  "merge-pdf-for-tax-forms",
+  "merge-pdf-for-job-applications",
+  "merge-pdf-for-court-filings",
+  "merge-pdf-without-watermark",
+  "merge-pdf-lossless-quality",
+  "merge-pdf-on-mac",
+  "merge-pdf-on-iphone",
+
+  // 5. Sign PDF Use Cases & Devices (9)
+  "sign-pdf-for-contracts",
+  "sign-pdf-for-real-estate",
+  "sign-pdf-for-job-applications",
+  "sign-pdf-for-court-filings",
+  "sign-pdf-without-watermark",
+  "sign-pdf-on-iphone",
+  "sign-pdf-on-mac",
+  "sign-pdf-on-windows",
+  "sign-pdf-on-android",
+
+  // 6. Edit PDF Use Cases & Platforms (9)
+  "edit-pdf-for-resumes",
+  "edit-pdf-for-job-applications",
+  "edit-pdf-for-tax-forms",
+  "edit-pdf-without-watermark",
+  "edit-pdf-editable-text",
+  "edit-pdf-on-mac",
+  "edit-pdf-on-windows",
+  "edit-pdf-on-iphone",
+  "edit-pdf-on-android",
+
+  // 7. Split & Rotate PDF (8)
+  "split-pdf-for-email",
+  "split-pdf-for-passports-and-visas",
+  "split-pdf-without-watermark",
+  "split-pdf-lossless-quality",
+  "rotate-pdf-on-mac",
+  "rotate-pdf-on-windows",
+  "rotate-pdf-on-iphone",
+  "rotate-pdf-without-watermark",
+
+  // 8. Scan & Sanitize (Redact) PDF (11)
+  "scan-pdf-for-invoices",
+  "scan-pdf-for-passports-and-visas",
+  "scan-pdf-high-resolution-300dpi",
+  "scan-pdf-without-watermark",
+  "scan-pdf-on-iphone",
+  "scan-pdf-on-android",
+  "sanitize-pdf-for-court-filings",
+  "sanitize-pdf-for-lawyers",
+  "sanitize-pdf-for-medical-records",
+  "sanitize-pdf-for-bank-statements",
+  "sanitize-pdf-for-tax-forms",
+] as const;
+
+export const INDEXED_PSEO_SLUG_SET = new Set<string>(INDEXED_PSEO_SLUGS);
+
+export function isIndexedPseoSlug(slug: string): boolean {
+  return INDEXED_PSEO_SLUG_SET.has(slug);
 }
 
 // Module-level memoization caches to prevent O(N^2) rebuilds during static export
@@ -1160,29 +1298,38 @@ function buildPageRecord(
   const relatedSlugs = CORE_TOOLS.filter((t) => t.type !== tool.type)
     .slice(0, 8)
     .map((t) => ({
-      href: `${prefix}/${t.baseSlug}`,
+      href: `${prefix}/tools/${t.baseSlug}`,
       label: t.names[locale],
     }));
 
   // Build internal links to compatible modifier variations for this tool so zero pSEO pages are orphaned
   const compatibleMods = MODIFIERS.filter((m) => isModifierCompatible(tool.type, m));
+  const indexedVariations = compatibleMods
+    .filter((m) => m.id !== mod?.id && isIndexedPseoSlug(buildPseoSlug(tool.baseSlug, m.id)))
+    .map((m) => ({
+      href: `${prefix}/${buildPseoSlug(tool.baseSlug, m.id)}`,
+      label: `${toolName} ${m[locale]}`,
+    }));
+
+  const otherVariations = compatibleMods
+    .filter((m) => m.id !== mod?.id && !isIndexedPseoSlug(buildPseoSlug(tool.baseSlug, m.id)))
+    .map((m) => ({
+      href: `${prefix}/${buildPseoSlug(tool.baseSlug, m.id)}`,
+      label: `${toolName} ${m[locale]}`,
+    }));
+
   const variationLinks = [
     ...(mod
       ? [
           {
-            href: `${prefix}/${tool.baseSlug}`,
+            href: `${prefix}/tools/${tool.baseSlug}`,
             label: toolName,
           },
         ]
       : []),
-    ...compatibleMods
-      .filter((m) => m.id !== mod?.id)
-      .slice(0, 14)
-      .map((m) => ({
-        href: `${prefix}/${buildPseoSlug(tool.baseSlug, m.id)}`,
-        label: `${toolName} ${m[locale]}`,
-      })),
-  ];
+    ...indexedVariations,
+    ...otherVariations,
+  ].slice(0, 16);
 
   return {
     slug,

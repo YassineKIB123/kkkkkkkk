@@ -6,30 +6,13 @@ import {
   generateAllPseoPages,
   getPseoPage,
   BASE_SITE_URL,
+  isIndexedPseoSlug,
 } from "@/lib/pseo/pseo-data";
 import { PseoToolRenderer } from "@/components/pseo/PseoToolRenderer";
 import { ToolLayout } from "@/components/tools/ToolLayout";
 import { ArrowRight, Sparkles } from "lucide-react";
 
 export const dynamic = "force-static";
-
-const CORE_INDEXED_SLUGS = new Set([
-  "pdf-to-word",
-  "word-to-pdf",
-  "pdf-to-excel",
-  "excel-to-pdf",
-  "pdf-to-powerpoint",
-  "powerpoint-to-pdf",
-  "jpg-to-pdf",
-  "pdf-to-jpg",
-  "png-to-pdf",
-  "pdf-to-png",
-  "pdf-to-text",
-  "text-to-pdf",
-  "compress-pdf-under-100kb",
-  "compress-pdf-under-200kb",
-  "compress-pdf-under-1mb",
-]);
 
 const DEDICATED_TOOL_CANONICAL_MAP: Record<string, string> = {
   "edit-pdf": "/tools/edit-pdf",
@@ -41,8 +24,6 @@ const DEDICATED_TOOL_CANONICAL_MAP: Record<string, string> = {
   "scan-pdf": "/tools/scan",
   "watermark-pdf": "/tools/watermark-pdf",
   "sanitize-pdf": "/tools/sanitize-pdf",
-  "compress-pdf-to-100kb": "/compress-pdf-under-100kb",
-  "compress-pdf-to-200kb": "/compress-pdf-under-200kb",
 };
 
 interface PageProps {
@@ -64,7 +45,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const url = `${BASE_SITE_URL}/${slug}`;
   const dedicatedPath = DEDICATED_TOOL_CANONICAL_MAP[slug];
   const canonicalUrl = dedicatedPath ? `${BASE_SITE_URL}${dedicatedPath}` : url;
-  const shouldIndex = CORE_INDEXED_SLUGS.has(slug);
+  const shouldIndex = isIndexedPseoSlug(slug);
 
   return {
     title: {
@@ -102,41 +83,69 @@ export default async function PseoSlugPage({ params }: PageProps) {
 
   if (!page) notFound();
 
-  const jsonLdHowTo = {
+  const schemaGraph = {
     "@context": "https://schema.org",
-    "@type": "HowTo",
-    name: page.h1,
-    description: page.metaDescription,
-    step: page.steps.map((s, idx) => ({
-      "@type": "HowToStep",
-      position: idx + 1,
-      name: s.title,
-      text: s.desc,
-    })),
-  };
-
-  const jsonLdFaq = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: page.faqs.map((f) => ({
-      "@type": "Question",
-      name: f.q,
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: f.a,
+    "@graph": [
+      {
+        "@type": "SoftwareApplication",
+        name: page.h1,
+        applicationCategory: "BusinessApplication",
+        operatingSystem: "Windows, macOS, Linux, iOS, Android",
+        offers: {
+          "@type": "Offer",
+          price: "0",
+          priceCurrency: "USD",
+        },
+        description: page.metaDescription,
+        featureList: [
+          "100% Client-Side Privacy in Browser RAM",
+          "Zero Server Uploads",
+          "No Watermarks",
+          "ISO 32000-1 Compliant Output",
+        ],
       },
-    })),
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          {
+            "@type": "ListItem",
+            position: 1,
+            name: "Home",
+            item: BASE_SITE_URL,
+          },
+          {
+            "@type": "ListItem",
+            position: 2,
+            name: page.baseSlug.replace(/-/g, " "),
+            item: `${BASE_SITE_URL}/tools/${page.baseSlug}`,
+          },
+          {
+            "@type": "ListItem",
+            position: 3,
+            name: page.h1,
+            item: `${BASE_SITE_URL}/${page.slug}`,
+          },
+        ],
+      },
+      {
+        "@type": "FAQPage",
+        mainEntity: page.faqs.map((f) => ({
+          "@type": "Question",
+          name: f.q,
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: f.a,
+          },
+        })),
+      },
+    ],
   };
 
   return (
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdHowTo) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdFaq) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaGraph) }}
       />
 
       <ToolLayout

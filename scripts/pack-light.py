@@ -15,10 +15,32 @@ excluded_dirs = {"node_modules", ".git", ".next"}
 # - core indexed SEO pages
 # - static js/css bundles
 core_seo_slugs = {
-    "pdf-to-word", "word-to-pdf", "pdf-to-excel", "excel-to-pdf",
-    "pdf-to-powerpoint", "powerpoint-to-pdf", "jpg-to-pdf", "pdf-to-jpg",
-    "png-to-pdf", "pdf-to-png", "pdf-to-text", "text-to-pdf",
-    "compress-pdf-under-100kb", "compress-pdf-under-200kb", "compress-pdf-under-1mb"
+    "pdf-to-word", "word-to-pdf", "pdf-to-excel", "excel-to-pdf", "pdf-to-powerpoint",
+    "powerpoint-to-pdf", "jpg-to-pdf", "pdf-to-jpg", "png-to-pdf", "pdf-to-png",
+    "pdf-to-text", "text-to-pdf", "compress-pdf-under-50kb", "compress-pdf-to-100kb",
+    "compress-pdf-under-100kb", "compress-pdf-to-200kb", "compress-pdf-under-200kb",
+    "compress-pdf-under-300kb", "compress-pdf-under-500kb", "compress-pdf-under-1mb",
+    "compress-pdf-under-2mb", "compress-pdf-without-losing-quality", "compress-pdf-lossless-quality",
+    "compress-pdf-without-watermark", "compress-pdf-for-email", "compress-pdf-for-passports-and-visas",
+    "compress-pdf-for-job-applications", "compress-pdf-for-court-filings", "compress-pdf-for-scholarships",
+    "compress-pdf-for-invoices", "compress-pdf-for-bank-statements", "compress-pdf-for-tax-forms",
+    "compress-pdf-for-students", "compress-pdf-for-teachers", "compress-pdf-for-lawyers",
+    "compress-pdf-for-real-estate", "merge-pdf-for-lawyers", "merge-pdf-for-bank-statements",
+    "merge-pdf-for-tax-forms", "merge-pdf-for-job-applications", "merge-pdf-for-court-filings",
+    "merge-pdf-without-watermark", "merge-pdf-lossless-quality", "merge-pdf-on-mac",
+    "merge-pdf-on-iphone", "sign-pdf-for-contracts", "sign-pdf-for-real-estate",
+    "sign-pdf-for-job-applications", "sign-pdf-for-court-filings", "sign-pdf-without-watermark",
+    "sign-pdf-on-iphone", "sign-pdf-on-mac", "sign-pdf-on-windows", "sign-pdf-on-android",
+    "edit-pdf-for-resumes", "edit-pdf-for-job-applications", "edit-pdf-for-tax-forms",
+    "edit-pdf-without-watermark", "edit-pdf-editable-text", "edit-pdf-on-mac",
+    "edit-pdf-on-windows", "edit-pdf-on-iphone", "edit-pdf-on-android",
+    "split-pdf-for-email", "split-pdf-for-passports-and-visas", "split-pdf-without-watermark",
+    "split-pdf-lossless-quality", "rotate-pdf-on-mac", "rotate-pdf-on-windows",
+    "rotate-pdf-on-iphone", "rotate-pdf-without-watermark", "scan-pdf-for-invoices",
+    "scan-pdf-for-passports-and-visas", "scan-pdf-high-resolution-300dpi",
+    "scan-pdf-without-watermark", "scan-pdf-on-iphone", "scan-pdf-on-android",
+    "sanitize-pdf-for-court-filings", "sanitize-pdf-for-lawyers", "sanitize-pdf-for-medical-records",
+    "sanitize-pdf-for-bank-statements", "sanitize-pdf-for-tax-forms"
 }
 
 def should_include_out_file(rel_out_path):

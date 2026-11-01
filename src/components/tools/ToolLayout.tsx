@@ -31,12 +31,14 @@ import {
   Zap,
   Check,
   Heart,
+  BookOpen,
 } from "lucide-react";
 import React, { useState, useEffect, useRef, createContext, useContext } from "react";
 import { AdBanner } from "@/components/ads/AdBanner";
 import { BuyCoffeeButton } from "@/components/common/BuyCoffeeModal";
 import { useLanguage } from "@/context/LanguageContext";
 import { Language, Translations } from "@/lib/i18n/translations";
+import { getArticlesForTool } from "@/lib/blog/blog-utils";
 
 const EmbeddedToolContext = createContext<boolean>(false);
 
@@ -118,6 +120,23 @@ function getToolMeta(
   }
 }
 
+function inferToolIdFromPathname(pathname: string): SupportedToolId | undefined {
+  const clean = pathname.replace(/^\/(?:fr|es|ru|ar)\//, "/").toLowerCase();
+  if (clean.includes("compress")) return "compress";
+  if (clean.includes("merge")) return "merge";
+  if (clean.includes("split")) return "split";
+  if (clean.includes("rotate")) return "rotate";
+  if (clean.includes("sign")) return "sign";
+  if (clean.includes("scan")) return "scan";
+  if (clean.includes("sanitize")) return "sanitize";
+  if (clean.includes("watermark")) return "watermark";
+  if (clean.includes("images-to-pdf") || clean.includes("jpg-to-pdf") || clean.includes("png-to-pdf")) return "imagesToPdf";
+  if (clean.includes("pdf-to-images") || clean.includes("pdf-to-jpg") || clean.includes("pdf-to-png")) return "pdfToImages";
+  if (clean.includes("convert") || clean.includes("-to-")) return "convert";
+  if (clean.includes("edit")) return "edit";
+  return undefined;
+}
+
 export function ToolLayout({
   toolId,
   title,
@@ -157,6 +176,9 @@ export function ToolLayout({
   const { title: localizedTitle, description: localizedDesc } = toolId
     ? getToolMeta(toolId, t, title, description)
     : { title, description };
+
+  const effectiveToolId = toolId || inferToolIdFromPathname(pathname);
+  const relatedGuides = getArticlesForTool(effectiveToolId, 3);
 
   useEffect(() => {
     if (isEmbedded) return;
@@ -740,6 +762,47 @@ export function ToolLayout({
               })}
             </div>
           </section>
+
+          {/* Related Engineering & Security Guides */}
+          {relatedGuides.length > 0 && (
+            <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-6 sm:p-8 shadow-2xs dark:border-slate-800 dark:bg-slate-900/50">
+              <div className="flex items-center gap-2 mb-6">
+                <BookOpen className="h-5 w-5 text-rose-600" />
+                <h2 className="text-lg font-extrabold text-slate-900 dark:text-white">
+                  Related Engineering & Security Guides
+                </h2>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {relatedGuides.map((guide) => (
+                  <Link
+                    key={guide.slug}
+                    href={`/blog/${guide.slug}`}
+                    className="group flex flex-col justify-between rounded-xl border border-slate-100 bg-slate-50/70 p-4 hover:border-rose-300 hover:bg-white dark:border-slate-800 dark:bg-slate-950 dark:hover:border-rose-900 transition-all shadow-2xs"
+                  >
+                    <div className="space-y-2">
+                      <span className="inline-flex items-center rounded-md bg-rose-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-rose-600 dark:bg-rose-950/60 dark:text-rose-400">
+                        {guide.category}
+                      </span>
+                      <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white group-hover:text-rose-600 transition-colors line-clamp-2">
+                        {guide.title}
+                      </h3>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                        {guide.description}
+                      </p>
+                    </div>
+
+                    <div className="mt-4 flex items-center justify-between text-[11px] text-slate-400 font-medium pt-3 border-t border-slate-100 dark:border-slate-850">
+                      <span>{guide.publishedAt}</span>
+                      <span className="flex items-center gap-1 text-rose-600 font-semibold group-hover:translate-x-0.5 transition-transform">
+                        Read Guide <ChevronRight className="h-3 w-3" />
+                      </span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
         </main>
       </div>
 

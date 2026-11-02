@@ -169,22 +169,7 @@ export function getRemainingOperations(): {
 }
 
 export function consumeOperationQuota(): boolean {
-  if (isUserPro()) return true;
-
-  const state = getQuotaState();
-  const totalAllowed = DAILY_FREE_LIMIT + state.bonusUnlocked;
-
-  if (state.used >= totalAllowed) {
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(new CustomEvent("iknowapdf_open_paywall"));
-    }
-    return false;
-  }
-
-  saveQuotaState({
-    ...state,
-    used: state.used + 1,
-  });
+  // Unrestricted operation quota to preserve returning visitor retention
   return true;
 }
 

@@ -3,7 +3,6 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { LanguageProvider } from "@/context/LanguageContext";
 import { CookieConsent } from "@/components/common/CookieConsent";
-import { UsageLimitModal } from "@/components/common/UsageLimitModal";
 
 const inter = Inter({ subsets: ["latin", "cyrillic"] });
 
@@ -133,7 +132,6 @@ export default function RootLayout({
         <LanguageProvider>
           {children}
           <CookieConsent />
-          <UsageLimitModal />
         </LanguageProvider>
       </body>
     </html>

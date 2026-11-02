@@ -1,7 +1,25 @@
 User-agent: *
 Allow: /
 
+User-agent: Googlebot
+Allow: /
+
 User-agent: Mediapartners-Google
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Yandex
+Allow: /
+
+User-agent: Applebot
+Allow: /
+
+User-agent: DuckDuckBot
+Allow: /
+
+User-agent: Baiduspider
 Allow: /
 
 Sitemap: https://iknowapdf.lol/sitemap.xml

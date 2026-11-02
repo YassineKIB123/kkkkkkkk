@@ -19,6 +19,10 @@ export const metadata: Metadata = {
   },
   verification: {
     google: "TX_b_Rg1BBdC31WpXrXvxkBgRWD0LJ2tilIg3Iw9CV0",
+    yandex: process.env.NEXT_PUBLIC_YANDEX_VERIFICATION || undefined,
+    other: {
+      "msvalidate.01": process.env.NEXT_PUBLIC_BING_VERIFICATION || "",
+    },
   },
   title: {
     default: "iKnowAPDF — Free, Fast & 100% Private PDF Tools",

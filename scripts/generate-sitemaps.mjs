@@ -69,6 +69,7 @@ if (fs.existsSync(PSEO_DATA_PATH)) {
   } catch (e) {}
 }
 
+// 1. English pSEO Slugs
 for (const slug of indexedPseoSlugs) {
   CORE_URLS.push({
     loc: `${SITE_URL}/${slug}`,
@@ -77,7 +78,35 @@ for (const slug of indexedPseoSlugs) {
   });
 }
 
-// Dynamically inject blog articles
+// 2. Multilingual Base Tools & pSEO Clusters (French, Spanish, Russian for Yandex, Arabic)
+const LOCALES = ["fr", "es", "ru", "ar"];
+const BASE_TOOL_SLUGS = [
+  "edit-pdf", "compress-pdf", "merge-pdf", "split-pdf", "rotate-pdf",
+  "sign-pdf", "scan-pdf", "watermark-pdf", "sanitize-pdf", "images-to-pdf",
+  "pdf-to-images", "convert"
+];
+
+for (const locale of LOCALES) {
+  // Locale base tools
+  for (const baseSlug of BASE_TOOL_SLUGS) {
+    CORE_URLS.push({
+      loc: `${SITE_URL}/${locale}/${baseSlug}`,
+      priority: "0.88",
+      changefreq: "weekly",
+    });
+  }
+
+  // Locale pSEO slugs
+  for (const slug of indexedPseoSlugs) {
+    CORE_URLS.push({
+      loc: `${SITE_URL}/${locale}/${slug}`,
+      priority: "0.85",
+      changefreq: "weekly",
+    });
+  }
+}
+
+// 3. Dynamically inject blog articles
 if (fs.existsSync(ARTICLES_PATH)) {
   try {
     const raw = fs.readFileSync(ARTICLES_PATH, "utf-8");
@@ -114,8 +143,33 @@ xml += `</urlset>\n`;
 
 // Write both primary sitemap and cache-busting sitemap-main.xml
 fs.writeFileSync(path.join(PUBLIC_DIR, "sitemap.xml"), xml, "utf-8");
-console.log(`Saved clean public/sitemap.xml (${CORE_URLS.length} URLs)`);
+console.log(`Saved clean public/sitemap.xml (${CORE_URLS.length} URLs across Google, Bing, Yandex & Baidu)`);
 
-const robotsTxt = `User-agent: *\nAllow: /\n\nUser-agent: Mediapartners-Google\nAllow: /\n\nSitemap: ${SITE_URL}/sitemap.xml\n`;
+const robotsTxt = `User-agent: *
+Allow: /
+
+User-agent: Googlebot
+Allow: /
+
+User-agent: Mediapartners-Google
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Yandex
+Allow: /
+
+User-agent: Applebot
+Allow: /
+
+User-agent: DuckDuckBot
+Allow: /
+
+User-agent: Baiduspider
+Allow: /
+
+Sitemap: ${SITE_URL}/sitemap.xml
+`;
 fs.writeFileSync(path.join(PUBLIC_DIR, "robots.txt"), robotsTxt, "utf-8");
-console.log("Updated public/robots.txt with authoritative sitemap reference");
+console.log("Updated public/robots.txt with comprehensive multi-engine search crawler directives");

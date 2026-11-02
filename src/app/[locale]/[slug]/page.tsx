@@ -35,7 +35,21 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!page) return {};
 
   const url = `${BASE_SITE_URL}/${locale}/${slug}`;
-  const shouldIndex = isIndexedPseoSlug(slug);
+  const BASE_TOOL_SLUGS = new Set([
+    "edit-pdf",
+    "compress-pdf",
+    "merge-pdf",
+    "split-pdf",
+    "rotate-pdf",
+    "sign-pdf",
+    "scan-pdf",
+    "watermark-pdf",
+    "sanitize-pdf",
+    "images-to-pdf",
+    "pdf-to-images",
+    "convert",
+  ]);
+  const shouldIndex = isIndexedPseoSlug(slug) || BASE_TOOL_SLUGS.has(slug);
 
   return {
     title: {

@@ -54,7 +54,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     slug === "compress-pdf-to-200kb" ||
     slug === "compress-pdf-without-losing-quality"
   );
-  const shouldIndex = isIndexedPseoSlug(slug) && !isDuplicateSlug;
+  const shouldIndex = Boolean(dedicatedPath) || (isIndexedPseoSlug(slug) && !isDuplicateSlug);
 
   return {
     title: {
@@ -67,19 +67,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     },
     alternates: {
       canonical: canonicalUrl,
-      languages: {
-        en: canonicalUrl,
-        fr: `${BASE_SITE_URL}/fr/${slug}`,
-        es: `${BASE_SITE_URL}/es/${slug}`,
-        ru: `${BASE_SITE_URL}/ru/${slug}`,
-        ar: `${BASE_SITE_URL}/ar/${slug}`,
-        "x-default": canonicalUrl,
-      },
     },
     openGraph: {
       title: page.title,
       description: page.metaDescription,
-      url,
+      url: canonicalUrl,
       siteName: "iKnowAPDF",
       type: "website",
     },

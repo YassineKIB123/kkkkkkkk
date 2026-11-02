@@ -419,7 +419,7 @@ export default function PricingPage() {
               <ul className="space-y-3 text-xs text-slate-600 dark:text-slate-300">
                 <li className="flex items-center gap-2.5">
                   <Check className="h-4 w-4 text-emerald-500 shrink-0" />
-                  <span><strong>15 operations</strong> per day (resets at midnight)</span>
+                  <span><strong>Unlimited operations</strong> per day (100% Free Forever)</span>
                 </li>
                 <li className="flex items-center gap-2.5">
                   <Check className="h-4 w-4 text-emerald-500 shrink-0" />

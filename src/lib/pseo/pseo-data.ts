@@ -857,10 +857,75 @@ export const INDEXED_PSEO_SLUGS = [
   "pdf-to-text",
   "text-to-pdf",
 
-  // 2. High-Volume Target-Size Compression Cluster (3)
+  // 2. High-Volume Target-Size & Use-Case Compression Cluster
+  "compress-pdf-under-50kb",
   "compress-pdf-under-100kb",
   "compress-pdf-under-200kb",
+  "compress-pdf-under-300kb",
+  "compress-pdf-under-500kb",
   "compress-pdf-under-1mb",
+  "compress-pdf-under-2mb",
+  "compress-pdf-lossless-quality",
+  "compress-pdf-without-watermark",
+  "compress-pdf-for-email",
+  "compress-pdf-for-passports-and-visas",
+  "compress-pdf-for-job-applications",
+  "compress-pdf-for-court-filings",
+  "compress-pdf-for-scholarships",
+  "compress-pdf-for-invoices",
+  "compress-pdf-for-bank-statements",
+  "compress-pdf-for-tax-forms",
+
+  // 3. Edit PDF Long-Tail Cluster (Your #1 Free Differentiator)
+  "edit-pdf-without-watermark",
+  "edit-pdf-editable-text",
+  "edit-pdf-without-uploading",
+  "edit-pdf-no-file-limit",
+  "edit-pdf-for-resumes",
+  "edit-pdf-for-job-applications",
+  "edit-pdf-for-tax-forms",
+  "edit-pdf-for-contracts",
+  "edit-pdf-on-mac",
+  "edit-pdf-on-windows",
+  "edit-pdf-on-iphone",
+  "edit-pdf-on-android",
+
+  // 4. Scan to PDF & Images to PDF Long-Tail Cluster
+  "scan-pdf-for-invoices",
+  "scan-pdf-for-passports-and-visas",
+  "scan-pdf-high-resolution-300dpi",
+  "scan-pdf-without-watermark",
+  "scan-pdf-on-iphone",
+  "scan-pdf-on-android",
+  "jpg-to-pdf-without-watermark",
+  "jpg-to-pdf-under-100kb",
+  "jpg-to-pdf-under-200kb",
+  "png-to-pdf-without-watermark",
+
+  // 5. Sign, Merge, Split, Rotate & Sanitize High-Intent Cluster
+  "sign-pdf-for-contracts",
+  "sign-pdf-for-real-estate",
+  "sign-pdf-for-job-applications",
+  "sign-pdf-for-court-filings",
+  "sign-pdf-without-watermark",
+  "sign-pdf-without-uploading",
+  "sign-pdf-on-iphone",
+  "sign-pdf-on-mac",
+  "merge-pdf-for-lawyers",
+  "merge-pdf-for-bank-statements",
+  "merge-pdf-for-tax-forms",
+  "merge-pdf-for-court-filings",
+  "merge-pdf-without-watermark",
+  "merge-pdf-no-file-limit",
+  "split-pdf-for-email",
+  "split-pdf-for-passports-and-visas",
+  "split-pdf-without-watermark",
+  "rotate-pdf-without-watermark",
+  "sanitize-pdf-for-court-filings",
+  "sanitize-pdf-for-lawyers",
+  "sanitize-pdf-for-medical-records",
+  "sanitize-pdf-for-bank-statements",
+  "sanitize-pdf-for-tax-forms",
 ] as const;
 
 export const INDEXED_PSEO_SLUG_SET = new Set<string>(INDEXED_PSEO_SLUGS);
@@ -1214,9 +1279,15 @@ function buildPageRecord(
   const modLabel = mod ? ` ${mod[locale]}` : "";
   const actionText = tool.action[locale];
 
-  let title = `${toolName}${modLabel} — Free & 100% Private | iKnowAPDF`;
+  const suffixByCategory =
+    mod?.category === "size"
+      ? "Exact Size Target, Free & No Signup"
+      : mod?.category === "quality"
+        ? "Unlimited, Free & Zero Cloud Uploads"
+        : "Free Online (No Limits or Watermarks)";
+  let title = `${toolName}${modLabel} — ${suffixByCategory} | iKnowAPDF`;
   const h1 = `${toolName}${modLabel}`.trim();
-  let metaDescription = `Free online tool to ${actionText}${modLabel}. 100% private client-side processing directly in your browser. Files never leave your device.`;
+  let metaDescription = `Free online tool to ${actionText}${modLabel} with zero daily task limits, no watermarks, and no signup. 100% client-side processing in your browser memory—files never leave your device.`;
 
   if (locale === "fr") {
     title = `${toolName}${modLabel} — Gratuit & 100% Privé | iKnowAPDF`;

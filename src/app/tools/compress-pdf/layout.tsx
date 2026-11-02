@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Compress PDF Online — Reduce PDF File Size Free & 100% Private",
+  title: "Compress PDF Online Free — Reduce PDF Size Under 100KB, 200KB or 1MB",
   description:
-    "Compress and reduce PDF file size online under 100kb, 200kb, or 1MB while preserving document clarity. 100% private in-browser WebAssembly processing.",
+    "Shrink PDF file size online for free without losing quality. Auto-tuned presets for under 100KB, 200KB, or 1MB portal uploads—100% private in-browser WebAssembly compression.",
   alternates: {
     canonical: "https://iknowapdf.lol/tools/compress-pdf",
   },
   openGraph: {
-    title: "Compress PDF Online — Free & 100% Private | iKnowAPDF",
+    title: "Compress PDF Online Free — Under 100KB / 200KB / 1MB | iKnowAPDF",
     description:
       "Reduce PDF file size without sacrificing clarity. Extreme, Recommended, and Lossless compression directly in your browser.",
     url: "https://iknowapdf.lol/tools/compress-pdf",

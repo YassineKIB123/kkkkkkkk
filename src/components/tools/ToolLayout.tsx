@@ -173,9 +173,10 @@ export function ToolLayout({
   const langDropdownRef = useRef<HTMLDivElement>(null);
   const megaMenuRef = useRef<HTMLDivElement>(null);
 
-  const { title: localizedTitle, description: localizedDesc } = toolId
-    ? getToolMeta(toolId, t, title, description)
-    : { title, description };
+  const { title: localizedTitle, description: localizedDesc } =
+    toolId && language !== "EN"
+      ? getToolMeta(toolId, t, title, description)
+      : { title, description };
 
   const effectiveToolId = toolId || inferToolIdFromPathname(pathname);
   const relatedGuides = getArticlesForTool(effectiveToolId, 3);

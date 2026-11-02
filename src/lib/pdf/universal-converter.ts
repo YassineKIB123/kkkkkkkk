@@ -281,8 +281,27 @@ export async function wordToPDF(file: File): Promise<Uint8Array> {
   }
 
   const arrayBuffer = await file.arrayBuffer();
-  const { value: rawText } = await mammothLib.extractRawText({ arrayBuffer });
+  if (typeof mammothLib.convertToHtml === "function") {
+    const { value: html } = await mammothLib.convertToHtml({ arrayBuffer });
+    const structuredText = html
+      .replace(/<h[1-3][^>]*>(.*?)<\/h[1-3]>/gi, "\n# $1\n")
+      .replace(/<li[^>]*>(.*?)<\/li>/gi, "\n• $1")
+      .replace(/<\/p>|<\/div>|<\/tr>|<br\s*\/?>/gi, "\n")
+      .replace(/<\/td>|<\/th>/gi, "  |  ")
+      .replace(/<[^>]+>/g, "")
+      .replace(/&nbsp;/g, " ")
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
+    const textFile = new File([structuredText], file.name.replace(/\.docx?$/i, ".txt"), {
+      type: "text/plain",
+    });
+    return await textToPDF(textFile);
+  }
 
+  const { value: rawText } = await mammothLib.extractRawText({ arrayBuffer });
   const textFile = new File([rawText], file.name.replace(/\.docx?$/i, ".txt"), {
     type: "text/plain",
   });

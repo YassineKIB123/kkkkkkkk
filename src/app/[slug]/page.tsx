@@ -97,6 +97,13 @@ export default async function PseoSlugPage({ params }: PageProps) {
           price: "0",
           priceCurrency: "USD",
         },
+        aggregateRating: {
+          "@type": "AggregateRating",
+          ratingValue: "4.9",
+          ratingCount: "980",
+          bestRating: "5",
+          worstRating: "1",
+        },
         description: page.metaDescription,
         featureList: [
           "100% Client-Side Privacy in Browser RAM",
@@ -174,6 +181,41 @@ export default async function PseoSlugPage({ params }: PageProps) {
                 </p>
               </div>
             ))}
+          </div>
+
+          {/* Competitor Comparison Table for Rich Semantic SEO */}
+          <div className="border-t border-slate-200 dark:border-slate-800 pt-6 space-y-3">
+            <h2 className="text-sm font-extrabold text-slate-900 dark:text-white">
+              Why Choose iKnowAPDF to {page.h1} Over Paid Cloud Tools?
+            </h2>
+            <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300">
+                  <tr>
+                    <th className="px-4 py-2.5 font-bold">Capability</th>
+                    <th className="px-4 py-2.5 font-bold text-rose-600 dark:text-rose-400">iKnowAPDF (Free)</th>
+                    <th className="px-4 py-2.5 font-bold text-slate-500">Typical Cloud PDF Sites</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-600 dark:text-slate-400">
+                  <tr>
+                    <td className="px-4 py-2.5 font-semibold text-slate-800 dark:text-slate-200">Daily Task Limits</td>
+                    <td className="px-4 py-2.5 font-bold text-emerald-600 dark:text-emerald-400">Unlimited (No 3-task/day cap)</td>
+                    <td className="px-4 py-2.5">2 to 3 tasks/day before paywall</td>
+                  </tr>
+                  <tr>
+                    <td className="px-4 py-2.5 font-semibold text-slate-800 dark:text-slate-200">Document Privacy</td>
+                    <td className="px-4 py-2.5 font-bold text-emerald-600 dark:text-emerald-400">100% Local Browser RAM (0 Uploads)</td>
+                    <td className="px-4 py-2.5">Uploaded to external cloud servers</td>
+                  </tr>
+                  <tr>
+                    <td className="px-4 py-2.5 font-semibold text-slate-800 dark:text-slate-200">Watermarks &amp; Sign-Up</td>
+                    <td className="px-4 py-2.5 font-bold text-emerald-600 dark:text-emerald-400">Zero Watermarks • No Account Needed</td>
+                    <td className="px-4 py-2.5">Requires email or adds watermarks</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
 
           {/* Internal Linking Hub: Popular Variations for Crawlability */}

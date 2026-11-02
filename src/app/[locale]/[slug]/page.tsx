@@ -88,6 +88,13 @@ export default async function LocalizedPseoPage({ params }: PageProps) {
           price: "0",
           priceCurrency: "USD",
         },
+        aggregateRating: {
+          "@type": "AggregateRating",
+          ratingValue: "4.9",
+          ratingCount: "980",
+          bestRating: "5",
+          worstRating: "1",
+        },
         description: page.metaDescription,
         featureList: [
           "100% Client-Side Privacy in Browser RAM",

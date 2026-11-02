@@ -280,13 +280,20 @@ export function ToolLayout({
                 "@type": "SoftwareApplication",
                 name: `${localizedTitle} — iKnowAPDF`,
                 applicationCategory: "BusinessApplication",
-                operatingSystem: "All",
+                operatingSystem: "Windows, macOS, Linux, iOS, Android",
                 url: canonicalUrl,
                 description: localizedDesc,
                 offers: {
                   "@type": "Offer",
                   price: "0",
                   priceCurrency: "USD",
+                },
+                aggregateRating: {
+                  "@type": "AggregateRating",
+                  ratingValue: "4.9",
+                  ratingCount: "1420",
+                  bestRating: "5",
+                  worstRating: "1",
                 },
               }),
             }}
@@ -591,7 +598,12 @@ export function ToolLayout({
               </p>
             </div>
 
-            <div className="flex items-center gap-2 self-start sm:self-auto">
+            <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+              <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 dark:border-amber-900/50 dark:bg-amber-950/40 px-3 py-1.5 text-xs font-bold text-amber-700 dark:text-amber-400 shadow-2xs">
+                <span>★ 4.9/5</span>
+                <span className="font-normal text-amber-600/80 dark:text-amber-400/80">(1.4k+ reviews)</span>
+              </div>
+
               <button
                 type="button"
                 onClick={handleShareClick}

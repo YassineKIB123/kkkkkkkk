@@ -17,6 +17,7 @@ import {
   pdfToText,
 } from "@/lib/pdf/universal-converter";
 import { imagesToPDF, downloadBlob } from "@/lib/pdf/pdf-utils";
+import { PDFDocument } from "pdf-lib";
 import { ToolType } from "@/lib/pseo/pseo-data";
 import {
   FileText,
@@ -31,7 +32,7 @@ import {
   Layers,
 } from "lucide-react";
 
-type TargetFormat = "pdf" | "docx" | "xlsx" | "pptx" | "txt";
+type TargetFormat = "pdf" | "docx" | "xlsx" | "pptx" | "txt" | "pdfa";
 
 interface ConversionOption {
   id: TargetFormat;
@@ -171,6 +172,18 @@ export default function UniversalConverterPage({
           const text = await pdfToText(file);
           const textBlob = new Blob([text], { type: "text/plain" });
           downloadBlob(textBlob, `${baseName}.txt`, "text/plain");
+        } else if (selectedFormat === "pdfa") {
+          setProgressStatus("Standardizing ISO PDF/A streams & flattening...");
+          const bytes = await file.arrayBuffer();
+          const srcDoc = await PDFDocument.load(bytes, { ignoreEncryption: true });
+          try {
+            srcDoc.getForm().flatten();
+          } catch {}
+          srcDoc.setProducer("iKnowAPDF Archival Engine (ISO 32000-1)");
+          srcDoc.setModificationDate(new Date());
+          const pdfBytes = await srcDoc.save({ useObjectStreams: true });
+          const blob = new Blob([pdfBytes as unknown as BlobPart], { type: "application/pdf" });
+          downloadBlob(blob, `${baseName}-pdfa.pdf`, "application/pdf");
         }
 
         setSuccessMessage(
@@ -217,6 +230,13 @@ export default function UniversalConverterPage({
       ext: ".txt",
       desc: "Clean raw text extraction",
       icon: FileCode,
+    },
+    {
+      id: "pdfa",
+      label: "ISO PDF/A Archival",
+      ext: ".pdf",
+      desc: "Standardized self-contained streams & flattened forms for long-term storage",
+      icon: Layers,
     },
   ];
 

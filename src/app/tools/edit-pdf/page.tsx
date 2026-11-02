@@ -475,6 +475,16 @@ export default function EditPdfPage() {
     width: 595.28,
     height: 841.89,
   });
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.innerWidth < 640) {
+      const mobileZoom = Math.max(
+        42,
+        Math.min(100, Math.floor(((window.innerWidth - 40) / (595.28 * 1.48)) * 100))
+      );
+      setZoomPercent(mobileZoom);
+    }
+  }, []);
   const [isRenderingPage, setIsRenderingPage] = useState<boolean>(false);
   const [isApplying, setIsApplying] = useState<boolean>(false);
   const [readyDownloadBlob, setReadyDownloadBlob] = useState<{
@@ -1395,6 +1405,8 @@ export default function EditPdfPage() {
         cnv.width = Math.ceil(expVp.width);
         cnv.height = Math.ceil(expVp.height);
         const ctx = cnv.getContext("2d")!;
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, cnv.width, cnv.height);
 
         // 1. Draw clean text-free background at high DPI
         const cachedClean = cleanBgCanvasByPageRef.current[p];
@@ -1520,10 +1532,10 @@ export default function EditPdfPage() {
           }
         }
 
-        const pngBytes = dataUrlToBytes(cnv.toDataURL("image/png"));
-        const embeddedPng = await outPdf.embedPng(pngBytes);
+        const jpgBytes = dataUrlToBytes(cnv.toDataURL("image/jpeg", 0.92));
+        const embeddedJpg = await outPdf.embedJpg(jpgBytes);
         const pdfPage = outPdf.addPage([pW, pH]);
-        pdfPage.drawImage(embeddedPng, {
+        pdfPage.drawImage(embeddedJpg, {
           x: 0,
           y: 0,
           width: pW,

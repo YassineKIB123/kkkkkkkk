@@ -16,6 +16,9 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   alternates: {
     canonical: "/",
+    types: {
+      "text/plain": "/llms.txt",
+    },
   },
   verification: {
     google: "TX_b_Rg1BBdC31WpXrXvxkBgRWD0LJ2tilIg3Iw9CV0",
@@ -105,6 +108,12 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <link
+          rel="alternate"
+          type="text/plain"
+          href="/llms.txt"
+          title="LLMs.txt"
+        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

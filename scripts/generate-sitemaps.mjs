@@ -42,6 +42,8 @@ const CORE_URLS = [
   { loc: `${SITE_URL}/tools/pdf-to-images`, priority: "0.95", changefreq: "weekly" },
   { loc: `${SITE_URL}/tools/watermark-pdf`, priority: "0.95", changefreq: "weekly" },
   { loc: `${SITE_URL}/tools/sanitize-pdf`, priority: "0.95", changefreq: "weekly" },
+  { loc: `${SITE_URL}/llms.txt`, priority: "0.80", changefreq: "weekly" },
+  { loc: `${SITE_URL}/llms-full.txt`, priority: "0.80", changefreq: "weekly" },
 ];
 
 // Dynamically discover all indexed pSEO slugs from src/lib/pseo/pseo-data.ts
@@ -145,9 +147,36 @@ xml += `</urlset>\n`;
 fs.writeFileSync(path.join(PUBLIC_DIR, "sitemap.xml"), xml, "utf-8");
 console.log(`Saved clean public/sitemap.xml (${CORE_URLS.length} URLs across Google, Bing, Yandex & Baidu)`);
 
-const robotsTxt = `User-agent: *
+const robotsTxt = `# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Disallow:
+Allow: /
+Allow: /llms.txt
+Allow: /llms-full.txt
+
+# Explicit AI Search & Indexing Crawlers
+User-agent: OAI-SearchBot
+Allow: /
+User-agent: Google-Extended
+Allow: /
+User-agent: Applebot-Extended
+Allow: /
+User-agent: GPTBot
+Allow: /
+User-agent: ChatGPT-User
+Allow: /
+User-agent: PerplexityBot
+Allow: /
+User-agent: Perplexity-User
+Allow: /
+User-agent: ClaudeBot
+Allow: /
+User-agent: Claude-Web
+Allow: /
+User-agent: anthropic-ai
 Allow: /
 
+# Explicit Search Engine Crawlers
 User-agent: Googlebot
 Allow: /
 
@@ -160,6 +189,9 @@ Allow: /
 User-agent: Yandex
 Allow: /
 
+User-agent: YandexBot
+Allow: /
+
 User-agent: Applebot
 Allow: /
 
@@ -169,6 +201,7 @@ Allow: /
 User-agent: Baiduspider
 Allow: /
 
+# Sitemap
 Sitemap: ${SITE_URL}/sitemap.xml
 `;
 fs.writeFileSync(path.join(PUBLIC_DIR, "robots.txt"), robotsTxt, "utf-8");

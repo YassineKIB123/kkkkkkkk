@@ -8,6 +8,7 @@ import {
   BASE_SITE_URL,
   PseoLocale,
   isIndexedPseoSlug,
+  getCanonicalToolPath,
 } from "@/lib/pseo/pseo-data";
 import { PseoToolRenderer } from "@/components/pseo/PseoToolRenderer";
 import { ToolLayout } from "@/components/tools/ToolLayout";
@@ -45,11 +46,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     "scan-pdf",
     "watermark-pdf",
     "sanitize-pdf",
-    "images-to-pdf",
-    "pdf-to-images",
-    "convert",
   ]);
   const shouldIndex = isIndexedPseoSlug(slug) || BASE_TOOL_SLUGS.has(slug);
+  const enCanonicalUrl = BASE_TOOL_SLUGS.has(slug)
+    ? `${BASE_SITE_URL}${getCanonicalToolPath(slug)}`
+    : `${BASE_SITE_URL}/${slug}`;
 
   return {
     title: {
@@ -62,14 +63,18 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     },
     alternates: {
       canonical: url,
-      languages: {
-        en: `${BASE_SITE_URL}/${slug}`,
-        fr: `${BASE_SITE_URL}/fr/${slug}`,
-        es: `${BASE_SITE_URL}/es/${slug}`,
-        ru: `${BASE_SITE_URL}/ru/${slug}`,
-        ar: `${BASE_SITE_URL}/ar/${slug}`,
-        "x-default": `${BASE_SITE_URL}/${slug}`,
-      },
+      ...(shouldIndex
+        ? {
+            languages: {
+              en: enCanonicalUrl,
+              fr: `${BASE_SITE_URL}/fr/${slug}`,
+              es: `${BASE_SITE_URL}/es/${slug}`,
+              ru: `${BASE_SITE_URL}/ru/${slug}`,
+              ar: `${BASE_SITE_URL}/ar/${slug}`,
+              "x-default": enCanonicalUrl,
+            },
+          }
+        : {}),
     },
     openGraph: {
       title: page.title,

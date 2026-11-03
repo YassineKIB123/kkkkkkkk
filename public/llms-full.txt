@@ -112,119 +112,111 @@ iKnowAPDF operates on a **100% Client-Side WebAssembly (WASM) & HTML5 Canvas Exe
 
 ### Security & Compliance
 - **Sanitize PDF Metadata Before Court Filings:** https://iknowapdf.lol/blog/sanitize-pdf-metadata-redaction
-  - *Author:* Alex Vance (Lead Document Security Engineer, M.Sc.)
-  - *Summary:* Deep technical analysis of /Info dictionaries, XMP stream leaks, and unflattened vector redaction vulnerabilities in legal filings.
-- **Digital Signatures vs Electronic Signatures (eIDAS & ESIGN):** https://iknowapdf.lol/blog/digital-vs-electronic-signatures-eidas-esign
-  - *Summary:* Legal validity, cryptographic hashes, audit trails, and client-side execution compliance.
-- **Client-Side vs Cloud PDF Security Risks:** https://iknowapdf.lol/blog/client-side-vs-cloud-pdf-security-risks
-  - *Summary:* Comparing data transmission risks, GDPR data processor liabilities, and WebAssembly security models.
+- **HIPAA-Compliant PDF Processing in Browser RAM:** https://iknowapdf.lol/blog/hipaa-compliant-pdf-processing-browser
+- **Remove PDF Revision History & Incremental Updates:** https://iknowapdf.lol/blog/remove-pdf-incremental-updates-revision-history
+- **True PDF Redaction vs. Cosmetic Black Boxes:** https://iknowapdf.lol/blog/permanent-pdf-redaction-vector-graphics
 
-### Optimization & Technical Document Engineering
-- **Reduce PDF Size Below 200KB Without Losing Text Quality:** https://iknowapdf.lol/blog/reduce-pdf-size-below-200kb
-  - *Summary:* Exact DPI downsampling ratios, DCT quantization tables, and vector font subset preservation.
-- **PDF Linearization & Fast Web View Streaming:** https://iknowapdf.lol/blog/linearize-pdf-fast-web-view-streaming
-  - *Summary:* Page offset hint tables, cross-reference dictionary ordering, and byte-range request serving.
-- **PDF/A-1b vs PDF/A-2b Long-Term Archival Standards:** https://iknowapdf.lol/blog/pdfa-archival-standard-compliance
-  - *Summary:* Device-independent color spaces, embedded font requirements, and forbidden dynamic JavaScript actions.
+### Legal, Signatures & Encryption
+- **Digital vs. Electronic Signatures (ESIGN, eIDAS & SHA-256):** https://iknowapdf.lol/blog/digital-signature-vs-electronic-signature-pdf
+- **AES-256 PDF Encryption & Pre-Encryption Sanitization:** https://iknowapdf.lol/blog/aes-256-password-protect-pdf-locally
+- **Unlock Restricted Bank Statement PDFs Safely:** https://iknowapdf.lol/blog/fix-encrypted-permissions-restricted-pdf
+- **Create Legally Admissible Audit Trails for Signed Contracts:** https://iknowapdf.lol/blog/audit-trail-digital-signatures-contracts
+
+### Compression, Archiving & Extraction
+- **Complete Guide to Lossless vs. Lossy PDF Compression:** https://iknowapdf.lol/blog/pdf-compression-lossless-lossy-guide
+- **Reduce PDF File Size Below 200KB for Portals:** https://iknowapdf.lol/blog/reduce-pdf-size-below-200kb
+- **Linearized PDFs, Object Streams & Fast Web View:** https://iknowapdf.lol/blog/linearize-pdf-fast-web-view-streaming
+- **Optimize Laggy CAD & Architectural Vector PDFs:** https://iknowapdf.lol/blog/compress-architectural-cad-drawings-pdf
+- **Convert PDF to ISO 19005 PDF/A-1b & PDF/A-2b:** https://iknowapdf.lol/blog/convert-pdf-to-pdfa-archival-standard
+- **Client-Side OCR for Scanned PDFs:** https://iknowapdf.lol/blog/client-side-ocr-scanned-pdf-text-extraction
+- **Lossless PDF Merging (Preserving Bookmarks & Forms):** https://iknowapdf.lol/blog/merge-pdf-preserve-bookmarks-form-fields
+- **Flatten Interactive PDF Forms into Uneditable Records:** https://iknowapdf.lol/blog/flatten-interactive-pdf-form-fields
 
 ---
 
-## 5. Complete Programmatic SEO (pSEO) Matrix (74 Core Clusters)
+## 5. Complete Indexed Programmatic SEO (pSEO) Matrix (75 Core Clusters)
 
-### Exact File Size Targets
+### Exact File Size & Compression Targets
+- https://iknowapdf.lol/compress-pdf-under-50kb
 - https://iknowapdf.lol/compress-pdf-under-100kb
 - https://iknowapdf.lol/compress-pdf-under-200kb
 - https://iknowapdf.lol/compress-pdf-under-300kb
 - https://iknowapdf.lol/compress-pdf-under-500kb
 - https://iknowapdf.lol/compress-pdf-under-1mb
 - https://iknowapdf.lol/compress-pdf-under-2mb
-- https://iknowapdf.lol/scan-pdf-under-100kb
-- https://iknowapdf.lol/scan-pdf-under-500kb
-- https://iknowapdf.lol/scan-pdf-under-1mb
-- https://iknowapdf.lol/jpg-to-pdf-under-100kb
-- https://iknowapdf.lol/jpg-to-pdf-under-500kb
-- https://iknowapdf.lol/jpg-to-pdf-under-2mb
-- https://iknowapdf.lol/png-to-pdf-under-100kb
-- https://iknowapdf.lol/png-to-pdf-under-500kb
-- https://iknowapdf.lol/png-to-pdf-under-2mb
-- https://iknowapdf.lol/word-to-pdf-under-300kb
-- https://iknowapdf.lol/word-to-pdf-under-2mb
+- https://iknowapdf.lol/compress-pdf-lossless-quality
+- https://iknowapdf.lol/compress-pdf-without-watermark
+- https://iknowapdf.lol/compress-pdf-for-email
+- https://iknowapdf.lol/compress-pdf-for-passports-and-visas
+- https://iknowapdf.lol/compress-pdf-for-job-applications
+- https://iknowapdf.lol/compress-pdf-for-court-filings
+- https://iknowapdf.lol/compress-pdf-for-scholarships
+- https://iknowapdf.lol/compress-pdf-for-invoices
+- https://iknowapdf.lol/compress-pdf-for-bank-statements
+- https://iknowapdf.lol/compress-pdf-for-tax-forms
 
 ### Format Converters
-- https://iknowapdf.lol/word-to-pdf
 - https://iknowapdf.lol/pdf-to-word
-- https://iknowapdf.lol/excel-to-pdf
+- https://iknowapdf.lol/word-to-pdf
 - https://iknowapdf.lol/pdf-to-excel
+- https://iknowapdf.lol/excel-to-pdf
+- https://iknowapdf.lol/pdf-to-powerpoint
 - https://iknowapdf.lol/powerpoint-to-pdf
 - https://iknowapdf.lol/jpg-to-pdf
 - https://iknowapdf.lol/pdf-to-jpg
 - https://iknowapdf.lol/png-to-pdf
 - https://iknowapdf.lol/pdf-to-png
-- https://iknowapdf.lol/text-to-pdf
 - https://iknowapdf.lol/pdf-to-text
+- https://iknowapdf.lol/text-to-pdf
 
-### Professional & Industry Use Cases
-- https://iknowapdf.lol/edit-pdf-for-lawyers
-- https://iknowapdf.lol/merge-pdf-for-lawyers
-- https://iknowapdf.lol/pdf-to-jpg-for-lawyers
-- https://iknowapdf.lol/edit-pdf-for-invoices
-- https://iknowapdf.lol/png-to-pdf-for-invoices
-- https://iknowapdf.lol/rotate-pdf-for-invoices
-- https://iknowapdf.lol/sign-pdf-for-contracts
-- https://iknowapdf.lol/split-pdf-for-contracts
-- https://iknowapdf.lol/word-to-pdf-for-resumes
-- https://iknowapdf.lol/pdf-to-text-for-resumes
-- https://iknowapdf.lol/scan-pdf-for-teachers
-- https://iknowapdf.lol/sign-pdf-for-teachers
-- https://iknowapdf.lol/merge-pdf-for-teachers
-- https://iknowapdf.lol/split-pdf-for-teachers
-- https://iknowapdf.lol/jpg-to-pdf-for-teachers
-- https://iknowapdf.lol/scan-pdf-for-tax-forms
-- https://iknowapdf.lol/compress-pdf-for-ebooks
-- https://iknowapdf.lol/split-pdf-for-ebooks
-- https://iknowapdf.lol/jpg-to-pdf-for-ebooks
-- https://iknowapdf.lol/pdf-to-jpg-for-ebooks
-- https://iknowapdf.lol/sanitize-pdf-for-ebooks
-- https://iknowapdf.lol/word-to-pdf-for-email
-- https://iknowapdf.lol/jpg-to-pdf-for-email
-- https://iknowapdf.lol/png-to-pdf-for-email
-- https://iknowapdf.lol/text-to-pdf-for-email
-- https://iknowapdf.lol/sanitize-pdf-for-email
-- https://iknowapdf.lol/watermark-pdf-for-email
-
-### Platform & OS Optimized Clusters
-- https://iknowapdf.lol/edit-pdf-on-windows
-- https://iknowapdf.lol/merge-pdf-on-windows
-- https://iknowapdf.lol/sign-pdf-on-windows
-- https://iknowapdf.lol/scan-pdf-on-windows
-- https://iknowapdf.lol/word-to-pdf-on-windows
-- https://iknowapdf.lol/excel-to-pdf-on-windows
-- https://iknowapdf.lol/png-to-pdf-on-windows
-- https://iknowapdf.lol/text-to-pdf-on-windows
-- https://iknowapdf.lol/rotate-pdf-on-windows
+### Edit PDF Text & Annotations
+- https://iknowapdf.lol/edit-pdf-without-watermark
+- https://iknowapdf.lol/edit-pdf-editable-text
+- https://iknowapdf.lol/edit-pdf-without-uploading
+- https://iknowapdf.lol/edit-pdf-no-file-limit
+- https://iknowapdf.lol/edit-pdf-for-resumes
+- https://iknowapdf.lol/edit-pdf-for-job-applications
+- https://iknowapdf.lol/edit-pdf-for-tax-forms
+- https://iknowapdf.lol/edit-pdf-for-contracts
 - https://iknowapdf.lol/edit-pdf-on-mac
-- https://iknowapdf.lol/compress-pdf-on-mac
-- https://iknowapdf.lol/sign-pdf-on-mac
-- https://iknowapdf.lol/jpg-to-pdf-on-mac
-- https://iknowapdf.lol/pdf-to-png-on-mac
-- https://iknowapdf.lol/pdf-to-text-on-mac
-- https://iknowapdf.lol/pdf-to-excel-on-mac
-- https://iknowapdf.lol/sanitize-pdf-on-mac
-- https://iknowapdf.lol/watermark-pdf-on-mac
-- https://iknowapdf.lol/compress-pdf-on-iphone
-- https://iknowapdf.lol/merge-pdf-on-iphone
+- https://iknowapdf.lol/edit-pdf-on-windows
+- https://iknowapdf.lol/edit-pdf-on-iphone
+- https://iknowapdf.lol/edit-pdf-on-android
+
+### Scan, Sign, Merge, Split & Sanitize Workflows
+- https://iknowapdf.lol/scan-pdf-for-invoices
+- https://iknowapdf.lol/scan-pdf-for-passports-and-visas
+- https://iknowapdf.lol/scan-pdf-high-resolution-300dpi
+- https://iknowapdf.lol/scan-pdf-without-watermark
+- https://iknowapdf.lol/scan-pdf-on-iphone
+- https://iknowapdf.lol/scan-pdf-on-android
+- https://iknowapdf.lol/jpg-to-pdf-without-watermark
+- https://iknowapdf.lol/jpg-to-pdf-under-100kb
+- https://iknowapdf.lol/jpg-to-pdf-under-200kb
+- https://iknowapdf.lol/png-to-pdf-without-watermark
+- https://iknowapdf.lol/sign-pdf-for-contracts
+- https://iknowapdf.lol/sign-pdf-for-real-estate
+- https://iknowapdf.lol/sign-pdf-for-job-applications
+- https://iknowapdf.lol/sign-pdf-for-court-filings
+- https://iknowapdf.lol/sign-pdf-without-watermark
+- https://iknowapdf.lol/sign-pdf-without-uploading
 - https://iknowapdf.lol/sign-pdf-on-iphone
-- https://iknowapdf.lol/pdf-to-jpg-on-iphone
-- https://iknowapdf.lol/pdf-to-word-on-iphone
-- https://iknowapdf.lol/excel-to-pdf-on-iphone
-- https://iknowapdf.lol/pdf-to-excel-on-android
-- https://iknowapdf.lol/sign-pdf-on-chromebook
-- https://iknowapdf.lol/split-pdf-on-chromebook
-- https://iknowapdf.lol/scan-pdf-offline
-- https://iknowapdf.lol/jpg-to-pdf-offline
-- https://iknowapdf.lol/rotate-pdf-offline
-- https://iknowapdf.lol/sanitize-pdf-offline
-- https://iknowapdf.lol/text-to-pdf-offline
+- https://iknowapdf.lol/sign-pdf-on-mac
+- https://iknowapdf.lol/merge-pdf-for-lawyers
+- https://iknowapdf.lol/merge-pdf-for-bank-statements
+- https://iknowapdf.lol/merge-pdf-for-tax-forms
+- https://iknowapdf.lol/merge-pdf-for-court-filings
+- https://iknowapdf.lol/merge-pdf-without-watermark
+- https://iknowapdf.lol/merge-pdf-no-file-limit
+- https://iknowapdf.lol/split-pdf-for-email
+- https://iknowapdf.lol/split-pdf-for-passports-and-visas
+- https://iknowapdf.lol/split-pdf-without-watermark
+- https://iknowapdf.lol/rotate-pdf-without-watermark
+- https://iknowapdf.lol/sanitize-pdf-for-court-filings
+- https://iknowapdf.lol/sanitize-pdf-for-lawyers
+- https://iknowapdf.lol/sanitize-pdf-for-medical-records
+- https://iknowapdf.lol/sanitize-pdf-for-bank-statements
+- https://iknowapdf.lol/sanitize-pdf-for-tax-forms
 
 ---
 

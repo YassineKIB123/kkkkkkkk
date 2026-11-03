@@ -47,12 +47,18 @@ def should_include_out_file(rel_out_path):
     # rel_out_path is relative to out/ e.g. "sitemap.xml", "tools/edit-pdf.html", etc.
     p = rel_out_path.replace("\\", "/")
     
-    # Exclude internal Next.js RSC payload .txt files
-    if p.endswith(".txt") and not p == "robots.txt" and not p == "ads.txt":
+    allowed_root_txt = {
+        "robots.txt",
+        "ads.txt",
+        "llms.txt",
+        "llms-full.txt",
+        "e8d25fa0c427494589d901844bdf92a1.txt",
+    }
+    if p.endswith(".txt") and p not in allowed_root_txt:
         return False
-        
+
     # Always include root config / seo files
-    if p in {"sitemap.xml", "sitemap-main.xml", "robots.txt", "ads.txt", "sw.js", "_headers", "manifest.webmanifest", "index.html", "about.html", "contact.html", "pricing.html", "privacy.html", "terms.html", "_not-found.html"}:
+    if p in allowed_root_txt or p in {"sitemap.xml", "sitemap-main.xml", "sw.js", "_headers", "manifest.webmanifest", "index.html", "about.html", "contact.html", "pricing.html", "privacy.html", "terms.html", "_not-found.html"}:
         return True
         
     # Include tool pages

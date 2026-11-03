@@ -67,6 +67,18 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     },
     alternates: {
       canonical: canonicalUrl,
+      ...(isIndexedPseoSlug(slug) && !isDuplicateSlug
+        ? {
+            languages: {
+              en: canonicalUrl,
+              fr: `${BASE_SITE_URL}/fr/${slug}`,
+              es: `${BASE_SITE_URL}/es/${slug}`,
+              ru: `${BASE_SITE_URL}/ru/${slug}`,
+              ar: `${BASE_SITE_URL}/ar/${slug}`,
+              "x-default": canonicalUrl,
+            },
+          }
+        : {}),
     },
     openGraph: {
       title: page.title,

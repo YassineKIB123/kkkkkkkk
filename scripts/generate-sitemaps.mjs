@@ -42,8 +42,6 @@ const CORE_URLS = [
   { loc: `${SITE_URL}/tools/pdf-to-images`, priority: "0.95", changefreq: "weekly" },
   { loc: `${SITE_URL}/tools/watermark-pdf`, priority: "0.95", changefreq: "weekly" },
   { loc: `${SITE_URL}/tools/sanitize-pdf`, priority: "0.95", changefreq: "weekly" },
-  { loc: `${SITE_URL}/llms.txt`, priority: "0.80", changefreq: "weekly" },
-  { loc: `${SITE_URL}/llms-full.txt`, priority: "0.80", changefreq: "weekly" },
 ];
 
 // Dynamically discover all indexed pSEO slugs from src/lib/pseo/pseo-data.ts
@@ -83,9 +81,15 @@ for (const slug of indexedPseoSlugs) {
 // 2. Multilingual Base Tools & pSEO Clusters (French, Spanish, Russian for Yandex, Arabic)
 const LOCALES = ["fr", "es", "ru", "ar"];
 const BASE_TOOL_SLUGS = [
-  "edit-pdf", "compress-pdf", "merge-pdf", "split-pdf", "rotate-pdf",
-  "sign-pdf", "scan-pdf", "watermark-pdf", "sanitize-pdf", "images-to-pdf",
-  "pdf-to-images", "convert"
+  "edit-pdf",
+  "compress-pdf",
+  "merge-pdf",
+  "split-pdf",
+  "rotate-pdf",
+  "sign-pdf",
+  "scan-pdf",
+  "watermark-pdf",
+  "sanitize-pdf",
 ];
 
 for (const locale of LOCALES) {

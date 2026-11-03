@@ -115,18 +115,6 @@
     <priority>0.95</priority>
   </url>
   <url>
-    <loc>https://iknowapdf.lol/llms.txt</loc>
-    <lastmod>2026-11-03</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.80</priority>
-  </url>
-  <url>
-    <loc>https://iknowapdf.lol/llms-full.txt</loc>
-    <lastmod>2026-11-03</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.80</priority>
-  </url>
-  <url>
     <loc>https://iknowapdf.lol/pdf-to-word</loc>
     <lastmod>2026-11-03</lastmod>
     <changefreq>weekly</changefreq>
@@ -620,24 +608,6 @@
   </url>
   <url>
     <loc>https://iknowapdf.lol/fr/sanitize-pdf</loc>
-    <lastmod>2026-11-03</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.88</priority>
-  </url>
-  <url>
-    <loc>https://iknowapdf.lol/fr/images-to-pdf</loc>
-    <lastmod>2026-11-03</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.88</priority>
-  </url>
-  <url>
-    <loc>https://iknowapdf.lol/fr/pdf-to-images</loc>
-    <lastmod>2026-11-03</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.88</priority>
-  </url>
-  <url>
-    <loc>https://iknowapdf.lol/fr/convert</loc>
     <lastmod>2026-11-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.88</priority>
@@ -1141,24 +1111,6 @@
     <priority>0.88</priority>
   </url>
   <url>
-    <loc>https://iknowapdf.lol/es/images-to-pdf</loc>
-    <lastmod>2026-11-03</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.88</priority>
-  </url>
-  <url>
-    <loc>https://iknowapdf.lol/es/pdf-to-images</loc>
-    <lastmod>2026-11-03</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.88</priority>
-  </url>
-  <url>
-    <loc>https://iknowapdf.lol/es/convert</loc>
-    <lastmod>2026-11-03</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.88</priority>
-  </url>
-  <url>
     <loc>https://iknowapdf.lol/es/pdf-to-word</loc>
     <lastmod>2026-11-03</lastmod>
     <changefreq>weekly</changefreq>
@@ -1657,24 +1609,6 @@
     <priority>0.88</priority>
   </url>
   <url>
-    <loc>https://iknowapdf.lol/ru/images-to-pdf</loc>
-    <lastmod>2026-11-03</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.88</priority>
-  </url>
-  <url>
-    <loc>https://iknowapdf.lol/ru/pdf-to-images</loc>
-    <lastmod>2026-11-03</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.88</priority>
-  </url>
-  <url>
-    <loc>https://iknowapdf.lol/ru/convert</loc>
-    <lastmod>2026-11-03</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.88</priority>
-  </url>
-  <url>
     <loc>https://iknowapdf.lol/ru/pdf-to-word</loc>
     <lastmod>2026-11-03</lastmod>
     <changefreq>weekly</changefreq>
@@ -2168,24 +2102,6 @@
   </url>
   <url>
     <loc>https://iknowapdf.lol/ar/sanitize-pdf</loc>
-    <lastmod>2026-11-03</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.88</priority>
-  </url>
-  <url>
-    <loc>https://iknowapdf.lol/ar/images-to-pdf</loc>
-    <lastmod>2026-11-03</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.88</priority>
-  </url>
-  <url>
-    <loc>https://iknowapdf.lol/ar/pdf-to-images</loc>
-    <lastmod>2026-11-03</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.88</priority>
-  </url>
-  <url>
-    <loc>https://iknowapdf.lol/ar/convert</loc>
     <lastmod>2026-11-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.88</priority>

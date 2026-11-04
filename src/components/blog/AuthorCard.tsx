@@ -1,7 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import { Author } from "@/lib/blog/types";
-import { ShieldCheck, Calendar, Clock, Globe } from "lucide-react";
+import { Calendar, Clock } from "lucide-react";
 
 interface AuthorBylineProps {
   author: Author;
@@ -25,9 +25,6 @@ export function AuthorByline({
         <div>
           <span className="font-bold text-slate-900 dark:text-white flex items-center gap-1">
             {author.name}
-            <span title="Verified Author">
-              <ShieldCheck className="h-3.5 w-3.5 text-rose-600 inline" />
-            </span>
           </span>
           <span className="text-[10px] text-slate-400 block">{author.role}</span>
         </div>
@@ -123,9 +120,19 @@ export function AuthorBioBox({ author }: { author: Author }) {
             {author.bio}
           </p>
 
-          <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium pt-1">
-            <span className="font-semibold text-slate-600 dark:text-slate-300">Credentials:</span>{" "}
-            {author.credentials}
+          {author.credentials && (
+            <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium pt-1">
+              {author.credentials}
+            </p>
+          )}
+
+          <p className="text-[11px] pt-1">
+            <Link
+              href="/about"
+              className="font-semibold text-rose-600 hover:text-rose-500 dark:text-rose-400"
+            >
+              About iKnowAPDF &amp; how these guides are written
+            </Link>
           </p>
         </div>
       </div>

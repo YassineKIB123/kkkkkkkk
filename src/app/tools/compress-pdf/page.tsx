@@ -146,8 +146,8 @@ export default function CompressPdfPage({ targetKb }: CompressPdfPageProps = {})
               <Target className="h-4 w-4 text-rose-600 dark:text-rose-400" />
               <span>
                 {language === "AR"
-                  ? `الهدف النشط: حجم الملف أقل من ${targetKb} كيلوبايت`
-                  : `Preset Active: Target File Size Under ${targetKb} KB`}
+                  ? `الهدف النشط: حجم الملف أقل من ${targetKb >= 1024 ? `${+(targetKb/1024).toFixed(1)} ميجابايت` : `${targetKb} كيلوبايت`}`
+                  : `Preset Active: Target File Size Under ${targetKb >= 1024 ? `${+(targetKb/1024).toFixed(1)} MB` : `${targetKb} KB`}`}
               </span>
             </div>
             <span className="font-mono text-[11px] uppercase font-bold">Auto-Tuned</span>

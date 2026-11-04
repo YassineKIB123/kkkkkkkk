@@ -6,7 +6,6 @@ import { ToolLayout } from "@/components/tools/ToolLayout";
 import { FileDropzone } from "@/components/tools/FileDropzone";
 import { useLanguage } from "@/context/LanguageContext";
 import { downloadBlob } from "@/lib/pdf/pdf-utils";
-import { PDFDocument, PDFName } from "pdf-lib";
 import {
   ShieldAlert,
   FileText,
@@ -49,6 +48,7 @@ export default function SanitizePdfPage() {
     setSuccessMessage(null);
     try {
       const bytes = await selected.arrayBuffer();
+      const { PDFDocument } = await import("pdf-lib");
       const pdfDoc = await PDFDocument.load(bytes, { ignoreEncryption: true });
       let fieldCount = 0;
       try {
@@ -83,6 +83,7 @@ export default function SanitizePdfPage() {
     setSuccessMessage(null);
     try {
       const bytes = await file.arrayBuffer();
+      const { PDFDocument, PDFName } = await import("pdf-lib");
       const srcDoc = await PDFDocument.load(bytes, { ignoreEncryption: true });
 
       if (flattenForms) {

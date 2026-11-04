@@ -8,23 +8,23 @@ import {
   Lock,
   Zap,
   Globe,
-  Users,
+  Info,
   HeartHandshake,
   CheckCircle2,
   Mail,
 } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "About Us — 100% Client-Side Private PDF Tools",
+  title: { absolute: "About iKnowAPDF — Free In-Browser PDF Tools" },
   description:
-    "Learn about iKnowAPDF's mission to provide fast, studio-grade PDF editing, compression, and conversion tools directly in your browser with zero server uploads.",
+    "Who builds iKnowAPDF, how its in-browser PDF tools work, how the site is funded, and how the guides are written.",
   alternates: {
     canonical: "https://iknowapdf.lol/about",
   },
-  openGraph: {
-    title: "About iKnowAPDF — 100% Private Client-Side PDF Suite",
+  openGraph: { images: ["/opengraph-image.png"],
+    title: "About iKnowAPDF",
     description:
-      "Discover how iKnowAPDF processes sensitive PDF documents entirely in your web browser memory with WebAssembly and zero server retention.",
+      "iKnowAPDF is a free set of PDF tools that process files in your browser instead of uploading them. Built and maintained by Yassine K.",
     url: "https://iknowapdf.lol/about",
     siteName: "iKnowAPDF",
     type: "website",
@@ -54,7 +54,7 @@ export default function AboutPage() {
                 About iKnowAPDF
               </h1>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                Empowering global document productivity with unconditional client-side privacy
+                Free PDF tools that work on your files without uploading them
               </p>
             </div>
           </div>
@@ -63,13 +63,17 @@ export default function AboutPage() {
           <section className="space-y-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
             <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <HeartHandshake className="h-5 w-5 text-rose-600" />
-              <span>Our Mission</span>
+              <span>Why iKnowAPDF Exists</span>
             </h2>
             <p>
-              <strong>iKnowAPDF</strong> was created with a clear purpose: to free students, legal professionals, accountants, educators, and everyday users from expensive subscription paywalls, intrusive registration forms, and dangerous cloud-upload practices.
+              <strong>iKnowAPDF</strong> is a free set of PDF tools — compress, merge, split, rotate, sign, edit, scan, convert, watermark and clean metadata — that you can use without creating an account. Browse them all on the{" "}
+              <Link href="/pdf-tools" className="text-rose-600 underline font-semibold hover:text-rose-500">
+                PDF tools page
+              </Link>
+              .
             </p>
             <p>
-              Every day, millions of people upload sensitive tax returns, confidential business agreements, medical records, and personal resumes to unfamiliar third-party cloud servers simply to compress a file or sign a form. We believe you should never have to surrender document privacy to access modern PDF tools.
+              Many online PDF tools require you to upload tax returns, contracts, medical records or résumés to someone else&apos;s server just to compress a file or sign a form. iKnowAPDF takes a different approach: the processing happens in your browser, on your device.
             </p>
           </section>
 
@@ -77,10 +81,10 @@ export default function AboutPage() {
           <section className="space-y-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
             <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <Cpu className="h-5 w-5 text-indigo-600" />
-              <span>How Our Client-Side Architecture Works</span>
+              <span>How the Tools Work</span>
             </h2>
             <p>
-              Unlike legacy online PDF converters that require files to travel across remote networks to backend servers, iKnowAPDF executes every operation <strong>100% locally within your device&apos;s browser memory (RAM)</strong> using WebAssembly, HTML5 Canvas, and client-side JavaScript libraries:
+              The PDF tools run in your browser using open-source JavaScript libraries — <strong>pdf-lib</strong> for editing PDF structure and <strong>PDF.js</strong> for rendering pages — plus the browser&apos;s Canvas and Web Crypto APIs. Your file is read into the browser tab&apos;s memory and the result is downloaded back to your device:
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
               <div className="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-800/40 space-y-2">
@@ -88,10 +92,10 @@ export default function AboutPage() {
                   <Lock className="h-4 w-4" />
                 </div>
                 <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                  Zero Cloud Uploads
+                  No File Uploads
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                  Your documents never touch our servers or external databases. Every byte stays inside your device.
+                  The documents you process are not sent to our servers. You can confirm this in your browser&apos;s developer tools (Network tab).
                 </p>
               </div>
 
@@ -100,10 +104,10 @@ export default function AboutPage() {
                   <Zap className="h-4 w-4" />
                 </div>
                 <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                  Instant Processing
+                  No Upload Wait
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                  No server queue times or slow upload/download delays. Processing speed depends purely on your device hardware.
+                  There is no upload or server queue. Speed depends on your device — very large files can be slow on phones or low-memory computers.
                 </p>
               </div>
 
@@ -112,82 +116,79 @@ export default function AboutPage() {
                   <ShieldCheck className="h-4 w-4" />
                 </div>
                 <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                  Automatic Memory Clearance
+                  Nothing Stored by Us
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                  Once you finish and close or refresh your browser tab, all document buffers in RAM are permanently released.
+                  We don&apos;t keep copies of your files. Closing or refreshing the tab releases them from memory; downloads are saved wherever your browser saves files.
                 </p>
               </div>
             </div>
           </section>
 
-          {/* Key Standards */}
+          {/* Honest notes */}
           <section className="space-y-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
             <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <Users className="h-5 w-5 text-emerald-600" />
-              <span>Our Publishing & Quality Standards</span>
+              <Info className="h-5 w-5 text-emerald-600" />
+              <span>What to Expect</span>
             </h2>
-            <p>
-              We adhere to strict standards to ensure every tool in our suite delivers clean, professional output:
-            </p>
             <ul className="space-y-2 text-xs sm:text-sm">
               <li className="flex items-start gap-2">
                 <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
-                <span><strong>No Watermarks:</strong> Every file downloaded is pristine and suitable for official legal, court, and commercial use.</span>
+                <span><strong>No watermarks:</strong> We don&apos;t add watermarks or branding to the files you download.</span>
               </li>
               <li className="flex items-start gap-2">
                 <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
-                <span><strong>Full PDF Specification Compliance:</strong> Merged, split, signed, and compressed files preserve standard ISO 32000 PDF tags, bookmarks, and font tables.</span>
+                <span><strong>Know the trade-offs:</strong> Some operations change how a file is stored — for example, the Recommended and Extreme compression presets turn pages into images, and merging does not carry over bookmarks. The tools and guides explain these limits.</span>
               </li>
               <li className="flex items-start gap-2">
                 <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
-                <span><strong>Cross-Platform & Offline:</strong> Built as a Progressive Web App (PWA) that runs seamlessly on Chrome, Safari, Edge, and Firefox across macOS, Windows, Linux, iOS, and Android.</span>
+                <span><strong>Works in modern browsers:</strong> Chrome, Edge, Firefox and Safari on desktop and mobile. The site can be installed as a web app, and pages you have already opened may keep working offline.</span>
               </li>
             </ul>
           </section>
 
-          {/* Engineering Leadership & E-E-A-T */}
+          {/* Who builds it */}
           <section className="space-y-4 border-t border-slate-100 dark:border-slate-800 pt-6">
             <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <ShieldCheck className="h-5 w-5 text-rose-600" />
-              <span>Engineering Leadership & Editorial Board</span>
+              <span>Who Builds iKnowAPDF</span>
             </h2>
-            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-              Our software architecture and technical educational guides are maintained by experienced systems engineers specializing in WebAssembly runtime security, cryptography, and ISO document standards:
-            </p>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-              <div className="rounded-2xl border border-slate-200/90 bg-slate-50/70 p-5 dark:border-slate-800 dark:bg-slate-800/40 space-y-2">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-xl bg-rose-600 text-white font-extrabold flex items-center justify-center text-sm shadow-xs">
-                    A
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">Alex Vance</h3>
-                    <p className="text-[11px] font-semibold text-rose-600 dark:text-rose-400">Lead Document Security Engineer</p>
-                  </div>
+            <div className="rounded-2xl border border-slate-200/90 bg-slate-50/70 p-5 dark:border-slate-800 dark:bg-slate-800/40 space-y-2">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-xl bg-rose-600 text-white font-extrabold flex items-center justify-center text-sm shadow-xs">
+                  Y
                 </div>
-                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                  Specialist in WebAssembly document processing, cryptographic privacy, and client-side browser architectures. 12+ years in high-throughput document systems.
-                </p>
-                <p className="text-[10px] text-slate-400 font-medium">M.Sc. Computer Science • ISO 32000 Contributor</p>
+                <div>
+                  <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">Yassine K.</h3>
+                  <p className="text-[11px] font-semibold text-rose-600 dark:text-rose-400">Founder &amp; developer</p>
+                </div>
               </div>
+              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                iKnowAPDF is an independent project built and maintained by Yassine, who develops the in-browser PDF engine behind the tools and writes the guides on the{" "}
+                <Link href="/blog" className="text-rose-600 underline font-semibold hover:text-rose-500">
+                  blog
+                </Link>
+                .
+              </p>
+            </div>
 
-              <div className="rounded-2xl border border-slate-200/90 bg-slate-50/70 p-5 dark:border-slate-800 dark:bg-slate-800/40 space-y-2">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-xl bg-slate-900 text-white font-extrabold flex items-center justify-center text-sm shadow-xs dark:bg-rose-950 dark:text-rose-200">
-                    Y
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">Yassine K.</h3>
-                    <p className="text-[11px] font-semibold text-rose-600 dark:text-rose-400">Founder & Principal Systems Architect</p>
-                  </div>
-                </div>
-                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                  Open-web advocate dedicated to zero-upload client-side tools that preserve global user privacy without paywalls or tracking.
-                </p>
-                <p className="text-[10px] text-slate-400 font-medium">B.Sc. Software Engineering • Web Performance Engineer</p>
-              </div>
+            <div className="space-y-2 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+              <h3 className="font-bold text-slate-900 dark:text-white">How the guides are written</h3>
+              <p>
+                Guides explain how PDF features work and how to use the tools, based on building and testing them. When a guide describes what an iKnowAPDF tool does, it should match what the tool does today — if you spot something inaccurate or out of date, tell us and we&apos;ll correct it. Guides that touch on law (signatures, privacy rules) are general information, not legal advice.
+              </p>
+            </div>
+
+            <div className="space-y-2 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+              <h3 className="font-bold text-slate-900 dark:text-white">How the site is funded</h3>
+              <p>
+                The tools are free to use. The free version shows ads and uses analytics; an optional{" "}
+                <Link href="/pricing" className="text-rose-600 underline font-semibold hover:text-rose-500">
+                  ad-free pass
+                </Link>{" "}
+                removes the ads and helps cover hosting and development.
+              </p>
             </div>
           </section>
 
@@ -198,19 +199,17 @@ export default function AboutPage() {
               <span>Get in Touch</span>
             </h2>
             <p>
-              We welcome feedback, feature suggestions, bug reports, and partnership inquiries. Visit our{" "}
+              Feedback, bug reports and corrections are welcome. Visit the{" "}
               <Link href="/contact" className="text-rose-600 underline font-semibold hover:text-rose-500">
-                Contact Support page
+                contact page
               </Link>{" "}
-              or email our team directly at{" "}
+              or email{" "}
               <a href="mailto:support@iknowapdf.lol" className="text-rose-600 underline font-semibold hover:text-rose-500">
                 support@iknowapdf.lol
               </a>
               .
             </p>
           </section>
-
-          
 
           {/* Footer Navigation */}
           <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex flex-wrap gap-5 text-xs font-semibold text-slate-500">
@@ -221,7 +220,7 @@ export default function AboutPage() {
               Terms of Service
             </Link>
             <Link href="/contact" className="hover:text-rose-600 underline">
-              Contact Support
+              Contact
             </Link>
           </div>
         </div>

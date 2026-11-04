@@ -2,24 +2,25 @@ import React from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Mail, ArrowLeft, ShieldCheck, Globe, Cpu } from "lucide-react";
-import { ContactForm } from "@/components/common/ContactForm";
 
 export const metadata: Metadata = {
-  title: "Contact Support & Inquiries",
+  title: "Contact",
   description:
-    "Get in touch with the iKnowAPDF support team for technical help, bug reports, feature requests, and partnership inquiries.",
+    "Contact iKnowAPDF for help, bug reports, corrections to our guides, or feature requests.",
   alternates: {
     canonical: "https://iknowapdf.lol/contact",
   },
-  openGraph: {
-    title: "Contact iKnowAPDF Support",
+  openGraph: { images: ["/opengraph-image.png"],
+    title: "Contact iKnowAPDF",
     description:
-      "Get support for iKnowAPDF's 100% private client-side PDF tools. Direct email response within 24–48 hours.",
+      "Questions, bug reports or corrections for iKnowAPDF's in-browser PDF tools? Email support@iknowapdf.lol.",
     url: "https://iknowapdf.lol/contact",
     siteName: "iKnowAPDF",
     type: "website",
   },
 };
+
+const SUPPORT_EMAIL = "support@iknowapdf.lol";
 
 export default function ContactPage() {
   return (
@@ -40,81 +41,75 @@ export default function ContactPage() {
             </div>
             <div>
               <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">
-                About Us & Contact
+                Contact
               </h1>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Learn how iKnowAPDF protects your document privacy and get in touch with our team
+                Questions, bug reports, corrections and feature requests
               </p>
             </div>
           </div>
 
+          <section className="space-y-4 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+            <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <ShieldCheck className="h-4 w-4 text-emerald-600" />
+              <span>Email</span>
+            </h2>
+            <p>
+              iKnowAPDF is run by one developer, so email is the best way to reach us. We read every message and aim to reply within a few days.
+            </p>
+
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-800/50 space-y-1">
+              <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                Support email
+              </p>
+              <a
+                href={`mailto:${SUPPORT_EMAIL}`}
+                className="text-sm font-bold text-rose-600 hover:underline"
+              >
+                {SUPPORT_EMAIL}
+              </a>
+            </div>
+
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Please don&apos;t attach confidential documents. If a file causes a problem, describe it (page count, size, which tool and browser) or send a test file without personal data.
+            </p>
+          </section>
+
           <section className="space-y-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
             <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <Globe className="h-4 w-4 text-rose-600" />
-              <span>About iKnowAPDF (iknowapdf.lol)</span>
+              <span>About iKnowAPDF</span>
             </h2>
             <p>
-              <strong>iKnowAPDF</strong> was built with a simple mission: to provide fast, studio-quality PDF editing, compression, merging, splitting, signing, scanning, and conversion tools that run <strong>100% locally in your browser</strong>—without forcing you to upload sensitive documents to unknown cloud servers or pay expensive monthly subscriptions.
-            </p>
-            <p>
-              Whether you are preparing job applications, signing legal contracts, compressing bank statements for portal uploads, or converting academic research papers, our tools are engineered to work immediately on Windows, macOS, Linux, iOS, and Android without watermarks or registration walls.
+              <strong>iKnowAPDF</strong> offers free PDF tools — compress, merge, split, rotate, sign, edit, scan, convert and more — that process files in your browser instead of uploading them. See the{" "}
+              <Link href="/about" className="text-rose-600 underline hover:text-rose-500">
+                About page
+              </Link>{" "}
+              for who builds it and how it is funded.
             </p>
           </section>
 
           <section className="space-y-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
             <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <Cpu className="h-4 w-4 text-indigo-600" />
-              <span>How Our Client-Side Security Architecture Works</span>
+              <span>How Your Files Are Handled</span>
             </h2>
-            <p>
-              Traditional online PDF websites require you to upload your files to a remote backend server, process them in the cloud, and download the result. That approach creates unnecessary privacy risks for personal tax forms, IDs, medical records, and business agreements.
-            </p>
             <ul className="list-disc pl-5 space-y-1.5">
               <li>
-                <strong>Zero Cloud Uploads:</strong> iKnowAPDF processes every byte inside your browser&apos;s sandboxed memory using WebAssembly, PDF.js, and HTML5 Canvas APIs.
+                <strong>No file uploads:</strong> The PDF tools process files in your browser using PDF.js, pdf-lib and the Canvas API. Your documents are not sent to our servers.
               </li>
               <li>
-                <strong>Zero Data Retention:</strong> We do not operate file-storage databases. The moment you close your browser tab, your document data is permanently cleared from RAM.
+                <strong>No file storage:</strong> We don&apos;t keep copies of your documents. Closing or refreshing the tab releases them from memory.
               </li>
               <li>
-                <strong>Offline Capability:</strong> Once loaded, our Progressive Web App (PWA) can process documents even if you disconnect from the internet.
+                <strong>Partial offline support:</strong> The site can be installed as a web app, and pages you have already opened may keep working without a connection.
               </li>
             </ul>
           </section>
 
-          <section className="space-y-4 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
-            <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4 text-emerald-600" />
-              <span>Contact Our Support Team</span>
-            </h2>
-            <p>
-              Have a question, bug report, DMCA/legal inquiry, or feature request? Reach out to our team using the form below or via direct email. We respond to all inquiries within 24–48 business hours:
-            </p>
-
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-800/50 space-y-1">
-              <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                Direct Email Support
-              </p>
-              <a
-                href="mailto:support@iknowapdf.lol"
-                className="text-sm font-bold text-rose-600 hover:underline"
-              >
-                support@iknowapdf.lol
-              </a>
-            </div>
-
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 dark:border-slate-800 dark:bg-slate-900 space-y-3">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                Send an Online Message
-              </h3>
-              <ContactForm />
-            </div>
-          </section>
-
-          
           <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex flex-wrap gap-5 text-xs font-semibold text-slate-500">
             <Link href="/about" className="hover:text-rose-600 underline">
-              About Us
+              About
             </Link>
             <Link href="/privacy" className="hover:text-rose-600 underline">
               Privacy Policy

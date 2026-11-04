@@ -1,5 +1,9 @@
-import { consumeOperationQuota, setPendingDownload, consumePendingDownload } from "@/lib/quota/usage-quota";
-import { PDFDocument, rgb, degrees, StandardFonts } from "pdf-lib";
+import { consumePendingDownload } from "@/lib/quota/usage-quota";
+import type { PDFDocument, PDFImage } from "pdf-lib";
+
+// pdf-lib (~170KB gz) is loaded on demand inside each operation so that light helpers
+// (downloadBlob, loadPdfJs, parsePageRangeString, ...) never pull it into the initial bundle.
+const loadPdfLib = () => import("pdf-lib");
 
 declare global {
   interface Window {
@@ -109,6 +113,7 @@ export async function compressPDFDocument(
   targetKb?: number,
   onProgress?: (current: number, total: number) => void
 ): Promise<Uint8Array> {
+  const { PDFDocument } = await loadPdfLib();
   const buffer = await file.arrayBuffer();
   const originalDoc = await PDFDocument.load(buffer, { ignoreEncryption: true });
 
@@ -146,7 +151,7 @@ export async function compressPDFDocument(
   const sharedCanvas = document.createElement("canvas");
   try {
     const pdfjs = await loadPdfJs();
-    pdf = await pdfjs.getDocument({ data: buffer.slice(0) }).promise;
+    pdf = await pdfjs.getDocument({ data: buffer.slice(0), isEvalSupported: false }).promise;
     const numPages = pdf.numPages;
 
     let scale = level === "extreme" ? 1.0 : 1.4;
@@ -243,6 +248,7 @@ export async function mergePDFs(files: File[]): Promise<Uint8Array> {
     throw new Error("At least two PDF files are required to perform a merge.");
   }
 
+  const { PDFDocument } = await loadPdfLib();
   const mergedPdf = await PDFDocument.create();
 
   for (const file of files) {
@@ -294,6 +300,7 @@ export function downloadBlob(
  * Compiles a list of HTMLCanvasElements into a standard A4 multi-page PDF document.
  */
 export async function canvasesToPDF(canvases: HTMLCanvasElement[]): Promise<Uint8Array> {
+  const { PDFDocument } = await loadPdfLib();
   const pdfDoc = await PDFDocument.create();
 
   const A4_WIDTH = 595.28;
@@ -340,7 +347,7 @@ export async function canvasesToPDF(canvases: HTMLCanvasElement[]): Promise<Uint
 async function getImageEmbedData(
   pdfDoc: PDFDocument,
   file: File
-): Promise<{ image: import("pdf-lib").PDFImage }> {
+): Promise<{ image: PDFImage }> {
   const isJpeg = file.type === "image/jpeg" || file.type === "image/jpg";
   const isPng = file.type === "image/png";
 
@@ -417,6 +424,7 @@ export async function imagesToPDF(
     throw new Error("Please select at least one image to convert.");
   }
 
+  const { PDFDocument } = await loadPdfLib();
   const pdfDoc = await PDFDocument.create();
 
   const A4_PORTRAIT_W = 595.28;
@@ -493,6 +501,7 @@ export async function imagesToPDF(
  * Inspects a PDF file in-memory and returns its total page count.
  */
 export async function getPDFPageCount(file: File): Promise<number> {
+  const { PDFDocument } = await loadPdfLib();
   const bytes = await file.arrayBuffer();
   const pdfDoc = await PDFDocument.load(bytes, { ignoreEncryption: true });
   return pdfDoc.getPageCount();
@@ -549,6 +558,7 @@ export function parsePageRangeString(rangeStr: string, totalPages: number): numb
  * Splits a PDF document by extracting only the requested 1-based page range.
  */
 export async function splitPDF(file: File, pageRangeStr: string): Promise<Uint8Array> {
+  const { PDFDocument } = await loadPdfLib();
   const bytes = await file.arrayBuffer();
   const sourcePdf = await PDFDocument.load(bytes, { ignoreEncryption: true });
   const totalPages = sourcePdf.getPageCount();
@@ -604,6 +614,7 @@ export async function embedSignaturesIntoPDF(
   watermarkText?: string,
   appendAuditCertificate: boolean = false
 ): Promise<Uint8Array> {
+  const { PDFDocument, rgb, degrees, StandardFonts } = await loadPdfLib();
   const bytes = await pdfFile.arrayBuffer();
   const originalSha256 = appendAuditCertificate ? await computeSha256Hex(bytes) : "";
   const pdfDoc = await PDFDocument.load(bytes, { ignoreEncryption: true });
@@ -636,7 +647,7 @@ export async function embedSignaturesIntoPDF(
     if (targetPageIndex < 0 || targetPageIndex >= pages.length) continue;
     const page = pages[targetPageIndex];
     const { width: pageWidth, height: pageHeight } = page.getSize();
-    let signatureImage: import("pdf-lib").PDFImage;
+    let signatureImage: PDFImage;
     try {
       const { bytes: rawBytes, mime } = dataUrlToUint8Array(sig.signatureDataUrl);
       if (mime === "image/png") {
@@ -723,8 +734,8 @@ export async function embedSignaturesIntoPDF(
       ["Original Page Count:", `${pages.length} Page(s)`],
       ["Signatures / Stamps Placed:", `${signatures.length} Item(s)`],
       ["Execution Timestamp (UTC):", isoTimestamp],
-      ["Execution Environment:", "Local Browser Sandbox (WebAssembly + Web Crypto API)"],
-      ["Compliance Standard:", "US ESIGN Act (15 U.S.C. ch. 96) / UETA / eIDAS SES"],
+      ["Execution Environment:", "Local Browser Sandbox (Web Crypto API)"],
+      ["Signature Type:", "Simple electronic signature (image), not certificate-based"],
     ];
 
     for (const [label, val] of rows) {

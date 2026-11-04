@@ -119,7 +119,7 @@ export default function SignPdfPage() {
     try {
       const pdfjs = await loadPdfJs();
       const buffer = await selected.arrayBuffer();
-      const pdf = await pdfjs.getDocument({ data: buffer }).promise;
+      const pdf = await pdfjs.getDocument({ data: buffer, isEvalSupported: false }).promise;
       setPdfDocProxy(pdf);
       setTotalPages(pdf.numPages);
     } catch (err: unknown) {
@@ -645,7 +645,7 @@ export default function SignPdfPage() {
                 <span>Append Tamper-Evident SHA-256 Audit Certificate Page</span>
               </div>
               <span className="text-[11px] text-emerald-700 dark:text-emerald-400 font-mono hidden sm:inline">
-                ESIGN & eIDAS SES Audit Trail
+                SHA-256 audit page (not a certificate-based signature)
               </span>
             </label>
 

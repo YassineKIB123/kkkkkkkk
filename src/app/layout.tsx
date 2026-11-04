@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import { LanguageProvider } from "@/context/LanguageContext";
 import { CookieConsent } from "@/components/common/CookieConsent";
@@ -14,8 +15,9 @@ const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_ID;
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
+  // No site-wide canonical: every page declares its own. A root canonical
+  // would make pages without one point at the homepage.
   alternates: {
-    canonical: "/",
     types: {
       "text/plain": "/llms.txt",
     },
@@ -33,21 +35,9 @@ export const metadata: Metadata = {
   },
   description:
     "Every PDF tool you need, all in one place. Edit, merge, split, compress, scan, sign, convert, and rotate PDFs with 100% client-side browser privacy. Your files never leave your device.",
-  keywords: [
-    "PDF tools",
-    "edit PDF text online",
-    "free PDF merge",
-    "compress PDF under 100kb",
-    "PDF scanner",
-    "sign PDF online",
-    "convert PDF to word",
-    "split PDF",
-    "client-side PDF",
-    "private PDF editor",
-  ],
-  authors: [{ name: "iKnowAPDF Team" }],
+  authors: [{ name: "iKnowAPDF" }],
   creator: "iKnowAPDF",
-  openGraph: {
+  openGraph: { images: ["/opengraph-image.png"],
     type: "website",
     locale: "en_US",
     url: `${SITE_URL}/`,
@@ -80,34 +70,37 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // Site-wide structured data: who publishes the site + the site itself.
+  // (Tool/app schema lives on the individual pages.)
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "WebApplication",
-    name: "iKnowAPDF",
-    url: `${SITE_URL}/`,
-    applicationCategory: "BusinessApplication",
-    operatingSystem: "All",
-    browserRequirements:
-      "Requires modern web browser with WebAssembly and HTML5 Canvas support",
-    offers: {
-      "@type": "Offer",
-      price: "0",
-      priceCurrency: "USD",
-    },
-    featureList: [
-      "Sejda-Style In-Place PDF Text Editor",
-      "Mobile and Web Camera Document Scanner with Auto-Edge Detection",
-      "Multi-Level PDF Compression (Extreme, Recommended, Lossless)",
-      "Digital Electronic PDF Signing, Stamps & Initials",
-      "PDF Merge, Visual Split, and Page Rotation",
-      "Universal Word, Excel, PowerPoint, Text, and Image to PDF Conversion",
-      "100% Client-Side Privacy Guarantee with Offline PWA Support",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": `${SITE_URL}/#organization`,
+        name: "iKnowAPDF",
+        url: `${SITE_URL}/`,
+        logo: `${SITE_URL}/favicon.ico`,
+      },
+      {
+        "@type": "WebSite",
+        "@id": `${SITE_URL}/#website`,
+        name: "iKnowAPDF",
+        url: `${SITE_URL}/`,
+        publisher: { "@id": `${SITE_URL}/#organization` },
+        inLanguage: ["en", "fr", "es", "ru", "ar"],
+      },
     ],
   };
+
+  // Applies the saved theme before first paint (prevents a white flash for
+  // dark-mode users).
+  const themeScript = `try{var t=localStorage.getItem("theme");if(t==="dark"){document.documentElement.classList.add("dark")}}catch(e){}`;
 
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <link
           rel="alternate"
           type="text/plain"
@@ -131,13 +124,6 @@ export default function RootLayout({
             />
           </>
         )}
-        {ADSENSE_ID && (
-          <script
-            async
-            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_ID}`}
-            crossOrigin="anonymous"
-          />
-        )}
       </head>
       <body
         className={`${inter.className} min-h-screen bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-100 antialiased`}
@@ -146,6 +132,16 @@ export default function RootLayout({
           {children}
           <CookieConsent />
         </LanguageProvider>
+        {ADSENSE_ID && (
+          // Ads sit below the tools, so load AdSense after the page is idle
+          // instead of blocking the first render.
+          <Script
+            id="adsense"
+            strategy="lazyOnload"
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_ID}`}
+            crossOrigin="anonymous"
+          />
+        )}
       </body>
     </html>
   );

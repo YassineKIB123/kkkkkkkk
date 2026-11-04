@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Pricing — $5/mo Ad-Free Pass | iKnowAPDF",
+  title: "Pricing — Free PDF Tools & Optional Ad-Free Pass",
   description:
-    "All PDF tools are 100% free and unlimited. Remove all advertisements with our $5/month Ad-Free Pass payable via PayPal. Cancel anytime.",
+    "All iKnowAPDF PDF tools are free to use with no daily limits. An optional ad-free pass, paid once through PayPal, hides ads and supports the site.",
   alternates: {
     canonical: "https://iknowapdf.lol/pricing",
   },
-  openGraph: {
-    title: "iKnowAPDF Pricing — $5/mo Ad-Free Pass",
+  openGraph: { images: ["/opengraph-image.png"],
+    title: "iKnowAPDF Pricing — Free Tools & Optional Ad-Free Pass",
     description:
-      "All PDF tools are 100% free forever. Upgrade to Ad-Free for $5/month with PayPal. Zero ads, cancel anytime.",
+      "All PDF tools are free. Hide ads with an optional ad-free pass paid once through PayPal.",
     url: "https://iknowapdf.lol/pricing",
     siteName: "iKnowAPDF",
     type: "website",

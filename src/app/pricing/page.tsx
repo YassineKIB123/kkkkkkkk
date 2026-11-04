@@ -383,7 +383,7 @@ export default function PricingPage() {
           </h1>
 
           <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 leading-relaxed max-w-2xl mx-auto">
-            All 15+ PDF tools are 100% free and unlimited forever. For just $5 per month, enjoy a completely clean, distraction-free workspace with zero advertisements across all your personal devices.
+            All PDF tools are free to use, with no daily limits. If you&apos;d like a cleaner workspace without ads — and want to support the site — you can buy an optional ad-free pass.
           </p>
         </section>
 
@@ -419,7 +419,7 @@ export default function PricingPage() {
               <ul className="space-y-3 text-xs text-slate-600 dark:text-slate-300">
                 <li className="flex items-center gap-2.5">
                   <Check className="h-4 w-4 text-emerald-500 shrink-0" />
-                  <span><strong>Unlimited operations</strong> per day (100% Free Forever)</span>
+                  <span><strong>No daily limits</strong> on any tool</span>
                 </li>
                 <li className="flex items-center gap-2.5">
                   <Check className="h-4 w-4 text-emerald-500 shrink-0" />
@@ -435,7 +435,7 @@ export default function PricingPage() {
                 </li>
                 <li className="flex items-center gap-2.5">
                   <Check className="h-4 w-4 text-emerald-500 shrink-0" />
-                  <span>Offline Progressive Web App (PWA)</span>
+                  <span>Installable web app</span>
                 </li>
                 <li className="flex items-center gap-2.5 text-slate-400 dark:text-slate-500">
                   <span className="h-1.5 w-1.5 rounded-full bg-slate-400 shrink-0 ml-1.5 mr-0.5" />
@@ -489,7 +489,7 @@ export default function PricingPage() {
               <ul className="space-y-3 text-xs text-slate-700 dark:text-slate-200 font-medium">
                 <li className="flex items-center gap-2.5">
                   <CheckCircle2 className="h-4 w-4 text-amber-500 shrink-0" />
-                  <span><strong>Unlimited operations</strong> for 7 full days</span>
+                  <span><strong>Everything in Free</strong>, without ads for 7 days</span>
                 </li>
                 <li className="flex items-center gap-2.5">
                   <CheckCircle2 className="h-4 w-4 text-amber-500 shrink-0" />
@@ -501,11 +501,11 @@ export default function PricingPage() {
                 </li>
                 <li className="flex items-center gap-2.5">
                   <CheckCircle2 className="h-4 w-4 text-amber-500 shrink-0" />
-                  <span><strong>Faster Performance:</strong> Maximum WebAssembly speed</span>
+                  <span><strong>Supports development:</strong> helps keep the tools free</span>
                 </li>
                 <li className="flex items-center gap-2.5">
                   <CheckCircle2 className="h-4 w-4 text-amber-500 shrink-0" />
-                  <span><strong>All Devices Included:</strong> Desktop, tablet & phone</span>
+                  <span><strong>Per browser:</strong> activates in the browser you pay from</span>
                 </li>
                 <li className="flex items-center gap-2.5">
                   <CheckCircle2 className="h-4 w-4 text-amber-500 shrink-0" />
@@ -544,7 +544,7 @@ export default function PricingPage() {
             {/* Top Pill */}
             <div className="absolute -top-3 right-5 flex items-center gap-1 rounded-full bg-rose-600 px-3 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-white shadow-xs">
               <Sparkles className="h-3 w-3" />
-              <span>Most Popular &bull; Cancel Anytime</span>
+              <span>Supports the Site</span>
             </div>
 
             <div className="space-y-5">
@@ -575,7 +575,7 @@ export default function PricingPage() {
               <ul className="space-y-3 text-xs text-slate-700 dark:text-slate-200 font-medium">
                 <li className="flex items-center gap-2.5">
                   <CheckCircle2 className="h-4 w-4 text-rose-600 shrink-0" />
-                  <span><strong>Unlimited operations</strong> permanently</span>
+                  <span><strong>Everything in Free</strong>, without ads</span>
                 </li>
                 <li className="flex items-center gap-2.5">
                   <CheckCircle2 className="h-4 w-4 text-rose-600 shrink-0" />
@@ -583,19 +583,19 @@ export default function PricingPage() {
                 </li>
                 <li className="flex items-center gap-2.5">
                   <CheckCircle2 className="h-4 w-4 text-rose-600 shrink-0" />
-                  <span><strong>Zero Ad Tracking:</strong> 100% private, zero network calls</span>
+                  <span><strong>No ad units:</strong> banner ads are hidden</span>
                 </li>
                 <li className="flex items-center gap-2.5">
                   <CheckCircle2 className="h-4 w-4 text-rose-600 shrink-0" />
-                  <span><strong>Faster Performance:</strong> Cleaner pages & instant processing</span>
+                  <span><strong>Cleaner pages:</strong> more room for your work</span>
                 </li>
                 <li className="flex items-center gap-2.5">
                   <CheckCircle2 className="h-4 w-4 text-rose-600 shrink-0" />
-                  <span><strong>All Devices Included:</strong> Desktop, laptop, tablet, & phone</span>
+                  <span><strong>Per browser:</strong> activates in the browser you pay from</span>
                 </li>
                 <li className="flex items-center gap-2.5">
                   <CheckCircle2 className="h-4 w-4 text-rose-600 shrink-0" />
-                  <span><strong>Cancel Anytime:</strong> 1 click from your PayPal dashboard</span>
+                  <span><strong>No auto-renewal:</strong> one-time PayPal payment</span>
                 </li>
               </ul>
             </div>
@@ -608,7 +608,7 @@ export default function PricingPage() {
                     <span>Pro Pass Active</span>
                   </div>
                   <p className="text-[10px] text-slate-600 dark:text-slate-400">
-                    All ads and limits are removed across every tool.
+                    Ads are hidden across every tool in this browser.
                   </p>
                   <button
                     type="button"
@@ -640,7 +640,7 @@ export default function PricingPage() {
               )}
               <p className="flex items-center justify-center gap-1 text-center text-[10px] text-slate-400">
                 <ShieldCheck className="h-3 w-3 text-slate-400 shrink-0" />
-                <span>Protected by PayPal Buyer Protection &bull; Cancel anytime</span>
+                <span>Paid securely via PayPal &bull; No auto-renewal</span>
               </p>
             </div>
           </div>
@@ -688,7 +688,7 @@ export default function PricingPage() {
                   </td>
                 </tr>
                 <tr>
-                  <td className="py-3.5 px-6 font-medium">Unlimited File Sizes & Unlimited Pages</td>
+                  <td className="py-3.5 px-6 font-medium">No File-Size Caps (limited only by your device memory)</td>
                   <td className="py-3.5 px-6 text-center">
                     <Check className="h-4 w-4 text-emerald-500 mx-auto" />
                   </td>
@@ -706,7 +706,7 @@ export default function PricingPage() {
                   </td>
                 </tr>
                 <tr>
-                  <td className="py-3.5 px-6 font-medium">Offline PWA Functionality</td>
+                  <td className="py-3.5 px-6 font-medium">Installable Web App</td>
                   <td className="py-3.5 px-6 text-center">
                     <Check className="h-4 w-4 text-emerald-500 mx-auto" />
                   </td>
@@ -722,18 +722,18 @@ export default function PricingPage() {
                     Shown
                   </td>
                   <td className="py-3.5 px-6 text-center font-bold text-emerald-600 dark:text-emerald-400">
-                    100% Removed
+                    Hidden
                   </td>
                 </tr>
                 <tr className="bg-rose-50/30 dark:bg-rose-950/10">
                   <td className="py-3.5 px-6 font-bold text-slate-900 dark:text-white">
-                    Third-Party Ad Network Trackers
+                    Ad Units on Tool Pages
                   </td>
                   <td className="py-3.5 px-6 text-center text-slate-500">
-                    Standard
+                    Shown
                   </td>
                   <td className="py-3.5 px-6 text-center font-bold text-emerald-600 dark:text-emerald-400">
-                    Zero Ad Requests
+                    Hidden
                   </td>
                 </tr>
                 <tr>
@@ -756,7 +756,7 @@ export default function PricingPage() {
                     $0 Free Forever
                   </td>
                   <td className="py-3.5 px-6 text-center font-bold text-rose-600">
-                    $5 / month
+                    $5 (one-time)
                   </td>
                 </tr>
               </tbody>
@@ -784,7 +784,7 @@ export default function PricingPage() {
                 Affordable & Flexible
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                Just $5 a month with zero commitment. You can cancel your subscription whenever you want in one click from your PayPal dashboard.
+                A small one-time PayPal payment. Nothing renews automatically, so there is nothing to cancel.
               </p>
             </div>
 
@@ -796,7 +796,7 @@ export default function PricingPage() {
                 100% In-Browser Privacy
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                Other websites upload your confidential tax files and contracts to remote servers. iKnowAPDF runs 100% in your local RAM.
+                Many websites upload your files to their servers. iKnowAPDF processes them in your browser, with or without the pass.
               </p>
             </div>
 
@@ -808,7 +808,7 @@ export default function PricingPage() {
                 Independent Software
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                Your $5 directly supports ongoing WebAssembly engineering, web hosting, and keeping all utilities accessible for everyone.
+                Your payment supports ongoing development and hosting, and keeps the tools free for everyone.
               </p>
             </div>
           </div>
@@ -822,7 +822,7 @@ export default function PricingPage() {
               <span>Frequently Asked Questions</span>
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Everything you need to know about the $5/month Ad-Free pass
+              Everything you need to know about the ad-free pass
             </p>
           </div>
 
@@ -832,7 +832,7 @@ export default function PricingPage() {
                 How do I pay with PayPal?
               </h3>
               <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                Click &ldquo;Get Ad-Free Pass ($5/mo)&rdquo; to open the secure PayPal portal, then complete checkout directly using your PayPal balance, bank account, or debit/credit card.
+                Choose a pass to open PayPal checkout, then pay with your PayPal balance, bank account, or debit/credit card.
               </p>
             </div>
 
@@ -841,16 +841,16 @@ export default function PricingPage() {
                 When does the ad-free pass activate?
               </h3>
               <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                The pass activates instantly and automatically as soon as PayPal verifies your payment. There is no manual code to enter.
+                The pass activates in your browser when PayPal returns you to iKnowAPDF after payment. If that doesn&apos;t happen, email support@iknowapdf.lol with your PayPal transaction ID.
               </p>
             </div>
 
             <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900 space-y-2">
               <h3 className="font-bold text-sm text-slate-900 dark:text-white">
-                Can I cancel my $5/month subscription at any time?
+                Is this a recurring subscription?
               </h3>
               <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                Yes, absolutely. You can manage or cancel your subscription at any time directly through your PayPal account dashboard with zero fees or questions.
+                No. Checkout is a one-time PayPal payment and nothing renews automatically.
               </p>
             </div>
 
@@ -859,7 +859,7 @@ export default function PricingPage() {
                 How does ad removal work?
               </h3>
               <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                All Google AdSense banners, ad rectangles, and third-party tracking scripts are completely suppressed across both the homepage and all tool pages.
+                Ad units on the homepage and tool pages are hidden in the browser where the pass is active. The pass is saved in that browser, so clearing site data or switching devices removes it. Anonymous analytics may still run.
               </p>
             </div>
 
@@ -868,7 +868,7 @@ export default function PricingPage() {
                 Will the tools stay free if I choose not to subscribe?
               </h3>
               <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                Yes! Every single PDF tool on iKnowAPDF remains 100% free and unlimited. The $5/mo pass is solely for users who want an ad-free experience while supporting the site.
+                Yes. Every PDF tool on iKnowAPDF stays free, with no daily limits. The pass only removes ads.
               </p>
             </div>
           </div>
@@ -961,7 +961,7 @@ export default function PricingPage() {
                     Encrypted Card & PayPal Checkout
                   </span>
                   <span>-</span>
-                  <span>Instant Auto-Activation</span>
+                  <span>Activates on return from PayPal</span>
                 </div>
               </div>
             ) : (
@@ -974,7 +974,7 @@ export default function PricingPage() {
                     Ad-Free Pass Activated!
                   </h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Payment verified automatically via PayPal
+                    Thank you for your payment
                   </p>
                 </div>
 
@@ -999,12 +999,12 @@ export default function PricingPage() {
                   </div>
                   <div className="flex justify-between border-t border-slate-200 dark:border-slate-800 pt-2 font-semibold">
                     <span>Ad Removal</span>
-                    <span className="text-emerald-600 dark:text-emerald-400">100% Zero Ads</span>
+                    <span className="text-emerald-600 dark:text-emerald-400">Ads hidden</span>
                   </div>
                 </div>
 
                 <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                  Thank you for supporting iKnowAPDF! All advertisement banners and tracking containers are now disabled across all tools.
+                  Thank you for supporting iKnowAPDF! Ads are now hidden across all tools in this browser.
                 </p>
 
                 <div className="pt-2">
@@ -1036,7 +1036,7 @@ export default function PricingPage() {
                 </span>
               </div>
               <p className="text-slate-500 dark:text-slate-400 max-w-sm leading-relaxed">
-                Studio-grade, 100% private in-browser document processing. Merge, compress, split, sign, scan, and convert PDF files without uploading documents to external servers.
+                Free, in-browser document processing. Merge, compress, split, sign, scan, and convert PDF files without uploading documents to external servers.
               </p>
             </div>
 

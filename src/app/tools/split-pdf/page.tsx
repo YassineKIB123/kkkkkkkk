@@ -71,7 +71,7 @@ export default function SplitPdfPage() {
       loadPdfJs()
         .then(async (pdfjs) => {
           const buffer = await selected.arrayBuffer();
-          const pdf = await pdfjs.getDocument({ data: buffer }).promise;
+          const pdf = await pdfjs.getDocument({ data: buffer, isEvalSupported: false }).promise;
           const maxPreviewPages = Math.min(pdf.numPages, 40);
           const list: PageThumb[] = [];
           const canvas = document.createElement("canvas");

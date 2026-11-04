@@ -1,5 +1,3 @@
-"use client";
-
 import React from "react";
 import Link from "next/link";
 import { ToolLayout } from "@/components/tools/ToolLayout";
@@ -22,6 +20,7 @@ export default function NotFound() {
     { label: "Sign PDF", href: "/tools/sign-pdf", icon: PenLine },
     { label: "Scan to PDF", href: "/tools/scan", icon: Camera },
     { label: "Universal Converter", href: "/tools/convert", icon: RefreshCw },
+    { label: "All PDF tools", href: "/pdf-tools", icon: Home },
   ];
 
   return (
@@ -29,6 +28,7 @@ export default function NotFound() {
       title="Page Not Found (404)"
       description="The page you requested could not be found. Choose any of our 100% private client-side PDF tools below to continue."
       hideSeoMeta={true}
+      hideToolSections={true}
     >
       <div className="py-8 text-center space-y-6">
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-rose-100 bg-rose-50 text-rose-600 dark:border-rose-900/40 dark:bg-rose-950/40 dark:text-rose-400">

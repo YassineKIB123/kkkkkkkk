@@ -1,21 +1,13 @@
 import type { Metadata } from "next";
+import { toolMetadata } from "@/lib/seo/tool-metadata";
 
-export const metadata: Metadata = {
-  title: "Sign PDF Online Free — Electronic Signature & SHA-256 Audit Trail (No Signup)",
+export const metadata: Metadata = toolMetadata({
+  path: "/tools/sign-pdf",
+  localeSlug: "sign-pdf",
+  title: "Sign PDF Online Free – Add Signature, No Sign-Up",
   description:
-    "Draw, type, or upload your signature to sign PDF contracts online for free. Add date stamps, checkmarks, and an optional SHA-256 Audit Certificate with 100% browser privacy.",
-  alternates: {
-    canonical: "https://iknowapdf.lol/tools/sign-pdf",
-  },
-  openGraph: {
-    title: "Sign PDF Online Free — Electronic Signature & SHA-256 Audit | iKnowAPDF",
-    description:
-      "Sign PDF agreements in your browser with zero cloud uploads, saved signatures, and tamper-evident SHA-256 audit trails.",
-    url: "https://iknowapdf.lol/tools/sign-pdf",
-    siteName: "iKnowAPDF",
-    type: "website",
-  },
-};
+    "Draw, type or upload your signature, add initials and date stamps, and download the signed PDF. Free, runs in your browser, no account needed.",
+});
 
 export default function SignPdfLayout({ children }: { children: React.ReactNode }) {
   return <>{children}</>;

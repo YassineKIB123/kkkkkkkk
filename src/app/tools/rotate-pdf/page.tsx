@@ -7,7 +7,6 @@ import { ToolLayout } from "@/components/tools/ToolLayout";
 import { FileDropzone } from "@/components/tools/FileDropzone";
 import { useLanguage } from "@/context/LanguageContext";
 import { downloadBlob, loadPdfJs } from "@/lib/pdf/pdf-utils";
-import { PDFDocument, degrees } from "pdf-lib";
 import {
   RotateCw,
   RotateCcw,
@@ -63,7 +62,7 @@ export default function RotatePdfPage() {
     try {
       const pdfjs = await loadPdfJs();
       const arrayBuffer = await selected.arrayBuffer();
-      pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
+      pdf = await pdfjs.getDocument({ data: arrayBuffer, isEvalSupported: false }).promise;
       const loadedThumbnails: PageThumbnail[] = [];
 
       for (let i = 1; i <= pdf.numPages; i++) {
@@ -139,6 +138,7 @@ export default function RotatePdfPage() {
 
     try {
       const arrayBuffer = await file.arrayBuffer();
+      const { PDFDocument, degrees } = await import("pdf-lib");
       const pdfDoc = await PDFDocument.load(arrayBuffer, { ignoreEncryption: true });
       const pages = pdfDoc.getPages();
 

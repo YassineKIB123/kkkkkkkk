@@ -1,5 +1,6 @@
-import { PDFDocument, rgb, StandardFonts, PageSizes } from "pdf-lib";
-import JSZip from "jszip";
+// pdf-lib and JSZip are heavy; load them only when a conversion actually runs.
+const loadPdfLib = () => import("pdf-lib");
+const loadJSZip = async () => (await import("jszip")).default;
 import { loadPdfJs } from "./pdf-utils";
 
 declare global {
@@ -63,6 +64,7 @@ function sortPdfTextItems(items: any[]): any[] {
 }
 
 async function unicodeTextToPDFViaCanvas(title: string, rawText: string): Promise<Uint8Array> {
+  const { PDFDocument, PageSizes } = await loadPdfLib();
   const pdfDoc = await PDFDocument.create();
   const A4_W = PageSizes.A4[0];
   const A4_H = PageSizes.A4[1];
@@ -175,6 +177,7 @@ export async function textToPDF(file: File): Promise<Uint8Array> {
     return await unicodeTextToPDFViaCanvas(cleanTitle, text);
   }
 
+  const { PDFDocument, rgb, StandardFonts, PageSizes } = await loadPdfLib();
   const pdfDoc = await PDFDocument.create();
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
@@ -310,6 +313,7 @@ export async function wordToPDF(file: File): Promise<Uint8Array> {
 
 export async function powerpointToPDF(file: File): Promise<Uint8Array> {
   const arrayBuffer = await file.arrayBuffer();
+  const [JSZip, { PDFDocument }] = await Promise.all([loadJSZip(), loadPdfLib()]);
   const zip = await JSZip.loadAsync(arrayBuffer);
 
   const slideFiles = Object.keys(zip.files)
@@ -459,6 +463,7 @@ export async function excelToPDF(file: File): Promise<Uint8Array> {
     return await unicodeTextToPDFViaCanvas(file.name.replace(/\.[^/.]+$/, ""), textDump);
   }
 
+  const { PDFDocument, rgb, StandardFonts } = await loadPdfLib();
   const pdfDoc = await PDFDocument.create();
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
@@ -556,7 +561,7 @@ export async function excelToPDF(file: File): Promise<Uint8Array> {
 export async function pdfToText(file: File): Promise<string> {
   const pdfjs = await loadPdfJs();
   const arrayBuffer = await file.arrayBuffer();
-  const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
+  const pdf = await pdfjs.getDocument({ data: arrayBuffer, isEvalSupported: false }).promise;
   let fullText = "";
 
   try {
@@ -594,7 +599,7 @@ export async function pdfToWord(file: File): Promise<Blob> {
   const pdfjs = await loadPdfJs();
 
   const arrayBuffer = await file.arrayBuffer();
-  const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
+  const pdf = await pdfjs.getDocument({ data: arrayBuffer, isEvalSupported: false }).promise;
   const docChildren: any[] = [];
 
   try {
@@ -669,7 +674,7 @@ export async function pdfToExcel(file: File): Promise<Blob> {
 
   const pdfjs = await loadPdfJs();
   const arrayBuffer = await file.arrayBuffer();
-  const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
+  const pdf = await pdfjs.getDocument({ data: arrayBuffer, isEvalSupported: false }).promise;
   const workbook = xlsxLib.utils.book_new();
 
   try {
@@ -730,7 +735,7 @@ export async function pdfToPowerPoint(file: File): Promise<Blob> {
   pptx.layout = "LAYOUT_WIDE"; // 13.33 x 7.5 inches
 
   const arrayBuffer = await file.arrayBuffer();
-  const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
+  const pdf = await pdfjs.getDocument({ data: arrayBuffer, isEvalSupported: false }).promise;
   const canvas = document.createElement("canvas");
 
   try {

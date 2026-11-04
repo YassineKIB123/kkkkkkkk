@@ -1,19 +1,13 @@
 import type { Metadata } from "next";
+import { toolMetadata } from "@/lib/seo/tool-metadata";
 
-export const metadata: Metadata = {
-  title: "Sanitize PDF Metadata — Remove Hidden Author & Revision Data",
-  description: "Strip sensitive author information, software history, creation timestamps, and hidden XML/XMP metadata from PDF files for total privacy.",
-  alternates: {
-    canonical: "https://iknowapdf.lol/tools/sanitize-pdf",
-  },
-  openGraph: {
-    title: "Sanitize PDF Metadata — Free & 100% Private | iKnowAPDF",
-    description: "Strip sensitive author information, software history, creation timestamps, and hidden XML/XMP metadata from PDF files for total privacy.",
-    url: "https://iknowapdf.lol/tools/sanitize-pdf",
-    siteName: "iKnowAPDF",
-    type: "website",
-  },
-};
+export const metadata: Metadata = toolMetadata({
+  path: "/tools/sanitize-pdf",
+  localeSlug: "sanitize-pdf",
+  title: "Remove PDF Metadata Online Free – Author, Dates, XMP",
+  description:
+    "Strip author names, software history, timestamps and hidden XMP metadata from PDF files before you share them. Free, in your browser, no upload.",
+});
 
 export default function SanitizePdfLayout({ children }: { children: React.ReactNode }) {
   return <>{children}</>;

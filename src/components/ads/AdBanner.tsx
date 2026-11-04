@@ -14,9 +14,19 @@ declare global {
 interface AdBannerProps {
   format: "leaderboard" | "rectangle";
   className?: string;
+  /** AdSense ad unit slot id. Falls back to NEXT_PUBLIC_ADSENSE_SLOT_ID. */
   slotId?: string;
+  /** Dev aid: show a dashed placeholder box when no slot id is configured. */
   showPlaceholder?: boolean;
 }
+
+type AdStatus = "pending" | "show" | "ad-free";
+
+// Fixed box sizes (label row + ad creative + padding) so the unit never shifts layout.
+const SIZES = {
+  leaderboard: { box: "w-full max-w-[746px] h-[126px]", adHeight: 90 },
+  rectangle: { box: "w-[318px] h-[286px]", adHeight: 250 },
+} as const;
 
 export function AdBanner({
   format,
@@ -25,14 +35,19 @@ export function AdBanner({
   showPlaceholder = false,
 }: AdBannerProps) {
   const adsenseId = process.env.NEXT_PUBLIC_ADSENSE_ID || "ca-pub-5152878593494077";
+  const adSlot = slotId ?? process.env.NEXT_PUBLIC_ADSENSE_SLOT_ID;
   const pushedRef = useRef(false);
-  const [isAdFree, setIsAdFree] = useState<boolean>(false);
+  // "pending" until mounted and the Pro / ad-free status has been read from localStorage.
+  // Nothing (not even reserved space) is rendered while pending, so Pro users never see a flash.
+  const [status, setStatus] = useState<AdStatus>("pending");
 
   useEffect(() => {
     const checkAdFree = () => {
+      let pro = false;
       try {
-        setIsAdFree(isUserPro());
+        pro = isUserPro();
       } catch {}
+      setStatus(pro ? "ad-free" : "show");
     };
 
     checkAdFree();
@@ -48,18 +63,18 @@ export function AdBanner({
   }, []);
 
   useEffect(() => {
-    if (isAdFree) {
+    if (status === "ad-free") {
       try {
         const w = window as any;
         w.adsbygoogle = w.adsbygoogle || [];
         w.adsbygoogle.pauseAdRequests = 1;
-        document.querySelectorAll('ins.adsbygoogle-noablate, ins.adsbygoogle').forEach((el) => {
-          (el as HTMLElement).style.display = 'none';
+        document.querySelectorAll("ins.adsbygoogle-noablate, ins.adsbygoogle").forEach((el) => {
+          (el as HTMLElement).style.display = "none";
         });
       } catch {}
       return;
     }
-    if (!adsenseId || pushedRef.current) return;
+    if (status !== "show" || !adsenseId || !adSlot || pushedRef.current) return;
     try {
       const w = window as any;
       w.adsbygoogle = w.adsbygoogle || [];
@@ -71,71 +86,53 @@ export function AdBanner({
     } catch {
       // Ignore duplicate push on hot reload
     }
-  }, [adsenseId, isAdFree]);
+  }, [adsenseId, adSlot, status]);
 
-  // Strip all ad wrappers and banners if ad-free pass is active
-  if (isAdFree) {
+  if (status !== "show" || !adsenseId) {
     return null;
   }
 
-  // Render nothing until NEXT_PUBLIC_ADSENSE_ID is configured
-  if (!adsenseId && !showPlaceholder) {
-    return null;
-  }
-
+  const size = SIZES[format];
   const isLeaderboard = format === "leaderboard";
+
+  if (!adSlot) {
+    if (!showPlaceholder) return null;
+    return (
+      <aside
+        aria-label="Advertisement placeholder"
+        className={`mx-auto flex flex-col items-center justify-center overflow-hidden rounded-xl border border-dashed border-slate-200 bg-white text-xs text-slate-400 dark:border-slate-800 dark:bg-slate-900 ${size.box} ${className}`}
+      >
+        <span className="text-[11px] font-medium">
+          {isLeaderboard ? "Leaderboard (728x90)" : "Rectangle (300x250)"} - no ad slot configured
+        </span>
+      </aside>
+    );
+  }
 
   return (
     <aside
       aria-label="Advertisement"
-      className={`mx-auto flex flex-col items-center justify-center overflow-hidden rounded-xl border border-slate-200/80 bg-slate-50/50 p-2 text-center transition-all dark:border-slate-800 dark:bg-slate-900/40 ${
-        isLeaderboard
-          ? "w-full max-w-[728px] min-h-[90px] sm:min-h-[100px]"
-          : "w-[300px] min-h-[250px]"
-      } ${className}`}
+      className={`mx-auto flex flex-col items-center overflow-hidden rounded-xl border border-slate-200/80 bg-slate-50/50 p-2 text-center dark:border-slate-800 dark:bg-slate-900/40 ${size.box} ${className}`}
     >
-      {adsenseId ? (
-        <>
-          <div className="flex items-center justify-between w-full px-2 mb-1">
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-              Advertisement
-            </span>
-            <Link
-              href="/pricing"
-              className="inline-flex items-center gap-1 text-[10px] font-bold text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 hover:underline transition-colors cursor-pointer"
-            >
-              <span>Remove ads ($5/mo)</span>
-              <ArrowRight className="h-2.5 w-2.5" />
-            </Link>
-          </div>
-          <ins
-            className="adsbygoogle"
-            style={{ display: "block", width: "100%" }}
-            data-ad-client={adsenseId}
-            data-ad-slot={slotId || "auto"}
-            data-ad-format={isLeaderboard ? "horizontal" : "rectangle"}
-            data-full-width-responsive="true"
-          />
-        </>
-      ) : (
-        <div className="flex h-full w-full flex-col items-center justify-center rounded-lg border border-dashed border-slate-200 bg-white py-3 text-xs text-slate-400 dark:border-slate-800 dark:bg-slate-900">
-          <div className="flex items-center justify-between w-full px-3 mb-1">
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-              Advertisement
-            </span>
-            <Link
-              href="/pricing"
-              className="inline-flex items-center gap-1 text-[10px] font-bold text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 hover:underline transition-colors cursor-pointer"
-            >
-              <span>Remove ads ($5/mo)</span>
-              <ArrowRight className="h-2.5 w-2.5" />
-            </Link>
-          </div>
-          <span className="mt-1 text-[11px] font-medium text-slate-400">
-            {isLeaderboard ? "Leaderboard (728x90)" : "Rectangle (300x250)"}
-          </span>
-        </div>
-      )}
+      <div className="flex h-[14px] items-center justify-between w-full px-2 mb-1 shrink-0">
+        <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+          Advertisement
+        </span>
+        <Link
+          href="/pricing"
+          className="inline-flex items-center gap-1 text-[10px] font-bold text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 hover:underline transition-colors cursor-pointer"
+        >
+          <span>Remove ads ($5/mo)</span>
+          <ArrowRight className="h-2.5 w-2.5" />
+        </Link>
+      </div>
+      <ins
+        className="adsbygoogle"
+        style={{ display: "block", width: "100%", height: size.adHeight }}
+        data-ad-client={adsenseId}
+        data-ad-slot={adSlot}
+        data-ad-format={isLeaderboard ? "horizontal" : "rectangle"}
+      />
     </aside>
   );
 }

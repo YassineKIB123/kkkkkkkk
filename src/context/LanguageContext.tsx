@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
 import { DICTIONARY, Language, Translations } from "@/lib/i18n/translations";
 
@@ -29,73 +29,81 @@ function getLangFromPath(pathname: string | null): Language | null {
   return null;
 }
 
+// ---------------------------------------------------------------------------
+// Theme: persisted in localStorage. The inline <head> script in layout.tsx
+// applies the "dark" class before first paint; this store only mirrors it for
+// UI state (icons) and handles toggling.
+// ---------------------------------------------------------------------------
+
+const THEME_EVENT = "iknowapdf:theme";
+
+function subscribeTheme(onChange: () => void) {
+  window.addEventListener("storage", onChange);
+  window.addEventListener(THEME_EVENT, onChange);
+  return () => {
+    window.removeEventListener("storage", onChange);
+    window.removeEventListener(THEME_EVENT, onChange);
+  };
+}
+
+function getThemeSnapshot(): "light" | "dark" {
+  try {
+    return localStorage.getItem("theme") === "dark" ? "dark" : "light";
+  } catch {
+    return "light";
+  }
+}
+
+function getServerThemeSnapshot(): "light" | "dark" {
+  return "light";
+}
+
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const pathLang = getLangFromPath(pathname);
-  const [userLang, setUserLang] = useState<Language>("EN");
-  const [overrideLang, setOverrideLang] = useState<Language | null>(null);
-  const [theme, setThemeState] = useState<"light" | "dark">("light");
+  // A manual override only applies to the page it was chosen on; the URL
+  // (/fr, /es, /ru, /ar prefixes) otherwise decides the language, so every URL
+  // serves the same language to users and crawlers.
+  const [override, setOverride] = useState<{ lang: Language; path: string | null } | null>(null);
+  const theme = useSyncExternalStore(subscribeTheme, getThemeSnapshot, getServerThemeSnapshot);
 
-  // Reset explicit override when user navigates to a new route
-  useEffect(() => {
-    setOverrideLang(null);
-  }, [pathname]);
-
-  // Read saved language/theme from localStorage on client
-  useEffect(() => {
-    try {
-      if (!pathLang) {
-        const saved = localStorage.getItem("lang") as Language | null;
-        if (saved && DICTIONARY[saved]) {
-          setUserLang(saved);
-        }
-      }
-      const savedTheme = localStorage.getItem("theme") as "light" | "dark" | null;
-      if (savedTheme === "dark" || savedTheme === "light") {
-        setThemeState(savedTheme);
-      }
-    } catch {}
-  }, [pathLang]);
-
-  // Synchronously determine active language during SSG/build and client render
-  const activeLanguage: Language = overrideLang || pathLang || userLang;
+  const activeLanguage: Language =
+    (override && override.path === pathname ? override.lang : null) || pathLang || "EN";
 
   useEffect(() => {
     document.documentElement.dir = activeLanguage === "AR" ? "rtl" : "ltr";
     document.documentElement.lang = activeLanguage.toLowerCase();
-    if (theme === "dark") {
-      document.documentElement.classList.add("dark");
-      document.documentElement.classList.remove("light");
-    } else {
-      document.documentElement.classList.remove("dark");
-      document.documentElement.classList.add("light");
-    }
-    if ("serviceWorker" in navigator) {
+  }, [activeLanguage]);
+
+  // Register the service worker only after the page has fully loaded so it
+  // never competes with first-load resources.
+  useEffect(() => {
+    if (!("serviceWorker" in navigator)) return;
+    const register = () => {
       navigator.serviceWorker.register("/sw.js").catch(() => {});
+    };
+    if (document.readyState === "complete") {
+      register();
+      return;
     }
-  }, [activeLanguage, theme]);
+    window.addEventListener("load", register, { once: true });
+    return () => window.removeEventListener("load", register);
+  }, []);
 
   const setLanguage = (lang: Language) => {
-    setOverrideLang(lang);
-    setUserLang(lang);
-    try {
-      localStorage.setItem("lang", lang);
-    } catch {}
+    setOverride({ lang, path: pathname });
     document.documentElement.dir = lang === "AR" ? "rtl" : "ltr";
     document.documentElement.lang = lang.toLowerCase();
   };
 
   const toggleTheme = () => {
     const next = theme === "light" ? "dark" : "light";
-    setThemeState(next);
     try {
       localStorage.setItem("theme", next);
     } catch {}
-    if (next === "dark") {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
+    document.documentElement.classList.toggle("dark", next === "dark");
+    document.documentElement.classList.toggle("light", next === "light");
+    window.dispatchEvent(new Event(THEME_EVENT));
   };
 
   const t = DICTIONARY[activeLanguage] || DICTIONARY.EN;

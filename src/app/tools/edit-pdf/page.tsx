@@ -7,7 +7,6 @@ import { ToolLayout } from "@/components/tools/ToolLayout";
 import { FileDropzone } from "@/components/tools/FileDropzone";
 import { useLanguage } from "@/context/LanguageContext";
 import { downloadBlob, loadPdfJs } from "@/lib/pdf/pdf-utils";
-import { PDFDocument, PDFName } from "pdf-lib";
 import {
   Type,
   Link as LinkIcon,
@@ -44,7 +43,7 @@ import {
 // MODULE 1: TYPES & FONT / TEXT-LAYER ENGINE
 // ============================================================================
 
-export type SejdaToolMode =
+export type EditorToolMode =
   | "text"
   | "links"
   | "forms"
@@ -439,8 +438,8 @@ export default function EditPdfPage() {
   const [totalPages, setTotalPages] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState<number>(1);
 
-  // Active Sejda Tool & Subtools
-  const [activeTool, setActiveTool] = useState<SejdaToolMode>("text");
+  // Active Tool & Subtools
+  const [activeTool, setActiveTool] = useState<EditorToolMode>("text");
   const [formSubTool, setFormSubTool] = useState<FormSubTool>("check");
   const [annotateSubTool, setAnnotateSubTool] = useState<AnnotateSubTool>("highlight");
   const [shapeSubTool, setShapeSubTool] = useState<ShapeSubTool>("rect");
@@ -521,9 +520,9 @@ export default function EditPdfPage() {
   // Load Computer Modern & Google Fonts (Caladea/Carlito/Arimo/Dancing Script) for 1:1 matching
   useEffect(() => {
     if (typeof document === "undefined") return;
-    if (!document.getElementById("sejda-editor-fonts")) {
+    if (!document.getElementById("pdf-editor-fonts")) {
       const link1 = document.createElement("link");
-      link1.id = "sejda-editor-fonts";
+      link1.id = "pdf-editor-fonts";
       link1.rel = "stylesheet";
       link1.href =
         "https://cdn.jsdelivr.net/gh/dreampulse/computer-modern-web-font@master/fonts.css";
@@ -575,7 +574,7 @@ export default function EditPdfPage() {
    * Renders a PDF page into TWO offscreen canvases:
    * 1) `fullCanvas`: Full PDF render (used to sample true ink colors & stem thicknesses)
    * 2) `cleanBgCanvas`: Text-free background render (`fillText` & `strokeText` suppressed + residual glyph scrubber)
-   *    so that 100% of text on the page can be rendered as live Sejda DOM text lines with zero double-vision!
+   *    so that 100% of text on the page can be rendered as live DOM text lines with zero double-vision!
    */
   const extractAndRenderPage = useCallback(
     async (pdf: any, pageNum: number) => {
@@ -605,7 +604,7 @@ export default function EditPdfPage() {
       cleanCtx.strokeText = () => {};
       await page.render({ canvasContext: cleanCtx, viewport: renderVp }).promise;
 
-      // 3. Extract text items & merge into Sejda-style horizontal text lines
+      // 3. Extract text items & merge into horizontal text lines
       const textContent = await page.getTextContent();
       const rawItems: any[] = textContent.items || [];
       const stylesDict: Record<string, any> = textContent.styles || {};
@@ -686,7 +685,7 @@ export default function EditPdfPage() {
         return a.xPt - b.xPt;
       });
 
-      // Group segments on the same baseline with matching typography into Sejda horizontal lines
+      // Group segments on the same baseline with matching typography into horizontal lines
       const mergedLines: RawSegment[] = [];
       for (const seg of segments) {
         const prev = mergedLines[mergedLines.length - 1];
@@ -806,7 +805,7 @@ export default function EditPdfPage() {
       const buffer = await selected.arrayBuffer();
       defaultFontIdRef.current = detectDefaultFontFromPdfBuffer(buffer);
 
-      const pdf = await pdfjs.getDocument({ data: buffer }).promise;
+      const pdf = await pdfjs.getDocument({ data: buffer, isEvalSupported: false }).promise;
       setPdfDocProxy(pdf);
       setTotalPages(pdf.numPages);
     } catch (err: unknown) {
@@ -891,7 +890,7 @@ export default function EditPdfPage() {
     [lines, pushHistory]
   );
 
-  // Duplicate Line or Overlay (Sejda Duplicate button)
+  // Duplicate Line or Overlay (Duplicate button)
   const handleDuplicateSelected = () => {
     if (!selectedId) return;
     const ln = lines.find((l) => l.id === selectedId);
@@ -924,7 +923,7 @@ export default function EditPdfPage() {
     }
   };
 
-  // Delete Line or Overlay (Sejda Trash button)
+  // Delete Line or Overlay (Trash button)
   const handleDeleteSelected = useCallback(() => {
     if (!selectedId) return;
     pushHistory();
@@ -1005,7 +1004,7 @@ export default function EditPdfPage() {
 
     if (activeTool === "text") {
       // If user already had a line selected, first click on blank paper deselects;
-      // clicking blank paper when nothing is selected drops a Sejda "Type your text" box!
+      // clicking blank paper when nothing is selected drops a "Type your text" box!
       if (selectedId) {
         setSelectedId(null);
         return;
@@ -1347,7 +1346,7 @@ export default function EditPdfPage() {
   };
 
   // ============================================================================
-  // MODULE 4: SEJDA "APPLY CHANGES >" HIGH-FIDELITY PDF EXPORT ENGINE
+  // MODULE 4: "APPLY CHANGES >" HIGH-FIDELITY PDF EXPORT ENGINE
   // ============================================================================
   const handleApplyChanges = async () => {
     if (!file || !pdfDocProxy) return;
@@ -1357,6 +1356,7 @@ export default function EditPdfPage() {
 
     try {
       const EXPORT_SCALE = 2.5;
+      const { PDFDocument, PDFName } = await import("pdf-lib");
       const outPdf = await PDFDocument.create();
       const srcPdfBytes = await file.arrayBuffer();
       const srcPdfDoc = await PDFDocument.load(srcPdfBytes, { ignoreEncryption: true });
@@ -1612,13 +1612,13 @@ export default function EditPdfPage() {
 
   return (
     <ToolLayout toolId="edit"
-      title="Online PDF Editor (Sejda Style)"
-      description="Click directly on any line of text in your PDF to type and edit in-place with 100% matching typography, plus add Links, Forms, Images, Signatures, Whiteout, Annotations, and Shapes."
+      title="Online PDF Editor"
+      description="Click directly on any line of text in your PDF to type and edit in-place with closely matching typography, plus add Links, Forms, Images, Signatures, Whiteout, Annotations, and Shapes."
       faqs={[
         {
-          question: "Why does edited text match the rest of the page 100%?",
+          question: "Why does edited text match the rest of the page?",
           answer:
-            "Just like Sejda PDF Editor, our engine renders the clean non-text page background on the canvas and converts every line on the page into a live editable DOM text layer—so newly typed words and existing words share the exact same font rendering.",
+            "Our editor renders the clean non-text page background on the canvas and converts every line on the page into a live editable DOM text layer—so newly typed words and existing words share the exact same font rendering.",
         },
         {
           question: "How do I edit existing text vs adding new text?",
@@ -1628,7 +1628,7 @@ export default function EditPdfPage() {
         {
           question: "Can I sign, whiteout, highlight, or insert images?",
           answer:
-            "Yes! Use the Sejda-style top floating pill bar to switch between Text, Links, Forms, Images, Sign, Whiteout, Annotate, and Shapes, then click 'Apply changes' at the bottom.",
+            "Yes! Use the floating toolbar at the top to switch between Text, Links, Forms, Images, Sign, Whiteout, Annotate, and Shapes, then click 'Apply changes' at the bottom.",
         },
       ]}
     >
@@ -1652,7 +1652,7 @@ export default function EditPdfPage() {
         {file && (
           <div className="relative flex flex-col items-center rounded-2xl border border-slate-300 bg-[#e8eaed] dark:border-slate-800 dark:bg-slate-950 min-h-[86vh] pb-24 overflow-hidden">
             {/* ================================================================ */}
-            {/* MODULE 3: SEJDA TOP FLOATING PILL TOOLBAR                        */}
+            {/* MODULE 3: TOP FLOATING PILL TOOLBAR                        */}
             {/* ================================================================ */}
             <div className="sticky top-0 z-40 flex w-full flex-col items-center bg-white/95 dark:bg-slate-900/95 border-b border-slate-200 dark:border-slate-800 py-2.5 px-3 shadow-xs backdrop-blur-xs">
               <div className="flex flex-wrap items-center justify-center gap-0.5 rounded-lg border border-sky-300/90 bg-white dark:bg-slate-900 shadow-sm p-0.5">
@@ -2009,7 +2009,7 @@ export default function EditPdfPage() {
               )}
             </div>
 
-            {/* Right-Side Sejda Floating Page & Zoom Controls */}
+            {/* Right-Side Floating Page & Zoom Controls */}
             <div className="fixed right-5 top-28 z-30 flex flex-col items-center gap-1.5">
               <div className="flex flex-col items-center rounded-lg border border-sky-300 bg-white p-1 shadow-md text-xs text-sky-700">
                 <button
@@ -2072,7 +2072,7 @@ export default function EditPdfPage() {
             </div>
 
             {/* ================================================================ */}
-            {/* MAIN SEJDA PAGE WORKSPACE (CLEAN CANVAS + LIVE DOM TEXT LAYER)   */}
+            {/* MAIN PAGE WORKSPACE (CLEAN CANVAS + LIVE DOM TEXT LAYER)   */}
             {/* ================================================================ */}
             <div className="w-full flex-1 overflow-auto py-6 px-4 flex justify-center">
               <div
@@ -2416,7 +2416,7 @@ export default function EditPdfPage() {
                       }`}
                     >
                       {/* ====================================================== */}
-                      {/* MODULE 2: SEJDA FLOATING CONTEXT MINI-TOOLBAR          */}
+                      {/* MODULE 2: FLOATING CONTEXT MINI-TOOLBAR          */}
                       {/* [ B | I | T↕▾ | Aa▾ | 🎨▾ | 🔗 | ✥ | ❐ | 🗑 ]          */}
                       {/* ====================================================== */}
                       {isSelected && (
@@ -2690,7 +2690,7 @@ export default function EditPdfPage() {
             </div>
 
             {/* ================================================================ */}
-            {/* MODULE 4: SEJDA STICKY BOTTOM "APPLY CHANGES >" BAR              */}
+            {/* MODULE 4: STICKY BOTTOM "APPLY CHANGES >" BAR              */}
             {/* ================================================================ */}
             <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3 rounded-2xl bg-[#fde6cc]/95 dark:bg-slate-900/95 p-2 shadow-xl border border-amber-200/80">
               <button

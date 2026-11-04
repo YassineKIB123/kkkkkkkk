@@ -1,0 +1,130 @@
+[
+  {
+    "slug": "sanitize-pdf-metadata-redaction",
+    "title": "How to Sanitize PDF Metadata and Hidden Layers Before Court or Public Release",
+    "description": "Where hidden author names, XMP metadata, old revisions and form data live inside a PDF, and how to strip them in your browser before you publish or file.",
+    "category": "security",
+    "publishedAt": "2026-03-05",
+    "toolId": "sanitize"
+  },
+  {
+    "slug": "hipaa-compliant-pdf-processing-browser",
+    "title": "HIPAA and PDF Tools: Why Uploading Patient Records to Cloud Converters Is Risky",
+    "description": "Why uploading patient records to free online PDF converters can create HIPAA problems, and how in-browser processing keeps files on the clinic's own computer.",
+    "category": "security",
+    "publishedAt": "2026-03-12",
+    "toolId": "compress"
+  },
+  {
+    "slug": "remove-pdf-incremental-updates-revision-history",
+    "title": "How to Remove Hidden Revision History and Incremental Updates from PDFs",
+    "description": "How PDF incremental saves can leave earlier drafts and deleted text inside the file, and how rewriting the file into a single revision removes them.",
+    "category": "security",
+    "publishedAt": "2026-03-18",
+    "toolId": "sanitize"
+  },
+  {
+    "slug": "permanent-pdf-redaction-vector-graphics",
+    "title": "True PDF Redaction: How to Permanently Remove Text Behind Black Boxes",
+    "description": "The difference between drawing a box over text and actually removing it from the PDF, plus a quick test to check whether a redaction worked.",
+    "category": "security",
+    "publishedAt": "2026-03-24",
+    "toolId": "edit"
+  },
+  {
+    "slug": "pdf-compression-lossless-lossy-guide",
+    "title": "The Complete Guide to PDF Compression: Lossless vs. Lossy Browser Optimization",
+    "description": "What makes PDFs large, how lossless object-stream packing differs from page rasterization, and which iKnowAPDF compression preset fits which document.",
+    "category": "compression",
+    "publishedAt": "2026-04-02",
+    "toolId": "compress"
+  },
+  {
+    "slug": "reduce-pdf-size-below-200kb",
+    "title": "How to Reduce PDF File Size Below 200KB for Strict Portal Uploads",
+    "description": "Practical steps to get scanned IDs, transcripts and forms under 200KB or 100KB for visa, university and job portals while keeping them readable.",
+    "category": "compression",
+    "publishedAt": "2026-04-10",
+    "toolId": "compress"
+  },
+  {
+    "slug": "linearize-pdf-fast-web-view-streaming",
+    "title": "Linearized PDFs & Object Streams Explained: Optimizing Large PDFs for the Web",
+    "description": "How PDF object streams, Fast Web View (linearization) and HTTP byte-range requests affect how quickly large PDFs open in the browser.",
+    "category": "compression",
+    "publishedAt": "2026-04-18",
+    "toolId": "compress"
+  },
+  {
+    "slug": "compress-architectural-cad-drawings-pdf",
+    "title": "How to Fix Bloated Architectural and CAD Vector PDFs That Lag Your Viewer",
+    "description": "Why PDFs exported from AutoCAD or Revit can freeze tablets and viewers, and when flattening drawings into images is a sensible fix.",
+    "category": "compression",
+    "publishedAt": "2026-04-26",
+    "toolId": "compress"
+  },
+  {
+    "slug": "digital-signature-vs-electronic-signature-pdf",
+    "title": "Digital vs. Electronic Signatures in PDFs: ESIGN, eIDAS, and SHA-256 Hashes",
+    "description": "The difference between simple electronic signatures, SHA-256 document hashes and certificate-based digital signatures in PDFs, and when each one is used.",
+    "category": "legal",
+    "publishedAt": "2026-05-04",
+    "toolId": "sign"
+  },
+  {
+    "slug": "aes-256-password-protect-pdf-locally",
+    "title": "PDF Encryption Explained: RC4 vs. AES-128 vs. AES-256 & Cleaning Metadata First",
+    "description": "How PDF encryption evolved from 40-bit RC4 to AES-256, why metadata can stay readable in a locked PDF, and why to clean a file before encrypting it.",
+    "category": "legal",
+    "publishedAt": "2026-05-12",
+    "toolId": "sanitize"
+  },
+  {
+    "slug": "fix-encrypted-permissions-restricted-pdf",
+    "title": "'PDF Permissions Restricted' on Bank Statements: What It Means and What You Can Do",
+    "description": "Why banks restrict statement PDFs with an owner password, what the permission flags control, and legitimate ways account holders can work with these files.",
+    "category": "legal",
+    "publishedAt": "2026-05-20",
+    "toolId": "merge"
+  },
+  {
+    "slug": "audit-trail-digital-signatures-contracts",
+    "title": "How to Keep a Record of Signed PDF Contracts: Audit Trails Explained",
+    "description": "What an e-signature audit trail is, what it can and can't prove, and how freelancers and small businesses can keep a simple record of signed PDF contracts.",
+    "category": "legal",
+    "publishedAt": "2026-05-28",
+    "toolId": "sign"
+  },
+  {
+    "slug": "convert-pdf-to-pdfa-archival-standard",
+    "title": "PDF/A-1b & PDF/A-2b Explained: A Practical Guide to Archival PDFs",
+    "description": "What PDF/A (ISO 19005) requires — embedded fonts, color output intents, no encryption or scripts — and how to create and validate a compliant archival file.",
+    "category": "archiving",
+    "publishedAt": "2026-06-02",
+    "toolId": "sanitize"
+  },
+  {
+    "slug": "client-side-ocr-scanned-pdf-text-extraction",
+    "title": "OCR for Scanned PDFs: How Text Recognition Works and How to Keep Documents Private",
+    "description": "How OCR turns scanned pages into searchable text, how invisible text layers work in PDFs, and how to run OCR without exposing sensitive documents.",
+    "category": "archiving",
+    "publishedAt": "2026-06-10",
+    "toolId": "scan"
+  },
+  {
+    "slug": "merge-pdf-preserve-bookmarks-form-fields",
+    "title": "Merging PDFs Without Losing Bookmarks or Form Data: What to Know",
+    "description": "Why bookmarks, links and fillable fields often break when PDFs are merged, and practical steps to combine documents without losing the parts you need.",
+    "category": "archiving",
+    "publishedAt": "2026-06-18",
+    "toolId": "merge"
+  },
+  {
+    "slug": "flatten-interactive-pdf-form-fields",
+    "title": "How to Flatten Interactive PDF Forms into Uneditable, Read-Only Records",
+    "description": "Why the read-only flag doesn't protect a filled PDF form, and how flattening turns form fields into ordinary page content that is much harder to change.",
+    "category": "archiving",
+    "publishedAt": "2026-06-25",
+    "toolId": "sanitize"
+  }
+]

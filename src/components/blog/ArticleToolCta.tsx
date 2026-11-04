@@ -39,7 +39,7 @@ export function ArticleToolCta({ cta }: ArticleToolCtaProps) {
           <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-100/90 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-rose-700 dark:bg-rose-900/60 dark:text-rose-300">
               <Sparkles className="h-3 w-3" />
-              <span>Recommended Client-Side Tool</span>
+              <span>Related Free Tool</span>
             </span>
             {cta.highlightText && (
               <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100/80 px-2.5 py-0.5 text-[10px] font-bold text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300">
@@ -56,7 +56,7 @@ export function ArticleToolCta({ cta }: ArticleToolCtaProps) {
           <div className="flex flex-wrap items-center gap-3 pt-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400">
             <span className="flex items-center gap-1">
               <ShieldCheck className="h-3.5 w-3.5" />
-              100% Local RAM Execution (Zero Uploads)
+              Processed on your device (no uploads)
             </span>
             <span>•</span>
             <span className="flex items-center gap-1">

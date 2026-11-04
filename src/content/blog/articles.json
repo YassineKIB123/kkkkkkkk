@@ -1,28 +1,20 @@
 {
   "authors": [
     {
-      "id": "alex-vance",
-      "name": "Alex Vance",
-      "role": "Lead Document Security Engineer",
-      "avatar": "/favicon.ico",
-      "bio": "Specialist in WebAssembly document processing, cryptographic privacy, and client-side browser architectures. Former browser security researcher with 12+ years optimizing high-throughput ISO 32000 document engines.",
-      "credentials": "M.Sc. in Computer Science, ISO 32000 & WebAssembly Security Specialist"
-    },
-    {
       "id": "yassine-k",
       "name": "Yassine K.",
-      "role": "Founder & Principal Systems Architect",
+      "role": "Founder & developer of iKnowAPDF",
       "avatar": "/favicon.ico",
-      "bio": "Systems architect and open-web advocate dedicated to building uncompromising, zero-upload client-side tools that preserve user privacy across the globe.",
-      "credentials": "B.Sc. in Software Engineering, Full-Stack WASM & Web Performance Engineer"
+      "bio": "Yassine builds and maintains iKnowAPDF, including the in-browser PDF engine behind its compression, merging, signing and editing tools. These guides explain what he has learned building and testing those tools.",
+      "credentials": ""
     }
   ],
   "articles": [
     {
       "slug": "sanitize-pdf-metadata-redaction",
       "title": "How to Sanitize PDF Metadata and Hidden Layers Before Court or Public Release",
-      "seoTitle": "How to Sanitize PDF Metadata & Redaction Leaks Before Court Filings",
-      "description": "Learn how to inspect and permanently strip hidden author history, GPS coordinates, XMP streams, and unflattened vector layers from legal PDFs directly in your browser.",
+      "seoTitle": "Sanitize PDF Metadata Before Court Filings",
+      "description": "Where hidden author names, XMP metadata, old revisions and form data live inside a PDF, and how to strip them in your browser before you publish or file.",
       "category": "security",
       "tags": [
         "Sanitize PDF",
@@ -32,89 +24,89 @@
         "Metadata"
       ],
       "publishedAt": "2026-03-05",
-      "updatedAt": "2026-10-25",
-      "authorId": "alex-vance",
+      "updatedAt": "2026-11-04",
+      "authorId": "yassine-k",
       "toolCta": {
         "toolId": "sanitize",
-        "title": "Sanitize PDF Metadata & Rebuild XRef Locally",
-        "description": "Strip /Info dictionaries, XMP XML streams, author history, and flatten interactive forms 100% in local browser RAM with zero server uploads.",
+        "title": "Strip PDF Metadata & Rebuild the File Locally",
+        "description": "Clear the /Info fields, remove the document-level XMP stream, drop old incremental revisions and optionally flatten forms — processed in your browser.",
         "buttonText": "Open PDF Sanitizer",
         "href": "/tools/sanitize-pdf",
-        "highlightText": "Zero cloud egress guarantee"
+        "highlightText": "No uploads"
       },
       "blocks": [
         {
           "type": "paragraph",
-          "text": "When publishing legal briefs, FOIA disclosures, investigatory reports, or corporate M&A filings, visual inspection is never enough. In numerous high-profile legal disasters—including federal court filings where sealed witness identities and settlement figures were inadvertently leaked to journalists—sensitive data was exposed simply because an attorney drew a black visual rectangle over confidential text or forgot to purge the internal PDF object graph. In this engineering guide, we examine where hidden metadata lurks inside the ISO 32000-1 PDF specification and how to execute forensic-grade document sanitization inside your local browser sandbox."
+          "text": "When publishing legal briefs, FOIA disclosures, investigative reports, or corporate filings, visual inspection is never enough. Sensitive data regularly leaks from PDFs because someone drew a black rectangle over confidential text, or because the file still carries hidden metadata and earlier drafts. In this guide we look at where hidden data lives inside the PDF format (ISO 32000) and how to clean a document in your browser before it leaves your hands."
         },
         {
           "type": "heading2",
           "id": "visual-overlays-vs-true-redaction",
-          "text": "The Fatal Mistake: Visual Black Boxes vs. Destructive Stream Sanitization"
+          "text": "The Fatal Mistake: Visual Black Boxes vs. Removing the Underlying Data"
         },
         {
           "type": "paragraph",
-          "text": "Many office workers assume that placing a black rectangle over sensitive text renders it unreadable. However, PDF files are structured as independent display layers and object dictionaries. When you draw a shape over text using basic markup tools, the underlying character glyphs remain 100% intact inside the page's /Contents stream. Anyone who opens the file can press Ctrl+A, copy the text to their clipboard, or run a command-line extraction utility to read everything underneath."
+          "text": "Many people assume that placing a black rectangle over sensitive text makes it unreadable. However, a PDF page is built from separate layers and object dictionaries. When you draw a shape over text with a basic markup tool, the underlying characters remain intact in the page's /Contents stream. Anyone who opens the file can press Ctrl+A, copy the text, or run a command-line extraction utility to read everything underneath. Our guide to [true PDF redaction](/blog/permanent-pdf-redaction-vector-graphics) covers how to actually remove that text."
         },
         {
           "type": "heading3",
           "id": "raw-pdf-metadata-anatomy",
-          "text": "Inspecting Raw PDF Metadata Dictionaries in the Binary Stream"
+          "text": "Inspecting Raw PDF Metadata Dictionaries"
         },
         {
           "type": "paragraph",
-          "text": "Even when visible text is clean, every PDF generated by Microsoft Word, macOS Quartz, Adobe InDesign, or enterprise scanners embeds both a legacy Document Information Dictionary (/Info) and an uncompressed Extensible Metadata Platform (/Metadata) XML packet. If you inspect a raw PDF in a hex editor or via pdfinfo, you will routinely find hidden corporate usernames and local filesystem paths:"
+          "text": "Even when the visible text is clean, PDFs produced by Microsoft Word, macOS, Adobe InDesign, or office scanners usually embed a Document Information Dictionary (/Info) and often an XMP metadata packet (/Metadata). Inspect a typical file with a hex editor or `pdfinfo` and you will often find usernames and file names like these:"
         },
         {
           "type": "code",
-          "title": "Raw ISO 32000 /Info & /Metadata Object Inspection",
+          "title": "Example /Info Dictionary",
           "language": "pdf",
           "code": "12 0 obj\n<<\n  /Title (Settlement_Agreement_FINAL_v4_Redline.docx)\n  /Author (j.miller@lawfirm-internal.local)\n  /Creator (Microsoft® Word for Microsoft 365)\n  /Producer (macOS Version 15.2 (Build 24C101) Quartz PDFContext)\n  /CreationDate (D:20261014092211-04'00')\n  /ModDate (D:20261024184502-04'00')\n>>\nendobj"
         },
         {
           "type": "callout",
           "variant": "warning",
-          "title": "Court E-Filing & CM/ECF Risk Warning",
-          "text": "Federal CM/ECF and state e-filing portals archive uploaded PDFs permanently on public PACER servers. Uploading files with unflattened annotations, active /AcroForm widgets, or unpurged XMP revision logs can expose privileged client strategy."
+          "title": "Court E-Filing Risk",
+          "text": "Documents filed through court e-filing systems can become part of a public record. Unflattened annotations, live form fields, or leftover metadata in those files may reveal more than you intended. Check your court's own redaction rules and clean files before filing."
         },
         {
           "type": "heading2",
           "id": "where-metadata-hides",
-          "text": "5 Hidden Data Structures Inside Every PDF Container"
+          "text": "5 Places Hidden Data Lives Inside a PDF"
         },
         {
           "type": "list",
           "ordered": false,
           "items": [
-            "Classic Document Information Dictionary (/Info): Retains original file creation dates, modification history, author OS usernames, machine hostnames, and software license identifiers.",
-            "XMP Metadata Streams (/Metadata): Uncompressed XML packets that persist even if you edit the basic document properties, often storing camera EXIF serial numbers, GPS coordinates from mobile scans, and document tracking IDs (MM/DocumentID).",
-            "Incremental Save Trailers (/Prev XRef Pointers): Appended byte ranges at the bottom of the file that preserve deleted paragraphs and earlier contract drafts.",
-            "PieceInfo Dictionaries (/PieceInfo): Retain proprietary private working state from design tools like Illustrator, Photoshop, and CAD suites.",
-            "Interactive AcroForm Trees (/AcroForm): Store default field values (/DV) and JavaScript formatting macros even after a form appears visually completed."
+            "Document Information Dictionary (/Info): Title, author, creator application, producer, and creation/modification dates.",
+            "XMP Metadata Streams (/Metadata): XML packets that can persist even after you edit the basic document properties. They may contain author names, document IDs, and — in files built from photos — camera or location data.",
+            "Incremental Save Sections (/Prev pointers): Appended sections at the end of the file that can preserve deleted paragraphs and earlier drafts. See [how to remove PDF revision history](/blog/remove-pdf-incremental-updates-revision-history).",
+            "PieceInfo Dictionaries (/PieceInfo): Private working data from design tools such as Illustrator or Photoshop.",
+            "Interactive Form Trees (/AcroForm): Field names, default values, and scripts that remain even after a form looks complete."
           ]
         },
         {
           "type": "heading2",
           "id": "step-by-step-sanitization",
-          "text": "3-Step Method to Sanitize Any PDF in Local Browser Memory"
+          "text": "3-Step Method to Sanitize a PDF in Your Browser"
         },
         {
           "type": "step",
           "number": 1,
-          "title": "Load the Document into the Local Sanitizer",
-          "text": "Drop your PDF into the iKnowAPDF Sanitize Tool. The binary buffer is parsed locally in WebAssembly RAM without transmitting a single byte over the network."
+          "title": "Load the Document into the Sanitizer",
+          "text": "Drop your PDF into the [iKnowAPDF PDF Sanitizer](/tools/sanitize-pdf). The file is read by JavaScript in your browser tab and is not uploaded to a server."
         },
         {
           "type": "step",
           "number": 2,
-          "title": "Select Structural Purge & Form Flattening Options",
-          "text": "Enable '/Info Dictionary Purge', 'Rebuild /XRef & Strip XMP', and optionally 'Flatten Interactive Forms' to bake fillable fields into static vector graphics."
+          "title": "Choose What to Remove",
+          "text": "Keep the options to clear the /Info fields and to strip XMP and rebuild the file enabled, and optionally turn on form flattening to bake fillable fields into the page."
         },
         {
           "type": "step",
           "number": 3,
-          "title": "Export a Single-Generation Clean PDF",
-          "text": "The engine copies only reachable page nodes into a brand-new PDF container, discarding orphaned objects and historical trailers, and downloads your sanitized file immediately."
+          "title": "Export a Clean Single-Revision PDF",
+          "text": "The tool copies the current pages into a new PDF, which leaves behind superseded objects and old revision sections, then downloads the result."
         },
         {
           "type": "toolCta",
@@ -129,39 +121,39 @@
           "type": "comparisonTable",
           "headers": [
             "Sanitization Method",
-            "Purges /Info & XMP?",
-            "Removes /Prev History?",
-            "Preserves Vector Text?",
-            "Cloud Leak Risk"
+            "Clears /Info & XMP?",
+            "Removes Old Revisions?",
+            "Keeps Text Selectable?",
+            "Leaves Your Device?"
           ],
           "rows": [
             [
-              "Black Box Shape Overlay",
+              "Black box drawn over text",
               "No",
               "No",
-              "Yes",
-              "Extreme (Unredacted)"
+              "Yes (including the 'hidden' text)",
+              "No"
             ],
             [
-              "OS Print-to-PDF Driver",
-              "Partial (Adds OS name)",
+              "Print to PDF",
+              "Partly (adds its own producer info)",
               "Yes",
-              "Often rasterizes fonts",
-              "Low"
+              "Often, but may rasterize",
+              "No"
             ],
             [
-              "Cloud Converter SaaS",
-              "Yes",
-              "Yes",
+              "Cloud converter",
+              "Usually",
+              "Usually",
               "Depends on vendor",
-              "High (Server retention)"
+              "Yes (uploaded to a server)"
             ],
             [
-              "iKnowAPDF Client-Side WASM",
-              "Yes (100% Blanked)",
-              "Yes (Fresh XRef Graph)",
-              "Yes (100% Vector)",
-              "Zero (Local RAM only)"
+              "iKnowAPDF Sanitizer (in-browser)",
+              "Yes (document-level fields)",
+              "Yes (pages copied into a new file)",
+              "Yes",
+              "No"
             ]
           ]
         },
@@ -169,20 +161,24 @@
           "type": "faq",
           "items": [
             {
-              "question": "Does sanitizing a PDF invalidate pre-existing cryptographic signatures?",
-              "answer": "Yes. Cryptographic PKCS#7 digital signatures verify the exact byte-range hash of the PDF file. Stripping metadata or rebuilding the /XRef table alters byte offsets, so you should always sanitize a document before affixing final signatures."
+              "question": "Does sanitizing a PDF invalidate existing digital signatures?",
+              "answer": "Yes. Certificate-based (PKCS#7) signatures cover the exact bytes of the file. Removing metadata or rewriting the file changes those bytes, so sanitize first and sign last."
             },
             {
-              "question": "Why is client-side WebAssembly safer for legal discovery documents?",
-              "answer": "Attorneys are bound by strict confidentiality rules (such as ABA Model Rule 1.6). Uploading unredacted discovery files to third-party cloud converters hands custody to external servers, whereas local browser execution guarantees zero third-party exposure."
+              "question": "Why process confidential documents in the browser instead of a cloud service?",
+              "answer": "Uploading unredacted documents to a third-party service hands a copy to someone else's servers. Processing locally means the file never leaves your machine, which is easier to square with confidentiality obligations."
             },
             {
-              "question": "How can I verify that XMP and /Info metadata were completely removed?",
-              "answer": "After downloading your sanitized PDF, re-upload it into the iKnowAPDF Sanitize tool or run 'pdfinfo sanitized_file.pdf' in your terminal. Every metadata field (Author, Creator, Producer, Title) will read '(None)'."
+              "question": "How can I check that metadata was removed?",
+              "answer": "Open the sanitized file in the sanitizer again, or run `pdfinfo sanitized_file.pdf` in a terminal. The author, title, subject, creator and keywords should be empty. Note that new creation/modification dates are written when the file is saved."
             },
             {
-              "question": "Does stripping metadata affect searchable text or accessibility?",
-              "answer": "No. All visible page content streams, embedded font subsets, and selectable text remain 100% intact."
+              "question": "Does sanitizing remove EXIF data inside embedded photos?",
+              "answer": "No. The sanitizer works on document-level metadata. Images embedded in pages are copied as-is, so if a photo's own EXIF data matters, clean the image before putting it into the PDF."
+            },
+            {
+              "question": "Does stripping metadata affect searchable text?",
+              "answer": "No. Page content, fonts, and selectable text are copied unchanged. Bookmarks are not carried over when the file is rebuilt."
             }
           ]
         }
@@ -195,101 +191,106 @@
     },
     {
       "slug": "hipaa-compliant-pdf-processing-browser",
-      "title": "HIPAA-Compliant PDF Processing: Why Cloud Tools Risk PHI Violations",
-      "seoTitle": "HIPAA Compliant PDF Processing — Why Cloud Converters Violate PHI",
-      "description": "Discover why uploading medical records to free online PDF converters violates HIPAA Security Rules, and how client-side WebAssembly guarantees 100% compliance.",
+      "title": "HIPAA and PDF Tools: Why Uploading Patient Records to Cloud Converters Is Risky",
+      "seoTitle": "HIPAA & Online PDF Tools: Cloud Upload Risks",
+      "description": "Why uploading patient records to free online PDF converters can create HIPAA problems, and how in-browser processing keeps files on the clinic's own computer.",
       "category": "security",
       "tags": [
         "HIPAA",
         "Healthcare",
         "Compliance",
         "ePHI",
-        "WebAssembly",
         "Data Privacy"
       ],
       "publishedAt": "2026-03-12",
-      "updatedAt": "2026-10-25",
-      "authorId": "alex-vance",
+      "updatedAt": "2026-11-04",
+      "authorId": "yassine-k",
       "toolCta": {
         "toolId": "compress",
-        "title": "Process Medical Records Privately in Browser RAM",
-        "description": "Compress, merge, split, and sanitize patient health records locally without transmitting ePHI to external servers.",
-        "buttonText": "Open Private PDF Compressor",
+        "title": "Compress Medical PDFs Without Uploading Them",
+        "description": "Compress, merge, split, and clean PDFs in your browser so the file stays on the computer you are using.",
+        "buttonText": "Open PDF Compressor",
         "href": "/tools/compress-pdf",
-        "highlightText": "Zero ePHI network transmission"
+        "highlightText": "Files stay on your device"
       },
       "blocks": [
         {
           "type": "paragraph",
-          "text": "Every day, clinical staff, medical billing specialists, and healthcare administrators inadvertently violate federal healthcare privacy laws by uploading patient records to free online PDF converters. When preparing patient charts for insurance prior authorization, disability claims, or specialist referrals, staff frequently search for quick web utilities to merge lab results or compress large imaging PDFs. What many do not realize is that uploading electronic Protected Health Information (ePHI) to a cloud converter without a signed Business Associate Agreement (BAA) constitutes a reportable HIPAA data breach."
+          "text": "Clinical staff, billing specialists, and healthcare administrators often need to merge lab results or shrink large scanned charts for insurance portals and referrals, and a quick web search leads to free online PDF converters. Uploading electronic Protected Health Information (ePHI) to a service that has not signed a Business Associate Agreement (BAA) with your organization can be an impermissible disclosure under HIPAA. This article explains the risk and how in-browser tools avoid sending files anywhere."
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "title": "Not Legal Advice",
+          "text": "This article is general information, not legal or compliance advice. Your organization's privacy officer and policies decide which tools staff may use with patient data."
         },
         {
           "type": "heading2",
           "id": "the-hipaa-baa-trap",
-          "text": "The Business Associate Agreement (BAA) Trap Under 45 CFR § 164.502(e)"
+          "text": "The Business Associate Agreement (BAA) Question"
         },
         {
           "type": "paragraph",
-          "text": "Under the HIPAA Omnibus Rule (45 CFR § 164.502(e)), any vendor that creates, receives, maintains, or transmits ePHI on behalf of a Covered Entity is legally classified as a Business Associate—even if the vendor claims to delete uploaded files after 1 or 2 hours. Standard consumer PDF websites explicitly disclaim HIPAA liability in their Terms of Service and refuse to sign BAAs on free tiers. The instant a clinic workstation sends an HTTP POST request containing a patient's name, ICD-10 diagnosis code, or Social Security Number to an unvetted cloud server, an unauthorized disclosure has occurred."
+          "text": "Under HIPAA (45 CFR § 164.502(e) and related provisions), a vendor that creates, receives, maintains, or transmits PHI on behalf of a covered entity is generally a business associate and needs a BAA — even if it says uploaded files are deleted after an hour or two. Many consumer PDF websites do not offer BAAs on free plans. Sending a patient's chart to such a service is the kind of disclosure HIPAA is designed to prevent."
         },
         {
           "type": "heading3",
           "id": "verifying-zero-egress-devtools",
-          "text": "How Hospital IT Can Verify Zero Network Egress"
+          "text": "How IT Teams Can Check That a Tool Does Not Upload Files"
         },
         {
           "type": "paragraph",
-          "text": "Unlike cloud SaaS platforms, client-side WebAssembly tools execute entirely inside the workstation's V8/WebKit sandbox. Healthcare compliance officers and hospital network engineers can audit this guarantee in 10 seconds using browser developer tools or packet inspection:"
+          "text": "In-browser tools read the file with JavaScript inside the browser tab. You do not have to take that on trust — you can watch the network activity yourself:"
         },
         {
           "type": "code",
-          "title": "Auditing Zero Outbound File Upload Requests in Browser DevTools",
+          "title": "Checking for File Uploads in Browser DevTools",
           "language": "text",
-          "code": "1. Open https://iknowapdf.lol/tools/compress-pdf or /tools/merge-pdf\n2. Press F12 -> Select the \"Network\" tab -> Filter by \"Fetch/XHR\"\n3. (Optional) Toggle \"Offline\" mode in the Network throttling dropdown\n4. Drop a 50MB multi-page medical chart PDF and click Compress/Merge\n5. Result: 0 outbound HTTP POST/PUT requests. 100% of bytes remain in local RAM."
+          "code": "1. Open https://iknowapdf.lol/tools/compress-pdf\n2. Press F12 -> open the \"Network\" tab\n3. Drop a test PDF (not real patient data) and run the tool\n4. Look for POST/PUT requests carrying the file: there should be none.\n   (Page assets, ads and analytics requests may still appear.)"
         },
         {
           "type": "callout",
           "variant": "security",
-          "title": "Why No BAA Is Required for Local Execution",
-          "text": "Because iKnowAPDF never receives, processes, maintains, or transmits your files on any server infrastructure, our platform never takes custody of ePHI. Your data never leaves the hospital endpoint."
+          "title": "Why Local Processing Matters",
+          "text": "iKnowAPDF's PDF tools process files in your browser, so the documents themselves are not sent to iKnowAPDF's servers. The website still loads normally (and may show ads and use analytics on the free plan), so follow your organization's policy on which websites staff may use."
         },
         {
           "type": "heading2",
           "id": "meeting-hipaa-safeguards",
-          "text": "How Client-Side Execution Satisfies HIPAA Technical Safeguards (§ 164.312)"
+          "text": "How Local Processing Relates to HIPAA Technical Safeguards (§ 164.312)"
         },
         {
           "type": "list",
           "ordered": false,
           "items": [
-            "Access Control (§ 164.312(a)(1)): Document buffers exist strictly within the volatile memory space of the authenticated clinician's workstation.",
-            "Audit Controls (§ 164.312(b)): Local Endpoint Detection and Response (EDR) agents retain full visibility over local file reads and downloads without blind spots in third-party clouds.",
-            "Integrity (§ 164.312(c)(1)): Lossless PDF page merging and high-clarity DPI downsampling preserve clinical legibility on ECG traces and lab reports.",
-            "Transmission Security (§ 164.312(e)(1)): By eliminating internet transmission during document manipulation, man-in-the-middle (MitM) and cloud bucket misconfiguration risks drop to zero."
+            "Access Control (§ 164.312(a)(1)): The file stays on the workstation of the signed-in staff member instead of a third-party server.",
+            "Audit Controls (§ 164.312(b)): Your existing endpoint monitoring still sees the file being opened and saved locally.",
+            "Integrity (§ 164.312(c)(1)): Merging and splitting copy pages without re-encoding them. Compression presets that rasterize pages reduce image quality, so check small print before sending.",
+            "Transmission Security (§ 164.312(e)(1)): The document is not transmitted while it is being processed. How you send the finished file (email, portal) still needs to follow your usual safeguards."
           ]
         },
         {
           "type": "heading2",
           "id": "clinical-workflow",
-          "text": "Safe 3-Step Healthcare Workflow for Patient Charts"
+          "text": "A Simple 3-Step Workflow for Patient Records"
         },
         {
           "type": "step",
           "number": 1,
-          "title": "Combine Multi-Department Records Locally",
-          "text": "Use the Merge PDF tool to stitch EHR discharge summaries, pathology reports, and signed consent forms into a single chronological packet."
+          "title": "Combine Records Locally",
+          "text": "Use [Merge PDF](/tools/merge-pdf) to combine discharge summaries, reports, and consent forms into one packet in the order you choose."
         },
         {
           "type": "step",
           "number": 2,
-          "title": "Sanitize Scanner & Workstation Metadata",
-          "text": "Run the Sanitize PDF tool to strip internal hospital workstation hostnames and author tags before external release."
+          "title": "Clean Workstation Metadata",
+          "text": "Run [Sanitize PDF](/tools/sanitize-pdf) to clear author names and other document-level metadata before the file leaves your organization."
         },
         {
           "type": "step",
           "number": 3,
           "title": "Compress for Payer & Referral Portals",
-          "text": "Use Recommended or Extreme compression to shrink 80MB scanned chart packages below insurance portal upload caps."
+          "text": "Use [Compress PDF](/tools/compress-pdf) — or a size-targeted preset such as [compress PDF under 2MB](/compress-pdf-under-2mb) — to get large scanned packets under portal upload caps, then check that small values are still legible."
         },
         {
           "type": "toolCta",
@@ -299,20 +300,20 @@
           "type": "faq",
           "items": [
             {
-              "question": "Do we need a signed Business Associate Agreement (BAA) to use iKnowAPDF?",
-              "answer": "No. Under HIPAA guidelines, a vendor is only a Business Associate if it creates, receives, maintains, or transmits PHI. Because iKnowAPDF runs 100% locally in your browser via WebAssembly and never receives or transmits your files, no PHI is disclosed to us."
+              "question": "Do we need a Business Associate Agreement to use iKnowAPDF?",
+              "answer": "iKnowAPDF does not receive the documents you process — they are handled in your browser — and we do not sign BAAs. Whether a tool that never receives PHI is acceptable is a decision for your privacy officer."
             },
             {
-              "question": "Can clinic staff use iKnowAPDF on air-gapped or restricted hospital networks?",
-              "answer": "Yes. Once the web application loads, our Service Worker caches the processing engine locally, allowing staff to merge, split, compress, and sign PDFs even when disconnected from the internet."
+              "question": "Can staff use iKnowAPDF without an internet connection?",
+              "answer": "Partly. A service worker caches pages and scripts you have already loaded, so a previously opened tool may keep working offline, but this is not guaranteed for every tool or browser. Don't rely on it for air-gapped networks."
             },
             {
-              "question": "What happens to patient data in RAM after a nurse closes the browser tab?",
-              "answer": "All array buffers and canvas bitmaps are allocated inside the browser tab's isolated heap. Closing or refreshing the tab immediately releases that memory back to the operating system."
+              "question": "What happens to the file after the browser tab is closed?",
+              "answer": "The file is held in the tab's memory while you work. Closing or refreshing the tab releases it. The downloaded result is saved wherever your browser saves downloads."
             },
             {
-              "question": "Does compressing a medical PDF degrade the readability of small lab values?",
-              "answer": "Our Recommended compression preset preserves crisp readability at 150+ DPI while stripping redundant metadata and packing object streams, ensuring diagnostic numbers and barcodes remain sharp."
+              "question": "Does compressing a medical PDF make small lab values harder to read?",
+              "answer": "It can. The Recommended and Extreme presets re-render each page as a JPEG image, which lowers sharpness and makes text non-selectable. For text-heavy reports, try Lossless / High Quality first and always check the output before sending."
             }
           ]
         }
@@ -326,84 +327,84 @@
     {
       "slug": "remove-pdf-incremental-updates-revision-history",
       "title": "How to Remove Hidden Revision History and Incremental Updates from PDFs",
-      "seoTitle": "Remove PDF Revision History & Incremental Updates — Step-by-Step",
-      "description": "Understand how PDF incremental saves leave historical contract drafts and deleted text inside file bytes, and how to rewrite the object graph cleanly.",
+      "seoTitle": "Remove PDF Revision History & Incremental Updates",
+      "description": "How PDF incremental saves can leave earlier drafts and deleted text inside the file, and how rewriting the file into a single revision removes them.",
       "category": "security",
       "tags": [
         "Revision History",
-        "PDF Forensic",
+        "PDF Forensics",
         "Contract Security",
         "Sanitization",
         "XRef"
       ],
       "publishedAt": "2026-03-18",
-      "updatedAt": "2026-10-25",
-      "authorId": "alex-vance",
+      "updatedAt": "2026-03-18",
+      "authorId": "yassine-k",
       "toolCta": {
         "toolId": "sanitize",
-        "title": "Purge Incremental Revision History from Your PDF",
-        "description": "Rebuild a single-generation cross-reference (/XRef) table and permanently discard orphaned draft objects in browser memory.",
+        "title": "Remove Old Revisions from Your PDF",
+        "description": "Copy the current pages into a fresh single-revision PDF and leave superseded objects behind — in your browser.",
         "buttonText": "Clean Document History",
         "href": "/tools/sanitize-pdf",
-        "highlightText": "Complete object-graph re-serialization"
+        "highlightText": "No uploads"
       },
       "blocks": [
         {
           "type": "paragraph",
-          "text": "When you delete a paragraph, change a pricing table, or crop out a section of a page in many desktop PDF editors and press 'Save', the deleted data is rarely erased from the file. Instead, it remains sitting in plain sight inside the binary payload. This forensic vulnerability is caused by a feature of the ISO 32000-1 specification known as 'Incremental Updates'. Here is how incremental saves expose confidential contract negotiations and how to permanently purge historical byte segments."
+          "text": "When you delete a paragraph, change a pricing table, or crop part of a page in many PDF editors and press 'Save', the old data is not always erased. It can remain inside the file. This is caused by a feature of the PDF specification (ISO 32000-1) called incremental updates. Here is how incremental saves can expose earlier drafts and how to remove them."
         },
         {
           "type": "heading2",
           "id": "how-incremental-saves-work",
-          "text": "How Incremental Saving Creates Ghosts in the PDF Binary (ISO 32000 § 7.5.6)"
+          "text": "How Incremental Saving Leaves Old Versions in the File (ISO 32000 § 7.5.6)"
         },
         {
           "type": "paragraph",
-          "text": "In the early days of computing, rewriting a 50MB PDF from scratch over a slow hard drive took too long. To optimize save times, the PDF standard introduced Incremental Updates: instead of overwriting modified objects in place, the editor appends the newly edited objects to the very end of the file, writes a secondary Cross-Reference (/XRef) section, and links it to the original trailer via a /Prev byte-offset pointer."
+          "text": "Rewriting a large PDF from scratch used to be slow, so the format allows incremental updates: instead of overwriting changed objects, the editor appends the new versions to the end of the file, writes an extra cross-reference (/XRef) section, and links it to the previous one with a /Prev byte offset. The old objects are still in the file — they are just no longer referenced by the newest section."
         },
         {
           "type": "heading3",
           "id": "inspecting-multiple-eof-markers",
-          "text": "How to Spot Incremental Save Leaks Using %%EOF Markers"
+          "text": "How to Spot Incremental Saves Using %%EOF Markers"
         },
         {
           "type": "paragraph",
-          "text": "Every incremental save appends a new `%%EOF` (End-of-File) marker to the binary stream. If a PDF contains three `%%EOF` markers, it contains three distinct historical snapshots—and anyone can extract the earlier drafts by truncating the file at an earlier `%%EOF` offset:"
+          "text": "Each incremental save usually adds another `%%EOF` marker. A file with three `%%EOF` markers may contain three versions, and an earlier version can often be recovered by truncating the file at an earlier marker:"
         },
         {
           "type": "code",
-          "title": "Structure of a Multi-Generation Incrementally Saved PDF",
+          "title": "Structure of an Incrementally Saved PDF",
           "language": "pdf",
           "code": "%PDF-1.7\n1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj\n... [Original Draft Objects: \"$500,000 Acquisition Offer\"] ...\nxref\n0 15\ntrailer << /Size 15 /Root 1 0 R >>\nstartxref\n18420\n%%EOF\n... [Appended Revision 2 Objects: \"$420,000 Revised Offer\"] ...\nxref\n0 1\n4 1\n0000024110 00000 n\ntrailer << /Size 15 /Root 1 0 R /Prev 18420 >>\nstartxref\n29850\n%%EOF"
         },
         {
           "type": "callout",
           "variant": "warning",
-          "title": "Real-World Contract Negotiation Risk",
-          "text": "If you draft a proposal, delete internal pricing notes or margin calculations, and save incrementally before emailing the PDF to a client, the counterparty can recover every deleted revision in seconds."
+          "title": "Contract Negotiation Risk",
+          "text": "If you draft a proposal, delete internal pricing notes, and save incrementally before emailing the PDF, the recipient may be able to recover the deleted revision with freely available tools."
         },
         {
           "type": "heading2",
           "id": "the-rebuild-pipeline",
-          "text": "How Full Object-Graph Re-Serialization Eliminates Past Revisions"
+          "text": "How Rewriting the File Removes Past Revisions"
         },
         {
           "type": "step",
           "number": 1,
-          "title": "Trace Only Active Page Nodes from /Root",
-          "text": "Open your PDF in the iKnowAPDF Sanitize Tool. The parser reads only the currently active page tree and ignores superseded object generations."
+          "title": "Read Only the Current Pages",
+          "text": "Open your PDF in the [iKnowAPDF PDF Sanitizer](/tools/sanitize-pdf). The current page tree is read; superseded object versions are ignored."
         },
         {
           "type": "step",
           "number": 2,
-          "title": "Copy Active Pages into a Fresh PDF Container",
-          "text": "With 'Rebuild /XRef & Strip XMP' enabled, active pages are cloned into a brand-new PDFDocument instance in memory, leaving all orphaned objects and /Prev trailers behind."
+          "title": "Copy the Pages into a New PDF",
+          "text": "With 'strip XMP and rebuild' enabled, the current pages are copied into a brand-new PDF document in memory, leaving orphaned objects and /Prev sections behind."
         },
         {
           "type": "step",
           "number": 3,
-          "title": "Write a Single-Generation XRef Stream",
-          "text": "The exported PDF is serialized from byte 0 with consecutive object IDs and a single %%EOF marker, making historical recovery mathematically impossible."
+          "title": "Save a Single-Revision File",
+          "text": "The new file is written from scratch with one cross-reference section and one %%EOF marker, so earlier revisions are not carried over."
         },
         {
           "type": "toolCta",
@@ -413,20 +414,20 @@
           "type": "faq",
           "items": [
             {
-              "question": "Does 'Save As' in desktop PDF viewers always remove incremental updates?",
-              "answer": "Not always. While some desktop suites perform garbage collection on 'Save As', many mobile apps and lightweight viewers simply copy the underlying byte stream or append another trailer. Re-cloning pages into a fresh PDF container guarantees a single-generation output."
+              "question": "Does 'Save As' in a desktop PDF viewer always remove incremental updates?",
+              "answer": "Not always. Some desktop suites fully rewrite the file on 'Save As', but other apps append another update. Copying pages into a fresh document is a reliable way to get a single-revision file."
             },
             {
-              "question": "Can forensic recovery tools extract deleted text after an XRef rebuild?",
-              "answer": "No. Once unreferenced objects and prior trailers are excluded from the new binary array, those historical bytes no longer exist in the downloaded file."
+              "question": "Can deleted text be recovered after the file is rewritten?",
+              "answer": "Not from old revisions — unreferenced objects and earlier sections are not copied into the new file. Text that is still on the current page (for example, under a black box) is of course still there; that needs [true redaction](/blog/permanent-pdf-redaction-vector-graphics)."
             },
             {
-              "question": "Why do cropped PDF pages sometimes still leak the cropped-out content?",
-              "answer": "Because standard PDF cropping only adjusts the visible /CropBox rectangle while leaving the full /MediaBox content stream intact. To permanently destroy content outside or inside a region, use Whiteout or Edit in the iKnowAPDF Editor, which rasterizes the modified page."
+              "question": "Why do cropped PDF pages sometimes still contain the cropped-out content?",
+              "answer": "Cropping usually only changes the visible /CropBox while the full page content stays in the file. To remove content, edit or white it out in the [PDF Editor](/tools/edit-pdf), which flattens the edited page into an image on export."
             },
             {
-              "question": "Does rebuilding the XRef table increase or decrease file size?",
-              "answer": "It almost always decreases file size—sometimes dramatically—because dead objects, duplicate fonts, and historical revision streams are stripped out."
+              "question": "Does rewriting the file change its size?",
+              "answer": "Usually it gets smaller, because unused objects and old revisions are dropped. If you mainly want a smaller file, use [Compress PDF](/tools/compress-pdf)."
             }
           ]
         }
@@ -440,79 +441,78 @@
     {
       "slug": "permanent-pdf-redaction-vector-graphics",
       "title": "True PDF Redaction: How to Permanently Remove Text Behind Black Boxes",
-      "seoTitle": "Permanently Redact PDF Text — True Redaction vs Black Boxes",
-      "description": "Learn the crucial difference between cosmetic annotation masks and permanent pixel/stream redaction. Prevent leaks of sensitive PII in PDFs.",
+      "seoTitle": "Permanently Redact PDF Text: Real Redaction vs Boxes",
+      "description": "The difference between drawing a box over text and actually removing it from the PDF, plus a quick test to check whether a redaction worked.",
       "category": "security",
       "tags": [
         "Redaction",
-        "Vector Graphics",
         "PII Protection",
         "Privacy",
         "Security"
       ],
       "publishedAt": "2026-03-24",
-      "updatedAt": "2026-10-25",
-      "authorId": "alex-vance",
+      "updatedAt": "2026-03-24",
+      "authorId": "yassine-k",
       "toolCta": {
         "toolId": "edit",
-        "title": "Edit, Whiteout & Permanently Flatten PDF Pages",
-        "description": "Delete sensitive text in-place or apply Whiteout masks that bake into a flattened high-DPI page image with zero underlying text streams.",
+        "title": "Edit, White Out & Flatten PDF Pages",
+        "description": "Delete text in place or cover areas with whiteout. Edited pages are exported as flattened images without the original text.",
         "buttonText": "Open PDF Editor",
         "href": "/tools/edit-pdf",
-        "highlightText": "Destroys underlying text streams on edited pages"
+        "highlightText": "Edited pages are flattened"
       },
       "blocks": [
         {
           "type": "paragraph",
-          "text": "Botched PDF redaction is one of the most frequent causes of accidental data breaches in law firms, government FOIA offices, and financial institutions. When redaction is performed using standard shape or highlight tools, anyone who receives the PDF can highlight right through the black box, copy the hidden words to their clipboard, and paste the confidential Social Security Numbers, names, or bank balances into a text editor."
+          "text": "Botched redaction is a common cause of accidental data leaks in law firms, public records offices, and financial institutions. When redaction is done with ordinary shape or highlight tools, anyone who receives the PDF can select the text under the black box, copy it, and paste the hidden names, numbers, or balances into a text editor."
         },
         {
           "type": "heading2",
           "id": "understanding-pdf-layers",
-          "text": "Why Cosmetic Black Rectangles Fail: The /Contents vs. /Annots Layer Split"
+          "text": "Why Black Rectangles Fail: Page Content vs. Annotations"
         },
         {
           "type": "paragraph",
-          "text": "A standard PDF page separates its primary typography (/Contents stream) from user markups (/Annots array). When you draw a black or white box in a basic PDF viewer, you are simply appending a floating rectangle annotation above the Z-axis of the text. The underlying `Tj` and `TJ` text-showing operators remain untouched in the file."
+          "text": "A PDF page keeps its main text in the /Contents stream and user markup in a separate /Annots array. Drawing a black box in a basic viewer usually adds a rectangle annotation on top of the text. The text-showing operators (`Tj` and `TJ`) underneath are untouched."
         },
         {
           "type": "code",
-          "title": "Why Underlying Text Survives a Floating Annotation Box",
+          "title": "Why the Text Survives Under an Annotation Box",
           "language": "pdf",
-          "code": "% Base Page Content Stream (/Contents) - STILL SELECTABLE!\nBT\n  /F1 11 Tf\n  72 710 Td\n  (Confidential SSN: 999-00-1234) Tj\nET\n\n% Cosmetic Black Rectangle (/Annots) - Merely floats on top visually\n<< /Type /Annot /Subtype /Square /Rect [70 705 240 725] /IC [0 0 0] >>"
+          "code": "% Page content stream (/Contents) - STILL SELECTABLE\nBT\n  /F1 11 Tf\n  72 710 Td\n  (Confidential SSN: 999-00-1234) Tj\nET\n\n% Black rectangle annotation (/Annots) - only drawn on top\n<< /Type /Annot /Subtype /Square /Rect [70 705 240 725] /IC [0 0 0] >>"
         },
         {
           "type": "callout",
           "variant": "tip",
-          "title": "The 5-Second Ctrl+A Clipboard Audit",
-          "text": "Before sending any redacted PDF, open the final file, press Ctrl+A (or Cmd+A) to select all text on the page, copy it, and paste it into a plain text editor. If the redacted words appear in plain text, the redaction failed."
+          "title": "The 5-Second Copy Test",
+          "text": "Before sending a redacted PDF, open the final file, press Ctrl+A (or Cmd+A), copy, and paste into a plain text editor. If the redacted words appear, the redaction failed."
         },
         {
           "type": "heading2",
           "id": "true-redaction-mechanics",
-          "text": "How iKnowAPDF's Editor Eliminates Underlying Text Streams"
+          "text": "How the iKnowAPDF Editor Removes the Underlying Text"
         },
         {
           "type": "paragraph",
-          "text": "When you edit a line of text or place a Whiteout box on a page using the iKnowAPDF Editor (`/tools/edit-pdf`), our engine suppresses the original PDF canvas text operators (`fillText` and `strokeText`), scrubs the underlying character bounding boxes, renders your modified text or whiteout mask onto a high-resolution 2.5x canvas, and replaces that page with a flattened raster layer. Because the exported page contains zero underlying PDF text operators for the removed words, nothing can ever be copied or extracted."
+          "text": "When you edit a line of text or place a whiteout box in the [iKnowAPDF PDF Editor](/tools/edit-pdf), the edited page is re-drawn on a canvas at 2.5x scale with the original text hidden, and that page is replaced by a flattened image when you export. The exported page therefore contains no text operators for the words you removed. The trade-off: text on that page is no longer selectable or searchable."
         },
         {
           "type": "step",
           "number": 1,
-          "title": "Open the Document in the Client-Side PDF Editor",
-          "text": "Load your PDF into /tools/edit-pdf. Every text line on the page is extracted into a live editable layer."
+          "title": "Open the Document in the PDF Editor",
+          "text": "Load your PDF into the [PDF Editor](/tools/edit-pdf). Text lines on the page become editable."
         },
         {
           "type": "step",
           "number": 2,
-          "title": "Delete the Text Line or Apply Whiteout",
-          "text": "Click directly on the sensitive text line and click the Trash icon (or overwrite it with '[REDACTED]'), or select the Whiteout tool to mask any region."
+          "title": "Delete the Text or Apply Whiteout",
+          "text": "Click the sensitive line and delete it (or overwrite it with '[REDACTED]'), or use the Whiteout tool to cover any region."
         },
         {
           "type": "step",
           "number": 3,
-          "title": "Click 'Apply Changes' & Sanitize Metadata",
-          "text": "Export the flattened PDF, then optionally run it through /tools/sanitize-pdf to strip any document-level /Info or XMP metadata."
+          "title": "Apply Changes, Then Clean Metadata",
+          "text": "Export the PDF, then run it through the [PDF Sanitizer](/tools/sanitize-pdf) to clear document-level metadata such as the title and author, and repeat the copy test."
         },
         {
           "type": "toolCta",
@@ -522,20 +522,20 @@
           "type": "faq",
           "items": [
             {
-              "question": "Can someone copy or extract text that I deleted in the iKnowAPDF Editor?",
-              "answer": "No. When you modify or whiteout a page in the iKnowAPDF Editor and click 'Apply changes', that page is flattened into a clean high-DPI image layer without the old text stream."
+              "question": "Can someone copy text that I deleted in the iKnowAPDF Editor?",
+              "answer": "Not from the edited page: after you apply changes, that page is exported as a flattened image without the old text stream. Always run the copy test on the final file to confirm."
             },
             {
-              "question": "What if my PDF has 50 pages, and I only redact Page 3?",
-              "answer": "Our editor is smart: untouched pages (Pages 1–2 and 4–50) are copied losslessly as native vector pages, while only the modified page (Page 3) is flattened to destroy the redacted text stream."
+              "question": "What if my PDF has 50 pages and I only redact page 3?",
+              "answer": "Untouched pages are copied as normal vector pages; only the pages you edited are flattened into images."
             },
             {
-              "question": "Should I also run the Sanitize Metadata tool after redacting?",
-              "answer": "Yes! Even after redacting page content, the PDF's /Info dictionary or title might still contain sensitive names. Running /tools/sanitize-pdf ensures all hidden document properties are purged too."
+              "question": "Should I also sanitize metadata after redacting?",
+              "answer": "Yes. The document title, author, or XMP metadata may still contain sensitive names. Running the [PDF Sanitizer](/tools/sanitize-pdf) clears those document-level fields."
             },
             {
-              "question": "Is my unredacted source file ever uploaded to a server?",
-              "answer": "Never. Both the PDF Editor and PDF Sanitizer run 100% locally in your browser's RAM."
+              "question": "Is my unredacted file uploaded to a server?",
+              "answer": "No. The PDF Editor and PDF Sanitizer process files in your browser."
             }
           ]
         }
@@ -549,31 +549,30 @@
     {
       "slug": "pdf-compression-lossless-lossy-guide",
       "title": "The Complete Guide to PDF Compression: Lossless vs. Lossy Browser Optimization",
-      "seoTitle": "PDF Compression Explained: Lossless vs Lossy Browser Optimization",
-      "description": "An engineering deep-dive into PDF compression algorithms: FlateDecode object streams, DPI downsampling, and metadata stripping in client WebAssembly.",
+      "seoTitle": "PDF Compression Explained: Lossless vs Lossy",
+      "description": "What makes PDFs large, how lossless object-stream packing differs from page rasterization, and which iKnowAPDF compression preset fits which document.",
       "category": "compression",
       "tags": [
         "Compress PDF",
         "Lossless",
         "Lossy",
-        "WebAssembly",
         "Optimization"
       ],
       "publishedAt": "2026-04-02",
-      "updatedAt": "2026-10-25",
-      "authorId": "alex-vance",
+      "updatedAt": "2026-11-04",
+      "authorId": "yassine-k",
       "toolCta": {
         "toolId": "compress",
-        "title": "Compress PDF Online with Live Size Comparison",
-        "description": "Choose Extreme, Recommended, or Lossless presets. 100% computed inside your device memory with instant before-and-after byte savings.",
+        "title": "Compress a PDF with a Live Size Comparison",
+        "description": "Choose Recommended, Extreme, or Lossless / High Quality and compare before-and-after sizes. Processing happens on your device.",
         "buttonText": "Open PDF Compressor",
         "href": "/tools/compress-pdf",
-        "highlightText": "Instant client-side optimization"
+        "highlightText": "Runs in your browser"
       },
       "blocks": [
         {
           "type": "paragraph",
-          "text": "Whether you are preparing financial reports for email distribution, uploading academic portfolios, or archiving thousands of scanned invoices, controlling PDF file size is essential. Yet most users treat PDF compression as a black box—uploading sensitive files to random cloud servers that either barely shrink the file or turn crisp pages into unreadable, pixelated blurs. Understanding how PDF streams and raster downsampling actually work lets you cut file sizes by 60% to 90% while preserving visual clarity."
+          "text": "Whether you are emailing a report, uploading a portfolio, or archiving scanned invoices, PDF file size matters. Most people treat compression as a black box — upload, hope, download. Understanding what actually takes up space in a PDF, and what each compression method does to it, lets you pick the right trade-off between size and quality."
         },
         {
           "type": "heading2",
@@ -582,71 +581,77 @@
         },
         {
           "type": "paragraph",
-          "text": "A PDF container is a miniature filesystem composed of numbered indirect objects: font dictionaries, vector paths, XMP XML packets, and embedded image XObjects (/Subtype /Image). When a 5-page PDF balloons to 25 MB, the bloat almost always comes from one of five sources:"
+          "text": "A PDF is a container of numbered objects: fonts, vector paths, metadata packets, and embedded images (/Subtype /Image). When a 5-page PDF weighs 25 MB, the size usually comes from one of these sources:"
         },
         {
           "type": "list",
           "ordered": false,
           "items": [
-            "Oversampled Smartphone & Scanner Bitmaps: Office scanners and phone cameras routinely embed 300 to 600 DPI 24-bit RGB images (12+ megapixels per page) when 150 DPI is virtually indistinguishable on screen.",
-            "Unpacked Legacy Cross-Reference Tables: Older PDF 1.4 generators write verbose ASCII object headers instead of compressed PDF 1.5+ Object Streams (/Type /ObjStm).",
-            "Unstripped Application Metadata & Thumbnails: Design suites like InDesign and Photoshop embed hundreds of kilobytes of proprietary XML editing state and preview thumbnails.",
-            "Duplicate Unsubsetted Font Tables: Merging multiple PDFs often leaves redundant copies of Arial, Calibri, or Times New Roman embedded across separate page resources.",
-            "Incremental Save Baggage: Repeated edits append new object generations to the end of the file without garbage-collecting deleted images."
+            "High-resolution scans and phone photos: Scanners and phone cameras often embed 300–600 DPI full-color images, far more detail than is needed to read a page on screen.",
+            "Uncompressed object structure: Older PDF generators write every object header as plain text instead of packing them into compressed object streams (/Type /ObjStm, PDF 1.5+).",
+            "Application metadata and thumbnails: Design tools can embed private editing data and preview images.",
+            "Duplicate fonts: Merging several PDFs can leave multiple copies of the same font embedded.",
+            "Incremental-save leftovers: Repeated edits can append new object versions without removing old ones (see [removing PDF revision history](/blog/remove-pdf-incremental-updates-revision-history))."
           ]
         },
         {
           "type": "heading2",
           "id": "lossless-vs-lossy-mechanics",
-          "text": "Lossless Object-Stream Packing vs. Adaptive Canvas Downsampling"
+          "text": "Lossless Object-Stream Packing vs. Page Rasterization"
         },
         {
           "type": "paragraph",
-          "text": "In iKnowAPDF's client-side compression engine (`compressPDFDocument`), we provide three distinct optimization pipelines tailored to different document types:"
+          "text": "The iKnowAPDF compressor (`compressPDFDocument` in our source) offers three presets. It is worth knowing exactly what each one does, because two of them change how your pages are stored:"
         },
         {
           "type": "heading3",
           "id": "three-compression-tiers-code",
-          "text": "How Our Multi-Tier Browser Compression Pipeline Works"
+          "text": "What Each Preset Does"
         },
         {
           "type": "code",
-          "title": "iKnowAPDF 3-Tier Compression Architecture",
+          "title": "iKnowAPDF Compression Presets",
           "language": "text",
-          "code": "1. Lossless / High Quality (\"low\"):\n   - Strips /Info & XMP metadata bloat\n   - Packs indirect objects into compressed PDF 1.5+ Object Streams (useObjectStreams: true)\n   - Preserves 100% original vector glyphs & original image bytes\n\n2. Recommended Preset (\"recommended\"):\n   - Renders heavy image/scanned pages at 1.4x scale (~150 DPI)\n   - Encodes page bitmaps with 0.74 perceptual DCT (JPEG) quality\n   - Typical reduction: 60% to 78% with crisp reading clarity\n\n3. Extreme & Target-KB Presets (\"extreme\" / targetKb):\n   - Dynamically calculates target bytes-per-page budget\n   - Runs a 2-pass adaptive scale (1.0x down to 0.55x) & quality pass to hit strict 100KB/200KB caps"
+          "code": "1. Lossless / High Quality (\"low\"):\n   - Clears document-level metadata (title, author, producer...)\n   - Re-saves with compressed object streams (useObjectStreams: true)\n   - Keeps original text, vectors and image bytes untouched\n   - Returns the original file if this doesn't make it smaller\n\n2. Recommended (\"recommended\"):\n   - Renders every page to an image at 1.4x scale (about 100 DPI)\n   - Encodes each page as a JPEG at quality 0.74\n   - Text becomes part of the image (no longer selectable)\n\n3. Extreme & size targets (\"extreme\" / targetKb):\n   - Renders pages at 1.0x scale (about 72 DPI), JPEG quality 0.5\n   - With a KB target: picks scale/quality from the per-page budget,\n     and runs a second, tighter pass if the first result is too big"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "title": "The Compressor Never Returns a Bigger File",
+          "text": "For Recommended and Extreme, the tool compares the original, the losslessly re-saved version, and the rasterized version, and gives you the smallest of the three. If your PDF is already well optimized, you may get the original back."
         },
         {
           "type": "comparisonTable",
           "headers": [
-            "Compression Profile",
-            "Typical Size Reduction",
-            "Best Document Type",
-            "Output Fidelity",
-            "Cloud Upload Risk"
+            "Preset",
+            "What Changes",
+            "Best For",
+            "Text Selectable Afterwards?"
           ],
           "rows": [
             [
               "Lossless / High Quality",
-              "15% - 40%",
-              "Native Word/LaTeX text PDFs, contracts",
-              "100% Native Vectors",
-              "Zero (Local RAM)"
+              "Metadata cleared, structure re-packed",
+              "Text PDFs exported from Word, Google Docs, LaTeX",
+              "Yes"
             ],
             [
-              "Recommended Preset",
-              "60% - 80%",
-              "Scanned documents, mixed reports, email",
-              "Crisp 150 DPI",
-              "Zero (Local RAM)"
+              "Recommended",
+              "Pages re-rendered as ~100 DPI JPEGs",
+              "Scans and photo-heavy documents",
+              "No"
             ],
             [
-              "Extreme Preset",
-              "75% - 92%",
-              "Strict government/university portal uploads",
-              "Compact Screen DPI",
-              "Zero (Local RAM)"
+              "Extreme / KB targets",
+              "Pages re-rendered at ~72 DPI or lower",
+              "Strict upload limits (e.g. 100KB–500KB portals)",
+              "No"
             ]
           ]
+        },
+        {
+          "type": "paragraph",
+          "text": "How much smaller a file gets depends entirely on its content. Scans and photo-heavy PDFs often shrink dramatically with Recommended; text-only PDFs that are already compact may barely change with any preset."
         },
         {
           "type": "heading2",
@@ -656,20 +661,20 @@
         {
           "type": "step",
           "number": 1,
-          "title": "Drop Your PDF into the Local Workspace",
-          "text": "Open /tools/compress-pdf. Your file is loaded directly into browser memory."
+          "title": "Drop Your PDF into the Compressor",
+          "text": "Open [Compress PDF](/tools/compress-pdf). Your file is loaded into browser memory, not uploaded."
         },
         {
           "type": "step",
           "number": 2,
-          "title": "Choose Recommended, Extreme, or Lossless",
-          "text": "Select 'Lossless' for pure text documents, 'Recommended' for everyday scans, or 'Extreme' for strict portal limits."
+          "title": "Choose a Preset",
+          "text": "Pick 'Lossless / High Quality' for text documents you want to keep searchable, 'Recommended' for scans, or 'Extreme' for strict upload limits."
         },
         {
           "type": "step",
           "number": 3,
-          "title": "Verify the Exact Percentage Saved & Download",
-          "text": "Review the exact before-and-after KB/MB comparison and download your optimized PDF."
+          "title": "Compare & Download",
+          "text": "Review the before-and-after size, open the result to check legibility, and download it."
         },
         {
           "type": "toolCta",
@@ -679,20 +684,20 @@
           "type": "faq",
           "items": [
             {
-              "question": "What happens if a PDF is already maximally compressed?",
-              "answer": "Our engine compares the byte length of the original buffer, the lossless object-stream buffer, and the raster-optimized buffer, and automatically returns the smallest candidate—so your file will never accidentally grow larger."
+              "question": "What happens if a PDF is already well compressed?",
+              "answer": "The compressor compares the original with each compressed candidate and returns the smallest, so the file will not get bigger. In that case you may simply get the original back."
             },
             {
-              "question": "When should I choose Lossless over Recommended compression?",
-              "answer": "If your PDF was exported directly from Microsoft Word, Google Docs, or LaTeX and contains mostly vector text with no large photos, choose 'Lossless / High Quality' to strip metadata and pack object streams while keeping 100% vector fonts."
+              "question": "When should I choose Lossless over Recommended?",
+              "answer": "If your PDF was exported from Word, Google Docs, or LaTeX and is mostly text, choose 'Lossless / High Quality'. It keeps text selectable and sharp. Recommended turns each page into an image, which suits scans better than text documents."
             },
             {
-              "question": "Can I target a specific kilobyte limit like 100KB or 200KB?",
-              "answer": "Yes! Use our dedicated /compress-pdf-under-100kb or /compress-pdf-under-200kb presets, which activate a 2-pass adaptive budget calculator."
+              "question": "Can I target a specific limit like 100KB or 200KB?",
+              "answer": "Yes. Use the size-targeted pages such as [compress PDF under 100KB](/compress-pdf-under-100kb) or [under 200KB](/compress-pdf-under-200kb). They size each page to the budget and run a second, tighter pass if needed. Very long documents may still not fit a small target — splitting them helps."
             },
             {
-              "question": "Are my financial or personal PDFs uploaded to a server during compression?",
-              "answer": "Never. All stream packing and canvas rendering happen 100% inside your device's browser memory."
+              "question": "Are my PDFs uploaded to a server during compression?",
+              "answer": "No. Rendering and re-saving happen inside your browser on your device."
             }
           ]
         }
@@ -706,84 +711,87 @@
     {
       "slug": "reduce-pdf-size-below-200kb",
       "title": "How to Reduce PDF File Size Below 200KB for Strict Portal Uploads",
-      "seoTitle": "Reduce PDF File Size Below 200KB — Government & Job Portals",
-      "description": "Step-by-step techniques to shrink PDF documents below 200KB or 100KB for visa portals, universities, and job applications without losing legibility.",
+      "seoTitle": "Reduce PDF Size Below 200KB for Upload Portals",
+      "description": "Practical steps to get scanned IDs, transcripts and forms under 200KB or 100KB for visa, university and job portals while keeping them readable.",
       "category": "compression",
       "tags": [
         "200KB Limit",
-        "USCIS Upload",
         "Government Portal",
         "Compress PDF",
         "Passports"
       ],
       "publishedAt": "2026-04-10",
-      "updatedAt": "2026-10-25",
-      "authorId": "alex-vance",
+      "updatedAt": "2026-11-04",
+      "authorId": "yassine-k",
       "toolCta": {
         "toolId": "compress",
-        "title": "Shrink PDF Under 200KB Automatically (Auto-Tuned Preset)",
-        "description": "Launch our dedicated Under-200KB compressor with 2-pass adaptive byte budgeting—100% private in your browser.",
-        "buttonText": "Compress Under 200KB Now",
+        "title": "Compress a PDF Under 200KB",
+        "description": "Open the under-200KB preset, which sizes each page to the budget and runs a second pass if needed — in your browser.",
+        "buttonText": "Compress Under 200KB",
         "href": "/compress-pdf-under-200kb",
-        "highlightText": "Auto-tuned 200KB target preset"
+        "highlightText": "200KB target preset"
       },
       "blocks": [
         {
           "type": "paragraph",
-          "text": "Submitting immigration petitions, civil service exam applications, university transcripts, or vendor KYC documents often means battling archaic government web portals. While modern email services allow 25 MB attachments, many national visa, scholarship, and licensing portals enforce strict 100 KB or 200 KB per-file ceilings. If your scanned passport, degree certificate, or tax transcript is 204 KB, the upload fails immediately."
+          "text": "Immigration forms, civil service applications, university transcripts, and KYC checks often mean dealing with upload portals that cap each file at 100KB or 200KB. If your scanned passport or certificate is 204KB, the upload simply fails. This guide shows how to get under those limits without making the document unreadable."
         },
         {
           "type": "heading2",
           "id": "why-portals-have-strict-caps",
-          "text": "Why Do Government & University Portals Enforce 100KB–200KB Limits?"
+          "text": "Why Do Some Portals Enforce 100KB–200KB Limits?"
         },
         {
           "type": "paragraph",
-          "text": "Many government intake systems store uploaded documents directly inside legacy relational database rows (SQL BLOBs) replicated across regional servers. To prevent database lockups during peak application windows, administrators hardcode strict byte caps. At the same time, intake officers still need to read fine print, stamps, and passport Machine-Readable Zones (MRZ)."
+          "text": "Portals rarely explain their limits. Small caps keep storage and bandwidth costs down for systems that receive very large numbers of applications, and some older systems were simply built with small limits that were never revised. Whatever the reason, reviewers still need to read fine print, stamps, and the machine-readable zone on a passport, so the goal is the smallest file that stays legible."
         },
         {
           "type": "callout",
           "variant": "security",
-          "title": "Identity Theft Warning for Passports & Tax Transcripts",
-          "text": "Never upload scans of your passport, birth certificate, driver's license, or W-2 tax forms to unknown cloud compression websites. Always compress identity documents in local browser memory."
+          "title": "Be Careful Where You Upload Identity Documents",
+          "text": "Passports, birth certificates, driver's licenses and tax forms are valuable to identity thieves. Prefer tools that process the file on your own device rather than uploading it to an unknown website."
         },
         {
           "type": "heading2",
           "id": "two-pass-adaptive-compression",
-          "text": "How iKnowAPDF's 2-Pass Adaptive 200KB Engine Works"
+          "text": "How the iKnowAPDF Size-Target Presets Work"
         },
         {
           "type": "paragraph",
-          "text": "When you use our `/compress-pdf-under-200kb` or `/compress-pdf-under-100kb` preset, the compressor does not just apply a blind fixed filter. Instead, it divides your target kilobyte budget (`200 * 1024` bytes) by the total number of pages in your document (`targetBytesPerPage`) and runs up to two automatic passes:"
+          "text": "When you use [compress PDF under 200KB](/compress-pdf-under-200kb) or [compress PDF under 100KB](/compress-pdf-under-100kb), the compressor divides the target budget by the number of pages, picks a rendering scale and JPEG quality for that per-page budget, and, if the first pass is still too big, runs one tighter pass:"
         },
         {
           "type": "code",
-          "title": "2-Pass Adaptive Byte-Budget Algorithm (src/lib/pdf/pdf-utils.ts)",
+          "title": "Size-Target Logic (simplified from src/lib/pdf/pdf-utils.ts)",
           "language": "ts",
-          "code": "const targetBytesPerPage = (targetKb * 1024) / Math.max(1, numPages);\n// Pass 1: Select initial DPI scale & JPEG quality based on per-page budget\nlet rasterCompressedBytes = await renderCompressedPass(scale, quality);\n\n// Pass 2: If Pass 1 slightly exceeded 200KB, calculate exact overshoot ratio and tighten\nif (targetKb && rasterCompressedBytes.length > targetKb * 1024) {\n  const ratio = (targetKb * 1024) / rasterCompressedBytes.length;\n  const tighterScale = Math.max(0.55, scale * Math.sqrt(ratio) * 0.92);\n  const tighterQuality = Math.max(0.28, quality * ratio * 0.9);\n  rasterCompressedBytes = await renderCompressedPass(tighterScale, tighterQuality);\n}"
+          "code": "const targetBytesPerPage = (targetKb * 1024) / Math.max(1, numPages);\n// Pass 1: choose scale & JPEG quality from the per-page budget\nlet rasterCompressedBytes = await renderCompressedPass(scale, quality);\n\n// Pass 2: if still over the target, tighten based on the overshoot\nif (targetKb && rasterCompressedBytes.length > targetKb * 1024) {\n  const ratio = (targetKb * 1024) / rasterCompressedBytes.length;\n  const tighterScale = Math.max(0.55, scale * Math.sqrt(ratio) * 0.92);\n  const tighterQuality = Math.max(0.28, quality * ratio * 0.9);\n  rasterCompressedBytes = await renderCompressedPass(tighterScale, tighterQuality);\n}"
+        },
+        {
+          "type": "paragraph",
+          "text": "The scale and quality have lower bounds so pages don't become unreadable, which means a long document may still end up above the target. When that happens, split it into parts."
         },
         {
           "type": "heading2",
           "id": "step-by-step-200kb",
-          "text": "3 Steps to Get Any PDF Under 200KB"
+          "text": "3 Steps to Get a PDF Under 200KB"
         },
         {
           "type": "step",
           "number": 1,
-          "title": "Open the Auto-Tuned Under-200KB Compressor",
-          "text": "Click the button below to open /compress-pdf-under-200kb with the 200KB target preset pre-activated."
+          "title": "Open the Under-200KB Compressor",
+          "text": "Go to [compress PDF under 200KB](/compress-pdf-under-200kb); the 200KB target is already set. For other limits there are presets such as [under 100KB](/compress-pdf-under-100kb), [under 300KB](/compress-pdf-under-300kb) and [under 500KB](/compress-pdf-under-500kb)."
         },
         {
           "type": "step",
           "number": 2,
           "title": "Drop Your Scanned ID, Transcript, or Form",
-          "text": "Keep 'Extreme Compression' selected and click Compress PDF Document."
+          "text": "Run the compressor and check the result size and legibility before uploading."
         },
         {
           "type": "step",
           "number": 3,
-          "title": "Split Multi-Page Exhibits if Needed",
-          "text": "If you have a 25-page scan that must fit under 200KB, use /tools/split-pdf first to separate it into Part 1 and Part 2, then compress each part below 200KB."
+          "title": "Split Long Documents if Needed",
+          "text": "If a 25-page scan won't fit, use [Split PDF](/tools/split-pdf) to divide it into parts and compress each part separately, if the portal allows multiple files."
         },
         {
           "type": "toolCta",
@@ -793,20 +801,20 @@
           "type": "faq",
           "items": [
             {
-              "question": "Will passport MRZ codes and stamps still be readable under 200KB?",
-              "answer": "Yes. For 1-to-4 page documents like passports, diplomas, and certificates, 200KB provides 50KB to 200KB per page—plenty of budget for crisp, legible text and barcodes."
+              "question": "Will passport details and stamps still be readable under 200KB?",
+              "answer": "For 1–4 page documents there is usually enough budget per page to keep text and stamps readable, but results depend on the scan. Always open the compressed file and zoom in on small print before you submit."
             },
             {
-              "question": "What if my portal requires under 100KB instead of 200KB?",
-              "answer": "You can use our /compress-pdf-under-100kb preset, which tightens the 2-pass byte budget specifically for 100KB limits."
+              "question": "What if my portal requires under 100KB?",
+              "answer": "Use [compress PDF under 100KB](/compress-pdf-under-100kb), or even [under 50KB](/compress-pdf-under-50kb) for very strict forms. Fewer pages make small targets much easier to hit."
             },
             {
-              "question": "Why is my phone photo of a document 6MB in the first place?",
-              "answer": "Modern smartphone cameras capture 12MP to 48MP full-color photos. If you scan a physical paper document using /tools/scan with the 'B&W Clean' filter first, the resulting PDF is dramatically cleaner and compresses even smaller."
+              "question": "Why is my phone photo of a document so large?",
+              "answer": "Phone cameras capture 12MP or more in full color. Scanning the page with the [document scanner](/tools/scan) and its 'B&W Clean' filter usually produces a cleaner image that compresses much smaller. If you start from a JPG, [JPG to PDF under 200KB](/jpg-to-pdf-under-200kb) handles conversion and size in one step."
             },
             {
-              "question": "Is there any daily limit on how many files I can shrink?",
-              "answer": "Zero limits. Because all computation uses your own device's CPU and RAM, you can compress as many files as you need for free."
+              "question": "Is there a daily limit on how many files I can compress?",
+              "answer": "No. Compression runs on your own device, and there is no daily cap on how many files you can process."
             }
           ]
         }
@@ -820,8 +828,8 @@
     {
       "slug": "linearize-pdf-fast-web-view-streaming",
       "title": "Linearized PDFs & Object Streams Explained: Optimizing Large PDFs for the Web",
-      "seoTitle": "Linearized PDFs, Object Streams & Fast Web View — Web Guide",
-      "description": "Learn how PDF 1.5+ Object Streams (/ObjStm) and ISO 32000 Annex F Linearization work with HTTP 206 byte-range requests to speed up browser PDF loading.",
+      "seoTitle": "Linearized PDFs, Object Streams & Fast Web View",
+      "description": "How PDF object streams, Fast Web View (linearization) and HTTP byte-range requests affect how quickly large PDFs open in the browser.",
       "category": "compression",
       "tags": [
         "Fast Web View",
@@ -831,20 +839,20 @@
         "PDF Spec"
       ],
       "publishedAt": "2026-04-18",
-      "updatedAt": "2026-10-25",
-      "authorId": "alex-vance",
+      "updatedAt": "2026-11-04",
+      "authorId": "yassine-k",
       "toolCta": {
         "toolId": "compress",
-        "title": "Pack PDF Object Streams & Shrink Web Payload Size",
-        "description": "Strip metadata bloat, pack PDF 1.5+ Object Streams (/ObjStm), and reduce total download megabytes in your browser.",
+        "title": "Shrink PDFs Before Putting Them Online",
+        "description": "Pack object streams, clear metadata, and reduce the download size of PDFs you host — in your browser.",
         "buttonText": "Optimize PDF for Web",
         "href": "/tools/compress-pdf",
-        "highlightText": "Packs /ObjStm & reduces total payload"
+        "highlightText": "Smaller downloads"
       },
       "blocks": [
         {
           "type": "paragraph",
-          "text": "Have you ever clicked a link to a 60MB product catalog, annual report, or academic thesis in your browser, only to stare at a loading spinner for 30 seconds before Page 1 appears? Slow in-browser PDF rendering happens for two reasons: bloated unoptimized page payloads, and the structural layout of the PDF's Cross-Reference (/XRef) table. In this guide, we break down how PDF Object Streams (`/ObjStm`), HTTP 206 byte-range requests, and Fast Web View work together."
+          "text": "Have you ever clicked a link to a 60MB catalog or annual report and waited for the first page to appear? Slow PDF loading in the browser usually comes down to two things: the total download size, and whether the file and server allow the viewer to fetch just the parts it needs. This guide explains object streams, Fast Web View (linearization), and HTTP 206 byte-range requests."
         },
         {
           "type": "heading2",
@@ -853,7 +861,7 @@
         },
         {
           "type": "paragraph",
-          "text": "In the classic ISO 32000-1 file structure, the `/XRef` index table—which tells the PDF reader the exact byte offset of every page, font, and image—is located at the very bottom of the file right before `%%EOF`. Unless a server and PDF file are properly optimized, the browser must either download the entire multi-megabyte file or perform multiple round-trip HTTP 206 range requests to locate Page 1's resources."
+          "text": "In a classic PDF, the cross-reference table that tells a reader where each object lives is at the end of the file, just before `%%EOF`. Unless the file is linearized and the server supports range requests, a browser viewer may need to download most or all of the file before showing page 1."
         },
         {
           "type": "heading3",
@@ -862,42 +870,42 @@
         },
         {
           "type": "paragraph",
-          "text": "There are two complementary techniques for accelerating web-hosted PDFs: packing indirect dictionaries into compressed **PDF 1.5+ Object Streams** (which shrinks the structural overhead of the file) and configuring **HTTP 206 Partial Content** headers on your CDN:"
+          "text": "Two different techniques help here. **Object streams** (PDF 1.5+) pack many small objects into compressed streams, shrinking the file's structural overhead. **Linearization** (ISO 32000 Annex F, often called Fast Web View) reorders the file so page 1 and a hint table come first, letting a viewer show the first page early when the server supports **HTTP 206 Partial Content**:"
         },
         {
           "type": "code",
-          "title": "Required NGINX / Cloudflare Headers for In-Browser PDF Streaming",
+          "title": "Example NGINX Config for Serving PDFs",
           "language": "nginx",
-          "code": "# Ensure your CDN or web server advertises byte-range support for PDF.js / Chrome\nlocation ~* \\.pdf$ {\n  add_header Accept-Ranges bytes;\n  add_header Cache-Control \"public, max-age=31536000, immutable\";\n  # Avoid gzipping already-compressed PDF streams so Content-Length stays exact for HTTP 206\n  gzip off;\n}"
+          "code": "# Advertise byte-range support so viewers can request parts of the file\nlocation ~* \\.pdf$ {\n  add_header Accept-Ranges bytes;\n  add_header Cache-Control \"public, max-age=31536000, immutable\";\n  # PDF streams are already compressed; gzip gains little and can\n  # interfere with range requests on some setups\n  gzip off;\n}"
         },
         {
           "type": "callout",
           "variant": "info",
-          "title": "Why gzip off Matters for HTTP 206 PDF Streaming",
-          "text": "Because internal PDF streams are already compressed with FlateDecode/DCTDecode, applying server-side gzip compression saves <1% while stripping the exact Content-Length header that browsers need to issue HTTP 206 byte-range requests!"
+          "title": "iKnowAPDF Does Not Linearize Files",
+          "text": "Our compressor writes object streams and reduces size, but it does not produce linearized (Fast Web View) output. If you need true linearization, use a desktop tool such as qpdf (`qpdf --linearize in.pdf out.pdf`) after compressing."
         },
         {
           "type": "heading2",
           "id": "optimizing-web-pdfs-steps",
-          "text": "3 Steps to Optimize Large PDFs for Instant Browser Viewing"
+          "text": "3 Steps to Make Large PDFs Open Faster Online"
         },
         {
           "type": "step",
           "number": 1,
-          "title": "Pack Object Streams & Downsample Heavy Bitmaps",
-          "text": "Load your PDF into /tools/compress-pdf. Our engine enables PDF 1.5+ Object Streams (useObjectStreams: true), strips XMP bloat, and compresses oversized images."
+          "title": "Reduce the Download Size",
+          "text": "Run the file through [Compress PDF](/tools/compress-pdf). 'Lossless / High Quality' re-packs object streams and keeps text selectable; 'Recommended' shrinks scan-heavy files much more by converting pages to images."
         },
         {
           "type": "step",
           "number": 2,
-          "title": "Split Massive 500-Page Manuals into Logical Chapters",
-          "text": "If you host a 200MB manual, use /tools/split-pdf to divide it into chapter-level PDFs so mobile readers download only the section they need."
+          "title": "Split Very Large Manuals into Chapters",
+          "text": "If you host a 200MB manual, use [Split PDF](/tools/split-pdf) to create chapter-level files so mobile readers download only what they need."
         },
         {
           "type": "step",
           "number": 3,
-          "title": "Serve with Accept-Ranges: bytes Enabled",
-          "text": "Host the compressed PDF on Cloudflare, S3, or NGINX with exact Content-Length and byte-range headers enabled."
+          "title": "Serve with Byte-Range Support",
+          "text": "Host the file on a server or CDN that sends `Accept-Ranges: bytes` and a correct Content-Length, and linearize it with a desktop tool if first-page speed matters."
         },
         {
           "type": "toolCta",
@@ -907,20 +915,20 @@
           "type": "faq",
           "items": [
             {
-              "question": "What does `useObjectStreams: true` do in iKnowAPDF?",
-              "answer": "Instead of writing thousands of separate uncompressed ASCII object headers (`12 0 obj ... endobj`), it bundles non-stream objects into compressed `/ObjStm` FlateDecode streams and writes a compact cross-reference stream."
+              "question": "What does `useObjectStreams: true` do?",
+              "answer": "Instead of writing every object as a separate plain-text block (`12 0 obj ... endobj`), it packs objects into compressed /ObjStm streams and writes a compact cross-reference stream."
             },
             {
-              "question": "Why does reducing total file size by 75% matter even when HTTP 206 is enabled?",
-              "answer": "Mobile browsers and embedded webviews (such as iOS in-app browsers) frequently fall back to downloading the entire PDF before rendering. Shrinking a 40MB PDF to 6MB ensures instant loading across every device."
+              "question": "Why does total file size matter even with byte-range requests?",
+              "answer": "Many mobile browsers and in-app webviews download the whole PDF before rendering it. A smaller file opens faster everywhere."
             },
             {
-              "question": "Does web optimization change how my PDF prints?",
-              "answer": "Using our 'Lossless' or 'Recommended' presets keeps typography and layouts crisp for both screen reading and office printing."
+              "question": "Will compressing change how my PDF prints?",
+              "answer": "'Lossless / High Quality' keeps text and vectors unchanged, so print quality is unaffected. 'Recommended' and 'Extreme' turn pages into lower-resolution images, which is fine on screen but can look soft when printed."
             },
             {
-              "question": "Is there a file size limit for optimizing large manuals in iKnowAPDF?",
-              "answer": "No server limits apply. Your browser processes the file directly in local RAM."
+              "question": "Is there a file size limit?",
+              "answer": "We don't impose one, but everything runs in your browser's memory, so very large files can be slow or fail on devices with little RAM."
             }
           ]
         }
@@ -934,8 +942,8 @@
     {
       "slug": "compress-architectural-cad-drawings-pdf",
       "title": "How to Fix Bloated Architectural and CAD Vector PDFs That Lag Your Viewer",
-      "seoTitle": "Compress CAD & Architectural PDFs — Fix Zoom Lag and Vector Bloat",
-      "description": "Discover why CAD blueprints exported from AutoCAD or Revit freeze tablets and PDF viewers, and how raster-flattening eliminates vector path lag.",
+      "seoTitle": "Fix Laggy CAD & Architectural PDFs",
+      "description": "Why PDFs exported from AutoCAD or Revit can freeze tablets and viewers, and when flattening drawings into images is a sensible fix.",
       "category": "compression",
       "tags": [
         "CAD PDF",
@@ -945,73 +953,73 @@
         "Performance"
       ],
       "publishedAt": "2026-04-26",
-      "updatedAt": "2026-10-25",
-      "authorId": "alex-vance",
+      "updatedAt": "2026-11-04",
+      "authorId": "yassine-k",
       "toolCta": {
         "toolId": "compress",
-        "title": "Optimize Laggy CAD Blueprints & Drawings Locally",
-        "description": "Flatten millions of lagging vector hatch paths and strip CAD metadata bloat so drawings pan and zoom smoothly on field tablets.",
+        "title": "Flatten Heavy CAD Drawings for Field Viewing",
+        "description": "Re-render dense vector sheets as images so they pan and zoom faster on tablets — or keep vectors with the lossless preset.",
         "buttonText": "Optimize CAD PDF",
         "href": "/tools/compress-pdf",
-        "highlightText": "Eliminates tablet GPU zoom lag"
+        "highlightText": "Runs in your browser"
       },
       "blocks": [
         {
           "type": "paragraph",
-          "text": "Architects, civil engineers, and construction superintendents know the frustration all too well: you open a 35MB PDF plan set exported from AutoCAD, Revit, or Civil 3D on an iPad at a job site, pinch-to-zoom into a floor plan callout, and the screen freezes for 12 seconds as each layer slowly redraws. Even worse, running that PDF through a basic lossless compressor barely changes the file size. Here is why CAD PDFs lag and how to fix them."
+          "text": "Architects, engineers, and site supervisors know the problem: you open a 35MB plan set exported from AutoCAD, Revit, or Civil 3D on a tablet, zoom into a detail, and the screen stalls while the viewer redraws. Running the file through a lossless compressor barely changes it. Here is why CAD PDFs lag and what you can do about it."
         },
         {
           "type": "heading2",
           "id": "vector-bloat-vs-raster",
-          "text": "The Root Cause: Millions of Unmerged Vector Hatch Paths & SHX Strokes"
+          "text": "The Root Cause: Huge Numbers of Vector Paths"
         },
         {
           "type": "paragraph",
-          "text": "When CAD software exports a complex site plan—complete with concrete stipple patterns, topography contours, insulation battings, and exploded SHX stick fonts—it writes millions of individual PDF path construction operators (`m` moveto, `l` lineto, `c` curveto, `S` stroke) into the page content stream. Every time you pan or zoom on a tablet, the mobile GPU must re-tessellate jutaan of mathematical vectors at 60 frames per second."
+          "text": "When CAD software exports a detailed plan — hatch patterns, contours, insulation symbols, and SHX text exploded into strokes — it can write enormous numbers of individual path operators (`m` moveto, `l` lineto, `c` curveto, `S` stroke) into the page. Every pan or zoom forces the viewer to redraw all of them."
         },
         {
           "type": "code",
-          "title": "Why Exploded CAD Hatching Freezes Mobile PDF Renderers",
+          "title": "Why Exploded CAD Hatching Is Slow to Render",
           "language": "pdf",
-          "code": "% A single 2x2 inch sand/concrete hatch in AutoCAD can generate 250,000+ path operators:\n0.12 w\n412.40 288.15 m 412.55 288.30 l S\n412.80 288.10 m 412.92 288.25 l S\n... [Repeated 400,000 times on a single sheet] ..."
+          "code": "% A dense hatch can turn into a very long run of tiny strokes:\n0.12 w\n412.40 288.15 m 412.55 288.30 l S\n412.80 288.10 m 412.92 288.25 l S\n... [repeated many thousands of times on one sheet] ..."
         },
         {
           "type": "callout",
           "variant": "tip",
-          "title": "Why Recommended Raster Flattening Fixes Tablet Stutter Instantly",
-          "text": "By converting a 500,000-operator vector sheet into a unified high-resolution page bitmap (via our Recommended preset), the tablet GPU renders a single flat texture instead of recalculating half a million bezier segments—eliminating zoom lag 100%."
+          "title": "Why Flattening Helps on Tablets",
+          "text": "Re-rendering a dense vector sheet as a single page image (the 'Recommended' preset) means the viewer draws one bitmap instead of re-processing every path, which typically makes panning and zooming much smoother. The trade-off is that you lose vector precision and selectable text."
         },
         {
           "type": "heading2",
           "id": "cad-optimization-strategy",
-          "text": "Choosing Between Lossless Stream Packing vs. Flattened Field Sets"
+          "text": "Choosing Between Lossless Packing and Flattened Field Sets"
         },
         {
           "type": "list",
           "ordered": false,
           "items": [
-            "For Field Review on iPads & Tablets (Use 'Recommended'): Flattens dense vector hatches and Optional Content Groups (OCGs) into a fast-loading, fixed-DPI drawing that scrolls effortlessly.",
-            "For Vector Submittals (Use 'Lossless / High Quality'): Strips proprietary Revit/AutoCAD XMP metadata and packs object streams while keeping 100% of vector lines intact for desktop vector measurement.",
-            "For Extracting Individual Sheets (Use /tools/split-pdf): Instead of emailing a 120-sheet master structural set, extract only the relevant 5 sheets for a subcontractor."
+            "For field review on tablets (use 'Recommended'): Flattens each sheet into an image that scrolls easily. Check that small dimensions are still readable at about 100 DPI.",
+            "For vector submittals (use 'Lossless / High Quality'): Clears metadata and re-packs the file while keeping every vector line for measurement on desktop.",
+            "For sending only a few sheets (use [Split PDF](/tools/split-pdf)): Extract the 5 relevant sheets instead of emailing the full 120-sheet set."
           ]
         },
         {
           "type": "step",
           "number": 1,
-          "title": "Load Your Blueprint Set into /tools/compress-pdf",
-          "text": "Drop your architectural or engineering PDF into the local compressor."
+          "title": "Load Your Drawing Set into the Compressor",
+          "text": "Drop your architectural or engineering PDF into [Compress PDF](/tools/compress-pdf)."
         },
         {
           "type": "step",
           "number": 2,
-          "title": "Select 'Recommended' to Eliminate Rendering Lag (or 'Lossless' for Vectors)",
-          "text": "Choose 'Recommended' to bake laggy vector hatches into a fast-rendering sheet, or 'Lossless' to keep raw vector paths."
+          "title": "Pick 'Recommended' for Speed or 'Lossless' for Vectors",
+          "text": "'Recommended' flattens heavy sheets into images; 'Lossless / High Quality' keeps the vector paths."
         },
         {
           "type": "step",
           "number": 3,
-          "title": "Download & Distribute to Field Teams",
-          "text": "Save the optimized drawing set locally with zero cloud upload delays."
+          "title": "Check & Distribute",
+          "text": "Open the result on the target device, zoom into fine details, and share it with the field team."
         },
         {
           "type": "toolCta",
@@ -1021,20 +1029,20 @@
           "type": "faq",
           "items": [
             {
-              "question": "Does iKnowAPDF preserve exact Arch D (24x36) and Arch E (36x48) sheet dimensions?",
-              "answer": "Yes. Our compressor reads the exact `baseViewport.width` and `baseViewport.height` in PDF points for every individual page and preserves the exact sheet dimensions."
+              "question": "Does iKnowAPDF keep large sheet sizes like Arch D (24x36) and Arch E (36x48)?",
+              "answer": "Yes. The compressor reads each page's width and height in PDF points and creates the output page at the same size."
             },
             {
               "question": "Why did AutoCAD create so many comments in my PDF?",
-              "answer": "By default, AutoCAD converts SHX fonts into thousands of PDF comment annotations (`PDFSHX=1`). In AutoCAD, setting `PDFSHX` to `0` before plotting prevents those extra annotation objects."
+              "answer": "Depending on settings, AutoCAD can export SHX text as comment annotations so it remains searchable. The `PDFSHX` system variable controls this behaviour — check your AutoCAD version's documentation before changing it."
             },
             {
-              "question": "Can I rotate sideways landscape blueprints before sending them?",
-              "answer": "Yes! Use /tools/rotate-pdf to permanently rotate individual sideways sheets by 90° or 180° with visual thumbnail previews."
+              "question": "Can I rotate sideways sheets before sending them?",
+              "answer": "Yes. Use [Rotate PDF](/tools/rotate-pdf) to rotate individual sheets by 90° or 180°."
             },
             {
-              "question": "Are confidential NDA construction blueprints safe to process here?",
-              "answer": "100% safe. Your drawings are processed entirely inside your local browser memory and never uploaded to any external server."
+              "question": "Are confidential drawings uploaded anywhere?",
+              "answer": "No. Drawings are processed in your browser on your own device."
             }
           ]
         }
@@ -1047,90 +1055,95 @@
     },
     {
       "slug": "digital-signature-vs-electronic-signature-pdf",
-      "title": "Cryptographic vs. Electronic Signatures in PDFs: ESIGN, eIDAS, and SHA-256 Verification",
-      "seoTitle": "Digital Signature vs Electronic Signature PDF — ESIGN & eIDAS Guide",
-      "description": "Understand the legal and technical differences between electronic signatures, SHA-256 audit trails, and PKCS#7 certificates in PDF workflows.",
+      "title": "Digital vs. Electronic Signatures in PDFs: ESIGN, eIDAS, and SHA-256 Hashes",
+      "seoTitle": "Digital vs Electronic Signature in PDF: ESIGN & eIDAS",
+      "description": "The difference between simple electronic signatures, SHA-256 document hashes and certificate-based digital signatures in PDFs, and when each one is used.",
       "category": "legal",
       "tags": [
         "Digital Signatures",
         "SHA-256",
         "eIDAS",
         "ESIGN Act",
-        "Cryptography",
         "Sign PDF"
       ],
       "publishedAt": "2026-05-04",
-      "updatedAt": "2026-10-25",
-      "authorId": "alex-vance",
+      "updatedAt": "2026-11-04",
+      "authorId": "yassine-k",
       "toolCta": {
         "toolId": "sign",
-        "title": "Sign PDF Contracts with SHA-256 Audit Certificate Locally",
-        "description": "Draw, type, or upload your signature and append a Web Crypto SHA-256 Certificate of Completion page—100% in your browser.",
+        "title": "Sign a PDF in Your Browser",
+        "description": "Draw, type, or upload your signature and optionally append a page listing SHA-256 hashes of the document — processed on your device.",
         "buttonText": "Open PDF Signer",
         "href": "/tools/sign-pdf",
-        "highlightText": "Includes Web Crypto SHA-256 Audit Certificate"
+        "highlightText": "Optional SHA-256 summary page"
       },
       "blocks": [
         {
           "type": "paragraph",
-          "text": "In everyday business, 'electronic signature' and 'digital signature' are often used as synonyms. Yet in contract law and document engineering, they describe distinct layers of evidence. Understanding when a Simple Electronic Signature (SES) paired with a SHA-256 cryptographic audit trail satisfies legal admissibility—versus when a hardware-backed PKCS#7 certificate is mandated—can save your business thousands of dollars in unnecessary SaaS subscriptions."
+          "text": "In everyday business, 'electronic signature' and 'digital signature' are often used as synonyms. In law and in the PDF format, they describe different things. Knowing which one a document actually needs helps you avoid both under-protecting important agreements and paying for tooling you don't need."
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "title": "Not Legal Advice",
+          "text": "This article explains general concepts. Signature requirements vary by country, industry and document type — check with a lawyer for anything high-stakes."
         },
         {
           "type": "heading2",
           "id": "the-legal-and-technical-divide",
-          "text": "The 3 Legal Tiers of Electronic Signatures (US ESIGN Act & EU eIDAS)"
+          "text": "Three Levels of Electronic Signatures (US ESIGN Act & EU eIDAS)"
         },
         {
           "type": "paragraph",
-          "text": "Under the US Electronic Signatures in Global and National Commerce (ESIGN) Act, the Uniform Electronic Transactions Act (UETA), and EU Regulation No 910/2014 (eIDAS), electronic signatures fall into three tiers:"
+          "text": "The US ESIGN Act and UETA give electronic signatures legal effect in most commercial contexts, and the EU's eIDAS Regulation (No 910/2014) defines simple, advanced, and qualified electronic signatures. In practice you will meet three levels:"
         },
         {
           "type": "list",
           "ordered": false,
           "items": [
-            "Simple Electronic Signature (SES): Drawn stylus/mouse signatures, typed cursive signatures, or uploaded signature stamps embedded into a PDF. Valid and legally binding for 95%+ of commercial agreements (NDAs, freelance contracts, leases, invoices, purchase orders).",
-            "Tamper-Evident Audited Electronic Signature: Combines visual signature placement with pre- and post-signing SHA-256 cryptographic document digests and UTC timestamps to prove the exact byte state at the time of signing.",
-            "Qualified / PKCS#7 Certificate Signature (QES / PAdES): Uses an X.509 digital certificate stored on a hardware USB token or cloud HSM issued by a Certificate Authority (CA), required only for specific statutory acts like notarized European land deeds."
+            "Simple electronic signature (SES): A drawn, typed, or image signature placed on a document. Widely used for everyday agreements such as NDAs, freelance contracts and purchase orders, although some documents (wills, certain real-estate or court documents) have stricter rules.",
+            "Signature plus an integrity record: A simple signature combined with evidence about the document — for example SHA-256 hashes and timestamps — that helps show what was signed and when.",
+            "Certificate-based digital signature (AdES/QES, PAdES): Uses an X.509 certificate from a certificate authority, often on a smart card or hardware token, and is embedded in the PDF so that any later change is detected by PDF readers. Qualified signatures are required for some regulated transactions in the EU."
           ]
         },
         {
           "type": "heading2",
           "id": "how-pdf-signatures-function",
-          "text": "How Client-Side SHA-256 Document Hashing Works via Web Crypto API"
+          "text": "How SHA-256 Document Hashing Works in the Browser"
         },
         {
           "type": "paragraph",
-          "text": "In iKnowAPDF's Sign PDF tool (`/tools/sign-pdf`), you can affix drawn, typed, or uploaded signatures along with date stamps and checkmarks, and check **'Append Tamper-Evident SHA-256 Audit Certificate Page'**. When enabled, your browser uses its native hardware-accelerated `window.crypto.subtle.digest('SHA-256', buffer)` engine to fingerprint the exact bytes of both the source PDF and the signed payload:"
+          "text": "In iKnowAPDF's [Sign PDF](/tools/sign-pdf) tool you can place drawn, typed, or uploaded signatures and date stamps, and tick **'Append Tamper-Evident SHA-256 Audit Certificate Page'**. When enabled, your browser's built-in Web Crypto API computes a SHA-256 hash of the original PDF and of the signed content, and the tool adds a summary page listing both:"
         },
         {
           "type": "code",
-          "title": "Verifying a Signed PDF's SHA-256 Digest via Web Crypto API",
+          "title": "Computing a SHA-256 Hash with the Web Crypto API",
           "language": "ts",
-          "code": "// Executed 100% locally in your browser tab (src/lib/pdf/pdf-utils.ts):\nconst hashBuffer = await window.crypto.subtle.digest(\"SHA-256\", pdfBytes);\nconst sha256Hex = Array.from(new Uint8Array(hashBuffer))\n  .map((b) => b.toString(16).padStart(2, \"0\"))\n  .join(\"\");"
+          "code": "// Runs in your browser tab (see src/lib/pdf/pdf-utils.ts):\nconst hashBuffer = await window.crypto.subtle.digest(\"SHA-256\", pdfBytes);\nconst sha256Hex = Array.from(new Uint8Array(hashBuffer))\n  .map((b) => b.toString(16).padStart(2, \"0\"))\n  .join(\"\");"
         },
         {
           "type": "callout",
-          "variant": "security",
-          "title": "Zero Third-Party Custody of Your Contracts",
-          "text": "Traditional e-signature platforms require uploading your confidential employment agreements and NDAs to their cloud servers. With iKnowAPDF, your signature and contract never leave your local RAM."
+          "variant": "warning",
+          "title": "A Hash Page Is Not a Certificate-Based Digital Signature",
+          "text": "The summary page records fingerprints of the file at signing time. It is not a cryptographic PDF signature: PDF readers won't flag later edits automatically, and it doesn't identify the signer with a certificate. Keep your own copies of the original and signed files so the hashes can be checked later, and use a certificate-based signing service when a document requires one."
         },
         {
           "type": "step",
           "number": 1,
-          "title": "Open Your Contract in /tools/sign-pdf",
-          "text": "Load the PDF locally and click '+ New Signature' to draw, type, or upload your signature stamp."
+          "title": "Open Your Document in Sign PDF",
+          "text": "Load the PDF in [Sign PDF](/tools/sign-pdf) and create a signature by drawing, typing, or uploading an image."
         },
         {
           "type": "step",
           "number": 2,
-          "title": "Add Date Stamps & Enable the SHA-256 Audit Certificate",
-          "text": "Click '+ Date' to drop today's ISO date, and check 'Append Tamper-Evident SHA-256 Audit Certificate Page'."
+          "title": "Add a Date & (Optionally) the SHA-256 Page",
+          "text": "Add today's date stamp and, if you want an integrity record, tick 'Append Tamper-Evident SHA-256 Audit Certificate Page'."
         },
         {
           "type": "step",
           "number": 3,
-          "title": "Download Your Signed & Audited PDF",
-          "text": "The engine burns your signature into the page and appends the Certificate of Completion with pre- and post-signing SHA-256 hashes."
+          "title": "Download and Keep Copies",
+          "text": "Download the signed PDF and store it together with the original so the listed hashes can be verified if questions come up later."
         },
         {
           "type": "toolCta",
@@ -1140,20 +1153,20 @@
           "type": "faq",
           "items": [
             {
-              "question": "Are contracts signed in iKnowAPDF legally binding under the US ESIGN Act?",
-              "answer": "Yes. Under 15 U.S.C. § 7001 (ESIGN Act) and UETA, a contract or signature cannot be denied legal effect solely because it is in electronic form. Placing your signature and appending the SHA-256 Audit Certificate establishes clear intent and record integrity."
+              "question": "Is a contract signed with iKnowAPDF legally binding?",
+              "answer": "Under the ESIGN Act (15 U.S.C. § 7001) and UETA, a signature can't be denied legal effect solely because it is electronic, and eIDAS has a similar rule for simple electronic signatures. Whether a particular contract is enforceable depends on the parties, the jurisdiction and the type of document — iKnowAPDF can't guarantee that."
             },
             {
-              "question": "Does signing a contract in iKnowAPDF upload my document to your servers?",
-              "answer": "Never. Signature creation, placement, and SHA-256 hashing run 100% inside your browser tab."
+              "question": "Is my document uploaded when I sign it?",
+              "answer": "No. Creating, placing and hashing signatures all happen in your browser tab."
             },
             {
-              "question": "Can I save my drawn signature so I don't have to redraw it next time?",
-              "answer": "Yes! When you click 'Place & Save Signature', your signature PNG is stored in your browser's private localStorage so you can insert it in one click on future documents."
+              "question": "Can I save my signature for next time?",
+              "answer": "Yes. Saving a signature stores the image in your browser's localStorage on that device, so you can reuse it. Clear your browser data to remove it."
             },
             {
-              "question": "Can I also stamp CONFIDENTIAL or APPROVED across all pages while signing?",
-              "answer": "Yes. The Sign PDF toolbar includes an Optional Diagonal Watermark input that stamps your custom text across every page during the same pass."
+              "question": "Can I add a CONFIDENTIAL or APPROVED stamp while signing?",
+              "answer": "Yes. Sign PDF has an optional diagonal watermark field. For more control over opacity and placement, use [Watermark PDF](/tools/watermark-pdf)."
             }
           ]
         }
@@ -1166,9 +1179,9 @@
     },
     {
       "slug": "aes-256-password-protect-pdf-locally",
-      "title": "PDF Encryption Standards Explained: RC4 vs. AES-128 vs. AES-256 & Pre-Encryption Sanitization",
-      "seoTitle": "AES-256 PDF Encryption Explained — How to Secure PDFs Properly",
-      "description": "Understand how PDF encryption revisions (R2 through R6 AES-256) work, why unencrypted metadata leaks data even in locked PDFs, and how to sanitize before encrypting.",
+      "title": "PDF Encryption Explained: RC4 vs. AES-128 vs. AES-256 & Cleaning Metadata First",
+      "seoTitle": "PDF Encryption Explained: RC4, AES-128 & AES-256",
+      "description": "How PDF encryption evolved from 40-bit RC4 to AES-256, why metadata can stay readable in a locked PDF, and why to clean a file before encrypting it.",
       "category": "legal",
       "tags": [
         "AES-256",
@@ -1178,113 +1191,123 @@
         "Sanitize PDF"
       ],
       "publishedAt": "2026-05-12",
-      "updatedAt": "2026-10-25",
-      "authorId": "alex-vance",
+      "updatedAt": "2026-11-04",
+      "authorId": "yassine-k",
       "toolCta": {
         "toolId": "sanitize",
-        "title": "Sanitize Hidden Metadata Before Encrypting Your PDF",
-        "description": "Purge plaintext XMP streams, author usernames, and incremental draft history in browser RAM so your PDF has zero metadata leaks.",
-        "buttonText": "Sanitize PDF Locally First",
+        "title": "Clean Hidden Metadata Before Encrypting",
+        "description": "Clear document metadata and old revisions in your browser, then encrypt the clean file with the tool of your choice.",
+        "buttonText": "Sanitize PDF First",
         "href": "/tools/sanitize-pdf",
-        "highlightText": "Prevents plaintext /Metadata leaks"
+        "highlightText": "No uploads"
       },
       "blocks": [
         {
           "type": "paragraph",
-          "text": "Before emailing tax returns, estate plans, or board resolutions, professionals know they need strong encryption. However, two major security pitfalls trip up even experienced users: first, uploading an unencrypted plaintext PDF to a 'free online password protector' exposes the plaintext document to a third-party server; second, many PDF encryption tools leave the document's XMP `/Metadata` stream and filename metadata completely unencrypted in plaintext!"
+          "text": "Before emailing tax returns, estate plans or board papers, many people add a password to the PDF. Two pitfalls are common: uploading the unencrypted file to an unknown 'free password protector' website, and assuming that a password-protected PDF hides everything — when some encryption settings leave the XMP metadata readable."
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "title": "What iKnowAPDF Does and Doesn't Do",
+          "text": "iKnowAPDF does not currently add or remove PDF passwords. Use it to clean the document first, then encrypt with a trusted desktop tool such as Adobe Acrobat, LibreOffice's PDF export, or qpdf."
         },
         {
           "type": "heading2",
           "id": "the-evolution-of-pdf-encryption",
-          "text": "The Evolution of ISO 32000 Encryption Handlers (Revisions 2 to 6)"
+          "text": "PDF Encryption Revisions (R2 to R6)"
         },
         {
           "type": "paragraph",
-          "text": "Not all password-protected PDFs are created equal. The PDF specification defines security handlers across five historical revisions:"
+          "text": "Not all password-protected PDFs are equally strong. The standard security handler has gone through several revisions:"
         },
         {
           "type": "comparisonTable",
           "headers": [
             "Security Revision",
-            "Cipher Algorithm",
+            "Cipher",
             "PDF Version",
             "Key Derivation",
-            "Security Status in 2026"
+            "Status Today"
           ],
           "rows": [
             [
               "Revision 2 (R=2)",
               "40-bit RC4",
-              "PDF 1.1 - 1.3",
-              "MD5 (Un-salted)",
-              "Broken (Cracked in milliseconds)"
+              "PDF 1.1 – 1.3",
+              "MD5",
+              "Broken — can be cracked quickly"
             ],
             [
               "Revision 3 (R=3)",
-              "128-bit RC4",
+              "Up to 128-bit RC4",
               "PDF 1.4",
               "MD5 (50 iterations)",
-              "Obsolete (Vulnerable to GPU rigs)"
+              "Obsolete"
             ],
             [
               "Revision 4 (R=4)",
-              "128-bit AES-CBC",
-              "PDF 1.5 - 1.6",
-              "MD5 + Per-object salt",
-              "Moderate (Legacy compatibility)"
+              "128-bit RC4 or AES",
+              "PDF 1.5 – 1.6",
+              "MD5-based",
+              "Legacy compatibility only"
             ],
             [
               "Revision 6 (R=6)",
-              "256-bit AES-CBC",
-              "PDF 1.7 Ext 3 / PDF 2.0",
-              "SHA-256 / SHA-384 / SHA-512",
-              "Gold Standard (Military-grade)"
+              "256-bit AES",
+              "PDF 1.7 ext. 3 / PDF 2.0",
+              "SHA-256/384/512 based",
+              "Current recommendation"
             ]
           ]
         },
         {
+          "type": "paragraph",
+          "text": "Even with AES-256, the password is the weak point: a short or common password can be guessed regardless of the cipher. Use a long passphrase."
+        },
+        {
           "type": "heading2",
           "id": "user-vs-owner-passwords",
-          "text": "Why You Must Sanitize Metadata & Incremental History Before Encrypting"
+          "text": "Why Clean Metadata and Old Revisions Before Encrypting"
         },
         {
           "type": "paragraph",
-          "text": "Even when using military-grade Revision 6 AES-256 encryption, serious privacy leaks can undermine your security if metadata and incremental revisions remain exposed. The ISO 32000 standard allows encrypting either the entire document, or encrypting content streams while leaving the /Metadata XMP stream in plaintext (controlled by the /EncryptMetadata boolean). Many legacy encryptors deliberately leave metadata unencrypted for desktop search indexing, inadvertently leaking author names, corporate usernames, and software license numbers. Furthermore, incremental saves (/Prev pointers) preserve older drafts inside the binary. True security requires sanitizing all metadata and rebuilding single-generation XRef tables before applying encryption."
+          "text": "The PDF standard lets an encryptor leave the XMP /Metadata stream unencrypted (controlled by the /EncryptMetadata flag), mainly so desktop search can index it. When that happens, author names, titles and similar details remain readable even though the page content is locked. Incremental saves can also carry earlier drafts inside the file. Cleaning the document first removes both issues."
         },
         {
           "type": "heading3",
           "id": "raw-xmp-leak-inspection",
-          "text": "How Plaintext /Metadata Streams Leak in Locked PDFs"
+          "text": "Example: Readable Metadata in an Encrypted PDF"
         },
         {
           "type": "code",
-          "title": "Plaintext /Metadata Stream in Locked PDF Container",
+          "title": "XMP Metadata Left Unencrypted (/EncryptMetadata false)",
           "language": "pdf",
-          "code": "% ISO 32000-1 § 7.6.3.2 Encryption Dictionary with /EncryptMetadata false\n14 0 obj\n<<\n  /Type /Metadata\n  /Subtype /XML\n  /Length 1240\n>>\nstream\n<?xpacket begin=\"\" id=\"W5M0MpCehiHzreSzNTczkc9d\"?>\n<x:xmpmeta xmlns:x=\"adobe:ns:meta/\">\n <rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\">\n  <rdf:Description rdf:about=\"\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\">\n   <dc:creator><rdf:Seq><rdf:li>Senior Managing Partner (j.doe@mergers-corp.com)</rdf:li></rdf:Seq></dc:creator>\n   <dc:title><rdf:Alt><rdf:li xml:lang=\"x-default\">Acquisition_Project_Titan_v4_Draft.docx</rdf:li></rdf:Alt></dc:title>\n  </rdf:Description>\n </rdf:RDF>\n</x:xmpmeta>\nendstream\nendobj"
+          "code": "% Metadata stream left in plaintext when /EncryptMetadata is false\n14 0 obj\n<<\n  /Type /Metadata\n  /Subtype /XML\n  /Length 1240\n>>\nstream\n<?xpacket begin=\"\" id=\"W5M0MpCehiHzreSzNTczkc9d\"?>\n<x:xmpmeta xmlns:x=\"adobe:ns:meta/\">\n <rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\">\n  <rdf:Description rdf:about=\"\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\">\n   <dc:creator><rdf:Seq><rdf:li>Senior Managing Partner (j.doe@mergers-corp.com)</rdf:li></rdf:Seq></dc:creator>\n   <dc:title><rdf:Alt><rdf:li xml:lang=\"x-default\">Acquisition_Project_Titan_v4_Draft.docx</rdf:li></rdf:Alt></dc:title>\n  </rdf:Description>\n </rdf:RDF>\n</x:xmpmeta>\nendstream\nendobj"
         },
         {
           "type": "callout",
           "variant": "security",
-          "title": "Forensic Pre-Encryption Sanitization",
-          "text": "By purging /Metadata XML, /PieceInfo dictionaries, and rebuilding single-generation XRef tables in iKnowAPDF Sanitizer, zero plaintext metadata traces can leak from your password-protected PDF."
+          "title": "Clean First, Encrypt Last",
+          "text": "Run the file through the [PDF Sanitizer](/tools/sanitize-pdf) to clear document metadata and rebuild it without old revisions, then apply encryption as the very last step."
         },
         {
           "type": "step",
           "number": 1,
-          "title": "Load the Sensitive PDF into /tools/sanitize-pdf",
-          "text": "Drag your PDF into the local memory sanitizer. The file stays inside local browser memory without cloud transmission."
+          "title": "Load the PDF into the Sanitizer",
+          "text": "Open [Sanitize PDF](/tools/sanitize-pdf) and drop in your file. It is processed in your browser."
         },
         {
           "type": "step",
           "number": 2,
-          "title": "Select 'Purge /Info Dictionary' & 'Rebuild /XRef'",
-          "text": "Our engine strips Author, Title, Creator, Producer, and XMP XML packets while rebuilding a clean single-generation object graph."
+          "title": "Clear Metadata & Rebuild",
+          "text": "Keep the options to clear the /Info fields and strip XMP / rebuild the file enabled."
         },
         {
           "type": "step",
           "number": 3,
-          "title": "Download Sanitized Document & Distribute",
-          "text": "Export a zero-leak container that contains zero hidden revision history or plaintext metadata before password protection."
+          "title": "Encrypt the Clean File",
+          "text": "Add an AES-256 password with a trusted desktop tool (for example `qpdf --encrypt <user-pw> <owner-pw> 256 -- in.pdf out.pdf`), and share the password through a different channel than the file."
         },
         {
           "type": "toolCta",
@@ -1294,20 +1317,20 @@
           "type": "faq",
           "items": [
             {
-              "question": "Why does encrypting a PDF sometimes leave metadata visible in plaintext?",
-              "answer": "Under ISO 32000-1 § 7.6.3.2, encryption dictionaries support an optional /EncryptMetadata false flag. When set, author names, titles, and creation timestamps remain completely unencrypted in plaintext XML streams."
+              "question": "Why can metadata be visible in an encrypted PDF?",
+              "answer": "The encryption dictionary can set /EncryptMetadata to false, which leaves the XMP metadata stream unencrypted so it can be indexed. Author names and titles in that stream are then readable without the password."
             },
             {
-              "question": "Can deleted text inside a PDF be recovered after password protection?",
-              "answer": "Yes, if the PDF was saved incrementally. Incremental saves append new byte ranges without wiping old ones. Using our local Sanitizer copies active pages into a fresh object graph, permanently destroying ghost draft revisions."
+              "question": "Can earlier drafts be recovered from a password-protected PDF?",
+              "answer": "If the file was saved incrementally before encryption, earlier revisions may still be inside it and readable to anyone with the password. Rebuilding the file with the sanitizer before encrypting removes them."
             },
             {
-              "question": "Does sanitizing before encrypting damage font or image quality?",
-              "answer": "No. Vector glyphs, page structures, and images are copied losslessly without re-compression. Only non-visual tracking dictionaries and obsolete revision pointers are purged."
+              "question": "Does sanitizing reduce image or font quality?",
+              "answer": "No. Pages, fonts and images are copied without re-compression. Only document-level metadata and old revisions are dropped (bookmarks are not carried over)."
             },
             {
-              "question": "Can iKnowAPDF recover an encrypted PDF if the user forgets their password?",
-              "answer": "No. Client-side encryption utilizes mathematical AES ciphers without cloud backdoors; lost passwords cannot be recovered. Always store passphrases in a secure password manager."
+              "question": "Can iKnowAPDF recover a forgotten PDF password?",
+              "answer": "No. iKnowAPDF doesn't crack or remove passwords. Store passwords in a password manager."
             }
           ]
         }
@@ -1320,105 +1343,109 @@
     },
     {
       "slug": "fix-encrypted-permissions-restricted-pdf",
-      "title": "How to Fix 'PDF Permissions Restricted' in Financial Statements Safely",
-      "seoTitle": "Unlock Bank Statement PDF — Fix Permissions Restricted Safely",
-      "description": "Learn why banks apply owner permission restrictions to financial PDFs, and how CPAs can legally remove print/copy restrictions client-side.",
+      "title": "'PDF Permissions Restricted' on Bank Statements: What It Means and What You Can Do",
+      "seoTitle": "Restricted Bank Statement PDF: What You Can Do",
+      "description": "Why banks restrict statement PDFs with an owner password, what the permission flags control, and legitimate ways account holders can work with these files.",
       "category": "legal",
       "tags": [
         "Bank Statement",
-        "Unlock PDF",
-        "CPA Workflow",
         "Permissions Restricted",
-        "Financial Security",
-        "Sanitize PDF"
+        "CPA Workflow",
+        "Financial Security"
       ],
       "publishedAt": "2026-05-20",
-      "updatedAt": "2026-10-25",
-      "authorId": "alex-vance",
+      "updatedAt": "2026-11-04",
+      "authorId": "yassine-k",
       "toolCta": {
-        "toolId": "sanitize",
-        "title": "Strip Owner Restrictions & Rebuild Statement XRef",
-        "description": "Strip /Encrypt permission locks from your authorized financial statements safely in local browser memory without uploading banking records.",
-        "buttonText": "Unlock Statement Locally",
-        "href": "/tools/sanitize-pdf",
-        "highlightText": "Zero GLBA compliance risk"
+        "toolId": "merge",
+        "title": "Combine Statements into One Packet",
+        "description": "Merge statements and supporting documents in the order you choose — in your browser, without uploading financial records.",
+        "buttonText": "Open PDF Merger",
+        "href": "/tools/merge-pdf",
+        "highlightText": "No uploads"
       },
       "blocks": [
         {
           "type": "paragraph",
-          "text": "Certified Public Accountants (CPAs), mortgage loan processors, and small business owners frequently encounter a major obstacle: downloading legitimate bank statements or payroll records, only to discover they cannot combine them into tax dossiers or extract tabular data into Excel. The viewer displays an error: 'This document has permissions restrictions.' Here is why banks do this and how authorized individuals can safely resolve restrictions."
+          "text": "Accountants, mortgage processors and small business owners regularly download legitimate bank statements, only to find they can't combine them into a tax or loan packet or copy figures into a spreadsheet. The viewer says 'This document has permissions restrictions.' Here is what that means and how to work with such files legitimately."
         },
         {
           "type": "heading2",
           "id": "why-banks-lock-statements",
-          "text": "Why Financial Institutions Lock Down Statements"
+          "text": "Why Banks Restrict Statement PDFs"
         },
         {
           "type": "paragraph",
-          "text": "Major banks apply an 'Owner Password' to monthly PDF statements to prevent accidental tampering. This sets a permission bitmask (/P value) in the document security dictionary that disables printing, page extraction, or combining pages with other exhibits. While intended for integrity, it creates an enormous bottleneck when compiling tax filings or mortgage packages."
+          "text": "Some banks apply an 'owner password' to statements. This sets a permissions value (/P) in the PDF's security dictionary that asks viewers to disable actions such as printing, copying text, or changing pages. The file still opens without a password, but the content is encrypted and compliant viewers enforce the restrictions."
         },
         {
           "type": "heading3",
           "id": "the-encrypt-dictionary-anatomy",
-          "text": "Anatomy of the PDF /Encrypt Permission Dictionary"
+          "text": "Anatomy of the /Encrypt Dictionary"
         },
         {
           "type": "code",
-          "title": "ISO 32000-1 § 7.6 /Encrypt Dictionary Inspection",
+          "title": "Standard Security Handler /Encrypt Dictionary (ISO 32000-1 § 7.6)",
           "language": "pdf",
-          "code": "% Standard Security Handler /Encrypt dictionary restricting permissions\n14 0 obj\n<<\n  /Filter /Standard\n  /V 4\n  /R 4\n  /P -1028        % Bitmask disabling printing, text copying, and form modification\n  /Length 128\n  /U <4a8f9c2d1b...>\n  /O <b7e12f6a9e...>\n>>\nendobj\n% Re-serializing active pages into a fresh PDF container purges this /Encrypt dictionary"
+          "code": "% Owner-password restrictions on a statement\n14 0 obj\n<<\n  /Filter /Standard\n  /V 4\n  /R 4\n  /P -1028        % Permission bits: which actions viewers should allow\n  /Length 128\n  /U <4a8f9c2d1b...>\n  /O <b7e12f6a9e...>\n>>\nendobj\n% Page content is encrypted even though no password is needed to open it"
         },
         {
           "type": "callout",
           "variant": "warning",
-          "title": "Gramm-Leach-Bliley Act (GLBA) Warning",
-          "text": "Accounting professionals are legally prohibited under FTC Safeguards and the GLBA from uploading client bank account numbers and tax returns to unauthorized public web tools. Always strip restrictions in local memory."
+          "title": "iKnowAPDF Does Not Decrypt PDFs",
+          "text": "Our tools don't remove passwords or decrypt files. Because the page content of a restricted PDF is encrypted, running it through tools like Merge or Sanitize may fail or produce blank pages. Use one of the options below instead."
         },
         {
           "type": "heading2",
           "id": "step-by-step-unrestriction",
-          "text": "3 Steps to Unlock Financial Statements Locally"
+          "text": "Legitimate Ways to Work with a Restricted Statement"
         },
         {
           "type": "step",
           "number": 1,
-          "title": "Open Authorized Statement in /tools/sanitize-pdf",
-          "text": "Load your bank statement into iKnowAPDF local processor. Parsing occurs inside your browser WebAssembly engine with zero network egress."
+          "title": "Ask the Bank for an Unrestricted Copy or a Data Export",
+          "text": "Most online banking portals offer CSV, Excel or OFX exports of transactions, which are far better for analysis than copying from a PDF. Some banks also provide unrestricted statement copies on request."
         },
         {
           "type": "step",
           "number": 2,
-          "title": "Re-serialize the Object Catalog",
-          "text": "The engine copies active pages into a fresh object graph, automatically discarding the restrictive /Encrypt dictionary while keeping authentic layout, fonts, and numbers intact."
+          "title": "Print to PDF if Printing Is Allowed",
+          "text": "If the statement allows printing, your operating system's 'Print to PDF' / 'Save as PDF' produces a new, unrestricted file you can then [merge](/tools/merge-pdf) with other documents."
         },
         {
           "type": "step",
           "number": 3,
-          "title": "Export Ready for Merging & Analysis",
-          "text": "Download an unrestricted PDF ready to be combined with tax returns, mortgage exhibits, and spreadsheet analysis."
+          "title": "Use a Desktop Tool on Your Own Machine",
+          "text": "Desktop tools such as qpdf (`qpdf --decrypt in.pdf out.pdf`) can remove owner restrictions from files you are authorized to use, without uploading them. Then combine and [compress](/tools/compress-pdf) the result as needed."
+        },
+        {
+          "type": "callout",
+          "variant": "security",
+          "title": "Keep Client Financial Data Off Unknown Websites",
+          "text": "Accountants in the US are subject to the FTC Safeguards Rule under the Gramm-Leach-Bliley Act. Uploading client statements to random web tools is hard to square with a written information security program — keep processing on systems you control."
         },
         {
           "type": "toolCta",
-          "toolId": "sanitize"
+          "toolId": "merge"
         },
         {
           "type": "faq",
           "items": [
             {
               "question": "Is it legal to remove restrictions from my own statements?",
-              "answer": "Yes. Authorized account holders and their appointed representatives have the full legal right to manage and reformat their own financial records for legitimate accounting and tax purposes."
+              "answer": "Generally, working with your own records (or a client's, with authorization) for accounting or tax purposes is routine, but rules and bank terms vary by country. When in doubt, ask the bank for an unrestricted copy or a data export."
             },
             {
-              "question": "Can iKnowAPDF crack a password if I don't know the open password?",
-              "answer": "No. Client-side tools do not execute illegal brute-force attacks against AES-encrypted files. It removes administrative owner restrictions when you have authorized access to view the document."
+              "question": "Can iKnowAPDF open a PDF if I don't know the password?",
+              "answer": "No. iKnowAPDF doesn't crack passwords or decrypt files."
             },
             {
-              "question": "Will unlocking bank statements alter any transaction amounts or dates?",
-              "answer": "Never. Page streams, vector glyphs, and typography are preserved bit-for-bit without alteration."
+              "question": "Will printing to PDF change transaction amounts or dates?",
+              "answer": "No, the visible content is the same, though the new file may lose selectable text or links depending on your printer driver."
             },
             {
-              "question": "Can I combine the unlocked statement with other PDFs immediately?",
-              "answer": "Yes. Once the restrictive permission dictionary is stripped, you can merge, reorder, or split the document in /tools/merge-pdf without permissions errors."
+              "question": "How do I combine statements once they're unrestricted?",
+              "answer": "Use [Merge PDF](/tools/merge-pdf) to combine them in order, and [Compress PDF](/tools/compress-pdf) if the packet is too large for the lender's portal."
             }
           ]
         }
@@ -1431,87 +1458,99 @@
     },
     {
       "slug": "audit-trail-digital-signatures-contracts",
-      "title": "How to Create Legally Admissible Audit Trails for Signed PDF Contracts",
-      "seoTitle": "Create Legal Audit Trails for Signed PDF Contracts — Free & Private",
-      "description": "Discover how freelancers and small businesses can execute legally binding contract audit trails under the ESIGN Act without expensive DocuSign subscriptions.",
+      "title": "How to Keep a Record of Signed PDF Contracts: Audit Trails Explained",
+      "seoTitle": "Audit Trails for Signed PDF Contracts Explained",
+      "description": "What an e-signature audit trail is, what it can and can't prove, and how freelancers and small businesses can keep a simple record of signed PDF contracts.",
       "category": "legal",
       "tags": [
         "Audit Trail",
         "Contract Signing",
         "ESIGN Act",
-        "Legal Admissibility",
-        "DocuSign Alternative",
         "SHA-256",
         "Sign PDF"
       ],
       "publishedAt": "2026-05-28",
-      "updatedAt": "2026-10-25",
-      "authorId": "alex-vance",
+      "updatedAt": "2026-11-04",
+      "authorId": "yassine-k",
       "toolCta": {
         "toolId": "sign",
-        "title": "Sign Contracts with SHA-256 Audit Certificate",
-        "description": "Affix legal signatures, dates, and append a tamper-evident SHA-256 Certificate of Completion page with 100% browser privacy.",
-        "buttonText": "Sign & Generate Certificate",
+        "title": "Sign a Contract with a SHA-256 Summary Page",
+        "description": "Add your signature and date, and optionally append a page listing SHA-256 hashes of the document — in your browser.",
+        "buttonText": "Open PDF Signer",
         "href": "/tools/sign-pdf",
-        "highlightText": "Includes Web Crypto SHA-256 Audit Certificate"
+        "highlightText": "No account needed"
       },
       "blocks": [
         {
           "type": "paragraph",
-          "text": "Small businesses and freelancers often believe they must pay $40 to $60 every month to DocuSign or Adobe Sign just to send a few client agreements. What SaaS vendors do not advertise is that the US ESIGN Act and state UETA laws do not mandate using a specific corporate cloud service. As long as you satisfy four legal pillars—intent, consent, attribution, and tamper-evident retention—self-contained contracts signed in your browser are fully admissible in court."
+          "text": "Freelancers and small businesses often wonder whether they need a paid e-signature subscription to send a few client agreements. US law (the ESIGN Act and state UETA laws) doesn't require any particular provider. What matters is being able to show that the parties intended to sign, agreed to do business electronically, and that the record wasn't changed afterwards. This article explains what an audit trail contributes and what a simple self-managed approach can and can't do."
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "title": "Not Legal Advice",
+          "text": "Requirements differ by jurisdiction and document type. For high-value or regulated agreements, a dedicated e-signature service or a lawyer's advice is worth it."
         },
         {
           "type": "heading2",
           "id": "the-four-legal-pillars",
-          "text": "The Four Legal Pillars of the ESIGN Act"
+          "text": "Four Things an E-Signature Record Should Show"
         },
         {
           "type": "list",
           "ordered": false,
           "items": [
-            "Intent to Sign: Evidenced by the conscious placement of a visual mark or digital signature block.",
-            "Consent to Do Business Electronically: Including standard electronic transaction consent clauses in the contract footer.",
-            "Association of the Signature with the Record: Tamper-evident linking ensuring the signature cannot be excised and pasted onto another document.",
-            "Record Integrity & Retention: Generating an immutable audit trail capturing SHA-256 hashes, timestamps, and signer identification."
+            "Intent to sign: Each party deliberately applied a signature.",
+            "Consent to do business electronically: The parties agreed to use electronic records (often stated in the contract itself).",
+            "Association with the record: The signature belongs to this specific document.",
+            "Record integrity and retention: You can show the document wasn't altered after signing and you kept a copy."
           ]
         },
         {
           "type": "heading2",
           "id": "the-self-contained-certificate",
-          "text": "The Self-Contained Completion Certificate"
+          "text": "What a Paid Service Adds"
         },
         {
           "type": "paragraph",
-          "text": "Rather than locking your audit history inside a third-party subscription database that expires if you cancel your plan, the optimal approach is baking the cryptographic audit summary directly into the PDF as a final immutable Certificate of Completion page."
+          "text": "Services like DocuSign or Adobe Sign send the document to each signer by email, log who opened and signed it from which address and when, and apply a certificate-based digital signature so later changes are detected automatically. That third-party log is the main thing a self-managed approach doesn't have."
         },
         {
           "type": "heading3",
           "id": "audit-certificate-spec",
-          "text": "Structure of the Cryptographic Certificate of Completion"
+          "text": "What the iKnowAPDF Summary Page Contains"
+        },
+        {
+          "type": "paragraph",
+          "text": "In [Sign PDF](/tools/sign-pdf), the optional SHA-256 page records the file name, page count, number of signatures placed, the signing time (UTC), and two SHA-256 hashes computed in your browser: one of the original file and one of the signed content before the summary page was added. For example:"
         },
         {
           "type": "code",
-          "title": "Cryptographic Certificate of Completion Schema",
+          "title": "Example SHA-256 Summary Page",
           "language": "text",
-          "code": "=== CERTIFICATE OF COMPLETION & CRYPTOGRAPHIC AUDIT TRAIL ===\nAudit Reference ID: AUD-8F434346648F\nDocument File Name: Master_Services_Agreement_2026.pdf\nOriginal Page Count: 8 Page(s)\nSignatures / Stamps Placed: 2 Item(s)\nExecution Environment: Local Browser Sandbox (WebAssembly + Web Crypto API)\nCompliance Standard: US ESIGN Act (15 U.S.C. ch. 96) / UETA / eIDAS SES\n\nCRYPTOGRAPHIC SHA-256 INTEGRITY DIGESTS:\nPre-Signing Source PDF SHA-256:\n  e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\nPost-Signing Payload SHA-256:\n  8f434346648f6b96df89dda901c5176b10e6d059612d559c41438b2929e741cf"
+          "code": "=== CERTIFICATE OF COMPLETION & CRYPTOGRAPHIC AUDIT TRAIL ===\nDocument File Name: Master_Services_Agreement_2026.pdf\nOriginal Page Count: 8 Page(s)\nSignatures / Stamps Placed: 2 Item(s)\n\nSHA-256 DIGESTS:\nPre-Signing Source PDF SHA-256:\n  e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\nPost-Signing Payload SHA-256:\n  8f434346648f6b96df89dda901c5176b10e6d059612d559c41438b2929e741cf"
+        },
+        {
+          "type": "paragraph",
+          "text": "These hashes let you show which original file was signed, as long as you keep that original. They do not identify who signed, and they are not a certificate-based PDF signature, so PDF readers will not warn about later edits."
         },
         {
           "type": "step",
           "number": 1,
-          "title": "Stage Contract in Local Memory",
-          "text": "Open the agreement in iKnowAPDF Sign PDF. The file never leaves your local workstation."
+          "title": "Agree on Electronic Signing",
+          "text": "Include a short clause in the contract stating that the parties agree to sign electronically."
         },
         {
           "type": "step",
           "number": 2,
-          "title": "Affix Signatures and Dates",
-          "text": "Place your legal signature, printed name, and ISO timestamp using our touch-friendly signature canvas."
+          "title": "Sign and Add the Summary Page",
+          "text": "Open the agreement in [Sign PDF](/tools/sign-pdf), place your signature and date, and tick 'Append Tamper-Evident SHA-256 Audit Certificate Page'."
         },
         {
           "type": "step",
           "number": 3,
-          "title": "Enable Tamper-Proof Audit Certificate",
-          "text": "Check 'Append Tamper-Evident SHA-256 Audit Certificate Page' to automatically compute pre- and post-signing SHA-256 digests via the Web Crypto API and burn the certificate into the document."
+          "title": "Exchange and Keep Records",
+          "text": "Send the signed PDF to the other party by email (which gives you a timestamped record of delivery), and keep the original, the signed file and the email thread together."
         },
         {
           "type": "toolCta",
@@ -1521,20 +1560,20 @@
           "type": "faq",
           "items": [
             {
-              "question": "Will a judge accept a client-side signed contract?",
-              "answer": "Yes. Federal Rule of Evidence 901 requires evidence sufficient to support a finding that the record is what the proponent claims. Cryptographic hash logs and timestamp certificates directly satisfy this standard."
+              "question": "Will a court accept a contract signed this way?",
+              "answer": "Electronic signatures are generally admissible, but how much weight a record gets depends on the evidence you can produce — who signed, how the document was exchanged, and whether it was changed. Hashes, emails and retained copies all help; for disputes-prone or high-value deals, use a service that independently logs signer identity."
             },
             {
               "question": "Where are my signed contracts stored?",
-              "answer": "Directly on your local hard drive. iKnowAPDF operates with zero cloud storage, meaning your contracts can never be hacked or leaked from our servers."
+              "answer": "Wherever you save them. iKnowAPDF doesn't store your documents; the file is processed in your browser and downloaded to your device, so keeping backups is up to you."
             },
             {
-              "question": "Does the audit certificate cost extra?",
-              "answer": "No. The SHA-256 audit certificate is 100% free and computed directly in your device RAM using the W3C Web Crypto API."
+              "question": "Does the SHA-256 summary page cost extra?",
+              "answer": "No. It is free and computed in your browser with the Web Crypto API."
             },
             {
-              "question": "Can either party tamper with the signed contract after downloading?",
-              "answer": "No. Any alteration to even a single character changes the document SHA-256 checksum, immediately revealing tampering when compared against the Certificate of Completion."
+              "question": "Can someone alter the signed PDF after downloading it?",
+              "answer": "Anyone can edit a PDF file. What the hashes give you is a way to check: if you still have your copies, any alteration of the original or signed content produces a different hash. A certificate-based digital signature is needed if you want PDF readers to detect changes automatically."
             }
           ]
         }
@@ -1547,113 +1586,123 @@
     },
     {
       "slug": "convert-pdf-to-pdfa-archival-standard",
-      "title": "Converting PDFs to PDF/A-1b & PDF/A-2b: The Complete Archival Guide",
-      "seoTitle": "Convert PDF to PDF/A-1b & PDF/A-2b — ISO Archival Guide",
-      "description": "Learn how to convert standard PDFs into permanent ISO 19005 PDF/A records with embedded font subsets, color output intents, and zero external dependencies.",
+      "title": "PDF/A-1b & PDF/A-2b Explained: A Practical Guide to Archival PDFs",
+      "seoTitle": "PDF/A-1b & PDF/A-2b Explained: Archival PDF Guide",
+      "description": "What PDF/A (ISO 19005) requires — embedded fonts, color output intents, no encryption or scripts — and how to create and validate a compliant archival file.",
       "category": "archiving",
       "tags": [
         "PDF/A",
         "Archiving",
         "ISO 19005",
-        "Convert PDF",
         "Legal Compliance"
       ],
       "publishedAt": "2026-06-02",
-      "updatedAt": "2026-10-25",
-      "authorId": "alex-vance",
+      "updatedAt": "2026-11-04",
+      "authorId": "yassine-k",
       "toolCta": {
-        "toolId": "convert",
-        "title": "Convert PDF to PDF/A Archival Format Free",
-        "description": "Embed required color output intents and font subsets for permanent ISO 19005 compliance directly in your browser.",
-        "buttonText": "Open PDF/A Converter",
-        "href": "/tools/convert",
-        "highlightText": "100% compliant with VeraPDF standards"
+        "toolId": "sanitize",
+        "title": "Prepare a PDF for Archiving",
+        "description": "Flatten form fields and clear old revisions and metadata in your browser before converting the file to PDF/A with a dedicated tool.",
+        "buttonText": "Open PDF Sanitizer",
+        "href": "/tools/sanitize-pdf",
+        "highlightText": "No uploads"
       },
       "blocks": [
         {
           "type": "paragraph",
-          "text": "The assumption that any PDF file will remain readable decades into the future is a dangerous myth. Standard PDFs frequently rely on system fonts installed on the host operating system, external web hyperlinks, dynamic JavaScript runtimes, or uncalibrated color spaces. Over 10 or 20 years, as operating systems evolve and legacy fonts are deprecated, regular PDFs break. The International Organization for Standardization created the PDF/A format (ISO 19005) specifically to guarantee permanent digital preservation."
+          "text": "It is easy to assume any PDF will open fine in 20 years. Ordinary PDFs, however, can depend on fonts that aren't embedded, external links, scripts, or device-dependent colors. PDF/A (ISO 19005) is a restricted version of PDF designed for long-term preservation: everything needed to display the document must be inside the file."
         },
         {
           "type": "heading2",
           "id": "understanding-pdfa-flavors",
-          "text": "Understanding the PDF/A Hierarchy"
+          "text": "Understanding the PDF/A Parts"
         },
         {
           "type": "list",
           "ordered": false,
           "items": [
-            "PDF/A-1 (ISO 19005-1, based on PDF 1.4): The classic standard. Level 1b guarantees visual preservation across decades; Level 1a mandates structural tags and Unicode character mappings.",
-            "PDF/A-2 (ISO 19005-2, based on PDF 1.7): Adds support for modern JPEG 2000 compression, transparency layers, and embedded PDF/A file attachments.",
-            "PDF/A-3 (ISO 19005-3): Allows embedding arbitrary raw XML or CSV data payloads directly inside the PDF container (widely used in European ZUGFeRD / Factur-X electronic invoicing)."
+            "PDF/A-1 (ISO 19005-1, based on PDF 1.4): The original standard. Level 'b' (basic) requires reliable visual reproduction; level 'a' (accessible) additionally requires tagged structure and Unicode text mapping.",
+            "PDF/A-2 (ISO 19005-2, based on PDF 1.7): Allows JPEG 2000 compression, transparency, layers, and embedding other PDF/A files.",
+            "PDF/A-3 (ISO 19005-3): Like PDF/A-2 but allows embedding arbitrary files such as XML or CSV — used by e-invoicing formats like ZUGFeRD / Factur-X."
           ]
         },
         {
           "type": "heading2",
           "id": "mandatory-conversion-requirements",
-          "text": "Mandatory Conversion Requirements Under ISO 19005"
+          "text": "Key Requirements Under ISO 19005"
         },
         {
           "type": "paragraph",
-          "text": "To qualify as an authentic PDF/A document, several strict modifications must occur: every font glyph used in the document must be 100% embedded in the binary payload, standardized ICC color profiles (/OutputIntents) must be attached, and all dynamic features—including JavaScript calculation macros, embedded audio/video, and encryption dictionaries—must be permanently stripped."
+          "text": "To be valid PDF/A, a file must embed all fonts it uses, include an output intent with an ICC color profile (or use only device-independent colors), carry XMP metadata that declares the PDF/A part and conformance level, and avoid features that can't be preserved — JavaScript, audio/video, external content and encryption are not allowed."
         },
         {
           "type": "heading3",
           "id": "output-intent-inspection",
-          "text": "Anatomy of the PDF/A OutputIntent Color Profile Dictionary"
+          "text": "Anatomy of a PDF/A OutputIntent Dictionary"
         },
         {
           "type": "code",
-          "title": "ISO 19005-1 § 6.2.2 Output Intent Dictionary for PDF/A-1b",
+          "title": "OutputIntent Dictionary for PDF/A-1b",
           "language": "pdf",
-          "code": "% ISO 19005-1 Mandatory Output Intent Dictionary\n12 0 obj\n<<\n  /Type /OutputIntent\n  /S /GTS_PDFA1\n  /OutputCondition (sRGB IEC61966-2.1)\n  /OutputConditionIdentifier (sRGB IEC61966-2.1)\n  /RegistryName (http://www.color.org)\n  /Info (sRGB IEC61966-2.1)\n  /DestOutputProfile 15 0 R\n>>\nendobj"
+          "code": "% Output intent referencing an embedded sRGB ICC profile\n12 0 obj\n<<\n  /Type /OutputIntent\n  /S /GTS_PDFA1\n  /OutputCondition (sRGB IEC61966-2.1)\n  /OutputConditionIdentifier (sRGB IEC61966-2.1)\n  /RegistryName (http://www.color.org)\n  /Info (sRGB IEC61966-2.1)\n  /DestOutputProfile 15 0 R\n>>\nendobj"
         },
         {
           "type": "callout",
           "variant": "info",
-          "title": "Government & Judicial Mandate",
-          "text": "Federal court systems, municipal land registries, and state archives across North America and Europe strictly mandate PDF/A compliance for all permanent official filings."
+          "title": "Who Requires PDF/A?",
+          "text": "Many archives, public administrations and some court e-filing systems require or recommend PDF/A for records that must be kept long-term. Requirements differ, so check the exact part and level (for example PDF/A-1b or PDF/A-2b) your recipient asks for."
+        },
+        {
+          "type": "callout",
+          "variant": "warning",
+          "title": "About the 'PDF/A' Option in iKnowAPDF's Converter",
+          "text": "The converter's archival option currently flattens form fields and re-saves the file; it does not embed fonts or color profiles or write PDF/A identification metadata, so its output should not be treated as validated PDF/A. Use a dedicated tool for real PDF/A output."
+        },
+        {
+          "type": "heading2",
+          "id": "how-to-create-pdfa",
+          "text": "How to Create a Valid PDF/A File"
         },
         {
           "type": "step",
           "number": 1,
-          "title": "Load File into Archival Engine",
-          "text": "Select your standard PDF in iKnowAPDF converter. Files are parsed inside local browser RAM."
+          "title": "Prepare the Document",
+          "text": "Flatten any form fields and remove old revisions and metadata with the [PDF Sanitizer](/tools/sanitize-pdf), so only the final content remains."
         },
         {
           "type": "step",
           "number": 2,
-          "title": "Embed Output Intents and Font Glyphs",
-          "text": "The engine embeds standardized sRGB color profiles, resolves font subsets, and strips dynamic JavaScript."
+          "title": "Export or Convert to PDF/A",
+          "text": "If you have the source document, export directly to PDF/A from Microsoft Word (Save as PDF → Options → 'PDF/A compliant') or LibreOffice (Export as PDF → 'Archive (PDF/A)'). For existing PDFs, tools such as Adobe Acrobat Pro or Ghostscript can convert them."
         },
         {
           "type": "step",
           "number": 3,
-          "title": "Export Archival PDF/A",
-          "text": "Download your permanent, future-proof document verified for long-term storage across decades."
+          "title": "Validate the Result",
+          "text": "Check the file with the free, open-source veraPDF validator or Acrobat's Preflight. Only a passing validation report shows the file actually conforms."
         },
         {
           "type": "toolCta",
-          "toolId": "convert"
+          "toolId": "sanitize"
         },
         {
           "type": "faq",
           "items": [
             {
-              "question": "Can an encrypted PDF be compliant with PDF/A?",
-              "answer": "No. ISO 19005 explicitly bans password encryption to guarantee that future digital archivists can access public records without obsolete cryptographic key restrictions."
+              "question": "Can an encrypted PDF be PDF/A compliant?",
+              "answer": "No. ISO 19005 doesn't allow encryption, so future readers are never locked out by a password or an obsolete cipher."
             },
             {
-              "question": "Why does PDF/A-1b require flattening transparency?",
-              "answer": "Because PDF 1.4 (on which PDF/A-1 is based) did not standardize blending modes and alpha channels. To ensure exact visual reproduction, transparencies are flattened into solid vector or raster elements."
+              "question": "Why does PDF/A-1 not allow transparency?",
+              "answer": "PDF/A-1 is based on PDF 1.4 and prohibits transparency to keep rendering predictable, so transparent objects must be flattened. PDF/A-2 and later allow transparency."
             },
             {
-              "question": "How can I verify that my converted PDF is truly PDF/A compliant?",
-              "answer": "You can validate the output file using industry-standard open-source conformance validators such as VeraPDF or the Adobe Acrobat Preflight panel."
+              "question": "How do I verify that a file is really PDF/A?",
+              "answer": "Validate it with veraPDF (free and open source) or Acrobat Preflight. A file that merely claims to be PDF/A in its metadata isn't necessarily compliant."
             },
             {
-              "question": "Does converting to PDF/A alter my document content or layout?",
-              "answer": "No. The visual layout, typography, and page numbers remain completely intact. The conversion only standardizes color profiles, font subsets, and container metadata."
+              "question": "Does converting to PDF/A change the layout?",
+              "answer": "Normally the visible layout stays the same. Converters may substitute fonts that can't be embedded or flatten transparency, so compare the result with the original."
             }
           ]
         }
@@ -1666,76 +1715,100 @@
     },
     {
       "slug": "client-side-ocr-scanned-pdf-text-extraction",
-      "title": "Zero-Leak OCR: Extracting Searchable Text from Scanned PDFs Locally",
-      "seoTitle": "Client-Side OCR for PDF — Extract Text Locally with Zero Leaks",
-      "description": "Benchmark client-side WebAssembly Tesseract OCR against cloud APIs. Turn paper scans into searchable, selectable PDFs without uploading sensitive data.",
+      "title": "OCR for Scanned PDFs: How Text Recognition Works and How to Keep Documents Private",
+      "seoTitle": "OCR for Scanned PDFs: How It Works & Privacy Tips",
+      "description": "How OCR turns scanned pages into searchable text, how invisible text layers work in PDFs, and how to run OCR without exposing sensitive documents.",
       "category": "archiving",
       "tags": [
         "OCR",
         "Scanned PDF",
         "Tesseract",
-        "WebAssembly",
         "Searchable PDF"
       ],
       "publishedAt": "2026-06-10",
-      "updatedAt": "2026-10-25",
-      "authorId": "alex-vance",
+      "updatedAt": "2026-11-04",
+      "authorId": "yassine-k",
       "toolCta": {
         "toolId": "scan",
-        "title": "Scan and OCR Documents Locally",
-        "description": "Convert paper scans and image receipts into searchable text directly in your browser with WebAssembly OCR.",
-        "buttonText": "Open PDF Scanner & OCR",
+        "title": "Scan Paper Documents to a Clean PDF",
+        "description": "Capture pages with your camera or upload photos, crop and straighten them, and apply a black-and-white filter that makes OCR and compression work better.",
+        "buttonText": "Open Document Scanner",
         "href": "/tools/scan",
-        "highlightText": "Runs multi-threaded in browser Web Workers"
+        "highlightText": "Camera stays on your device"
       },
       "blocks": [
         {
           "type": "paragraph",
-          "text": "Optical Character Recognition (OCR) is the backbone of modern paperless workflows. However, conventional online OCR services introduce extreme data privacy vulnerabilities: you upload confidential tax returns, medical bills, or bank receipts to remote server farms where the images may be cached, logged, or even ingested into commercial machine learning training datasets. Modern WebAssembly changes this equation by running high-performance neural OCR directly inside your browser."
+          "text": "Optical Character Recognition (OCR) turns pictures of text — scans, phone photos, faxes — into real, searchable text. It is the backbone of paperless workflows. It also raises a privacy question: many online OCR services require you to upload tax returns, medical bills or bank letters to their servers. This guide explains how OCR works and how to pick an approach that fits how sensitive your documents are."
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "title": "Does iKnowAPDF Do OCR?",
+          "text": "Not currently. iKnowAPDF's [document scanner](/tools/scan) creates clean image-based PDFs, and [PDF to Text](/pdf-to-text) extracts text from PDFs that already contain a text layer. For OCR itself, see the options below."
         },
         {
           "type": "heading2",
           "id": "how-in-browser-ocr-works",
-          "text": "The Architecture of In-Browser Tesseract WASM"
+          "text": "How OCR Works"
         },
         {
           "type": "paragraph",
-          "text": "By compiling the battle-tested C++ Tesseract OCR engine to WebAssembly with SIMD (Single Instruction, Multiple Data) acceleration and running it inside background Web Workers, your browser executes image thresholding, line segmentation, and character classification locally without freezing your interface."
+          "text": "An OCR engine such as the open-source Tesseract typically cleans up the image (deskewing and thresholding it to black and white), finds lines and words, then recognizes characters with a trained model. Tesseract has also been compiled to WebAssembly (tesseract.js), so OCR can run entirely inside a browser tab — slower than a native app, but without uploading the file."
         },
         {
           "type": "heading3",
           "id": "invisible-text-layer-code",
-          "text": "How Invisible Text Layers Are Rendered (Operator 3 Tr)"
+          "text": "How Searchable PDFs Hide Text Behind the Image (Render Mode 3 Tr)"
         },
         {
           "type": "code",
-          "title": "Invisible Searchable Text Stream in PDF Content",
+          "title": "Invisible Text Layer in a Searchable PDF",
           "language": "pdf",
-          "code": "% Invisible Searchable Text Layer behind scanned bitmap\nBT\n  /F1 10 Tf\n  3 Tr          % 3 Tr = \"Neither fill nor stroke text\" (Render text invisibly)\n  1 0 0 1 72 710 Tm\n  (INVOICE #94821 - TOTAL AMOUNT DUE: $4,850.00) Tj\nET"
+          "code": "% Invisible text placed behind the scanned page image\nBT\n  /F1 10 Tf\n  3 Tr          % 3 Tr = neither fill nor stroke (invisible text)\n  1 0 0 1 72 710 Tm\n  (INVOICE #94821 - TOTAL AMOUNT DUE: $4,850.00) Tj\nET"
         },
         {
           "type": "callout",
-          "variant": "security",
-          "title": "The Invisible Searchable Layer",
-          "text": "Client-side OCR injects an invisible text layer (rendered with operator 3 Tr) directly behind the scanned page bitmap. You see the authentic original paper scan, but you can effortlessly highlight words, copy text, and search keywords."
+          "variant": "tip",
+          "title": "Why the Scan Looks Unchanged",
+          "text": "A 'searchable PDF' keeps the original page image and adds the recognized text invisibly behind it. You see the real scan, but you can search, select and copy the words."
+        },
+        {
+          "type": "heading2",
+          "id": "private-ocr-options",
+          "text": "Private Ways to OCR Sensitive Documents"
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Built into your devices: Recent versions of iOS, macOS (Live Text), Android and Windows (Snipping Tool's text actions) can recognize text in images on-device.",
+            "Desktop software: OCRmyPDF (free, uses Tesseract) adds a searchable text layer to existing PDFs on your own computer; Adobe Acrobat and other desktop editors also include OCR.",
+            "Cloud OCR: Often the most accurate on difficult scans, but it means uploading the document — read the provider's retention and training policies first."
+          ]
+        },
+        {
+          "type": "heading2",
+          "id": "better-scans-better-ocr",
+          "text": "3 Steps to Get Better OCR Results"
         },
         {
           "type": "step",
           "number": 1,
-          "title": "Capture or Upload Scan",
-          "text": "Drop in flat image scans or use your webcam to scan document receipts."
+          "title": "Capture a Clean, Flat Scan",
+          "text": "Use the [document scanner](/tools/scan) to crop and straighten the page and apply the 'B&W Clean' filter. High contrast and straight lines matter more to OCR than raw resolution."
         },
         {
           "type": "step",
           "number": 2,
-          "title": "Execute Multi-Threaded Recognition",
-          "text": "Background Web Workers parse character baselines across multiple CPU cores simultaneously."
+          "title": "Run OCR with a Tool You Trust",
+          "text": "Use an on-device option from the list above for sensitive documents."
         },
         {
           "type": "step",
           "number": 3,
-          "title": "Download Searchable PDF",
-          "text": "Export an ISO-compliant PDF with a crisp, selectable text layer embedded behind the image."
+          "title": "Extract or Compress the Result",
+          "text": "Once the PDF has a text layer, [PDF to Text](/pdf-to-text) or [PDF to Word](/pdf-to-word) can pull the text out, and [Compress PDF](/tools/compress-pdf) with 'Lossless / High Quality' shrinks it while keeping the text layer."
         },
         {
           "type": "toolCta",
@@ -1745,20 +1818,20 @@
           "type": "faq",
           "items": [
             {
-              "question": "Is browser-based OCR as accurate as cloud OCR?",
-              "answer": "For standard printed documents (contracts, books, receipts), modern Tesseract WASM achieves 98%+ character accuracy, rivaling cloud APIs while maintaining 100% data confidentiality."
+              "question": "Is on-device OCR as accurate as cloud OCR?",
+              "answer": "For clean, printed documents, good on-device engines are usually accurate enough for search and copy-paste. Cloud services tend to do better on handwriting, low-quality photos and complex layouts. Always proofread numbers that matter."
             },
             {
-              "question": "Does local OCR slow down my device?",
-              "answer": "No. The processing executes in isolated Web Workers, keeping your browser tabs, scrolling, and UI responsive throughout."
+              "question": "Why can't I select text in my scanned PDF?",
+              "answer": "Because the page is just an image. It needs OCR to add a text layer. Our 'Recommended' and 'Extreme' compression presets also turn pages into images, so use 'Lossless / High Quality' if you need to keep an existing text layer."
             },
             {
-              "question": "What languages are supported in client-side OCR?",
-              "answer": "The engine supports English, Spanish, French, German, and Arabic language models loaded on-demand in browser memory."
+              "question": "Which languages can OCR handle?",
+              "answer": "It depends on the engine. Tesseract supports more than 100 languages through downloadable language data; built-in OS features support fewer."
             },
             {
-              "question": "Can I extract the recognized text directly into plain text or Word?",
-              "answer": "Yes. In addition to creating searchable PDFs, you can copy recognized text directly to your clipboard or export it to .txt."
+              "question": "Can I get the recognized text into Word?",
+              "answer": "Yes. Once the PDF has a text layer, convert it with [PDF to Word](/pdf-to-word) or extract plain text with [PDF to Text](/pdf-to-text)."
             }
           ]
         }
@@ -1771,75 +1844,85 @@
     },
     {
       "slug": "merge-pdf-preserve-bookmarks-form-fields",
-      "title": "Lossless PDF Merging: How to Preserve Bookmarks, Outlines, and Form Fields",
-      "seoTitle": "Merge PDF Keep Bookmarks & Form Fields — Lossless Guide",
-      "description": "Learn how to combine complex multi-document dossiers without losing outline bookmarks, internal hyperlinks, or causing AcroForm name collisions.",
+      "title": "Merging PDFs Without Losing Bookmarks or Form Data: What to Know",
+      "seoTitle": "Merge PDFs Without Losing Bookmarks or Form Data",
+      "description": "Why bookmarks, links and fillable fields often break when PDFs are merged, and practical steps to combine documents without losing the parts you need.",
       "category": "archiving",
       "tags": [
         "Merge PDF",
         "Bookmarks",
         "AcroForm",
-        "Table of Contents",
         "Combine PDF"
       ],
       "publishedAt": "2026-06-18",
-      "updatedAt": "2026-10-25",
-      "authorId": "alex-vance",
+      "updatedAt": "2026-11-04",
+      "authorId": "yassine-k",
       "toolCta": {
         "toolId": "merge",
-        "title": "Merge Multiple PDF Files Losslessly",
-        "description": "Combine documents in custom page orders while preserving bookmarks, form fields, and annotations locally.",
+        "title": "Merge PDF Files in Your Browser",
+        "description": "Combine documents in the order you choose without uploading them.",
         "buttonText": "Open PDF Merger",
         "href": "/tools/merge-pdf",
-        "highlightText": "No arbitrary page or file size limits"
+        "highlightText": "No uploads"
       },
       "blocks": [
         {
           "type": "paragraph",
-          "text": "Combining multiple PDF files should be simple, yet typical online merge tools create catastrophic document errors: table of contents bookmarks vanish, internal page links break, and interactive form fields collide. If Document A and Document B both feature an input named 'ApplicantName', typing into Page 1 unexpectedly overwrites Page 10. Here is how true lossless merging resolves these architectural issues."
+          "text": "Combining PDFs sounds simple, yet merged files often come out with missing bookmarks, broken internal links, or form fields that behave strangely — for example, two documents that both have a field named 'ApplicantName' end up sharing one value. Here is why that happens and how to avoid it."
         },
         {
           "type": "heading2",
           "id": "the-mechanics-of-lossless-merging",
-          "text": "The Three Engineering Challenges of Merging PDFs"
+          "text": "Three Things That Make Merging PDFs Hard"
         },
         {
           "type": "list",
           "ordered": false,
           "items": [
-            "Preserving the Outline Hierarchy: Document bookmarks (/Outlines) must be recursively stitched together with updated target page index offsets so navigation links continue to point to the correct sections.",
-            "Resolving AcroForm Namespace Collisions: Form fields must be dynamically namespaced (e.g., prefixing field IDs with Doc1 and Doc2) to prevent shared dictionary synchronization errors.",
-            "Page Tree Normalization: Independent /Pages root dictionaries must be balanced into clean B-trees so readers can navigate large 500-page merged documents smoothly."
+            "Bookmarks (outlines): Each file's /Outlines tree points at its own pages. A merger has to copy those trees and re-point every entry at the new page objects — many tools simply drop them.",
+            "Form fields: Fields live in a document-wide /AcroForm dictionary keyed by name. When two files use the same field names, merging them without renaming causes clashes.",
+            "Internal links and named destinations: Links that jump to other pages must be re-mapped to the merged page order or they break."
           ]
         },
         {
           "type": "heading3",
           "id": "outlines-dictionary-inspection",
-          "text": "Rebuilding Outline Hierarchies (/Outlines) Across Merged Pages"
+          "text": "What a Re-Pointed Bookmark Looks Like"
         },
         {
           "type": "code",
-          "title": "ISO 32000-1 § 12.3.3 Rebuilding Bookmark Outlines",
+          "title": "Bookmark Entry After Merging (ISO 32000-1 § 12.3.3)",
           "language": "pdf",
-          "code": "% Merged Bookmark Item with Recomputed Target Page Pointer\n18 0 obj\n<<\n  /Title (Chapter 2: Financial Exhibits)\n  /Parent 2 0 R\n  /Next 19 0 R\n  /Dest [ 35 0 R /XYZ 0 792 0 ]  % Target page object after offset re-indexing\n>>\nendobj"
+          "code": "% Bookmark whose destination now points at the merged page object\n18 0 obj\n<<\n  /Title (Chapter 2: Financial Exhibits)\n  /Parent 2 0 R\n  /Next 19 0 R\n  /Dest [ 35 0 R /XYZ 0 792 0 ]\n>>\nendobj"
+        },
+        {
+          "type": "callout",
+          "variant": "info",
+          "title": "What iKnowAPDF's Merger Keeps",
+          "text": "iKnowAPDF's [Merge PDF](/tools/merge-pdf) copies every page — text, images and page content — in the file order you choose. It does not currently rebuild bookmarks, and fillable fields may not stay interactive after merging. The steps below avoid both problems."
+        },
+        {
+          "type": "heading2",
+          "id": "merge-safely-steps",
+          "text": "How to Merge Without Losing What Matters"
         },
         {
           "type": "step",
           "number": 1,
-          "title": "Load Source Files in Local Memory",
-          "text": "Drag in all target PDFs. No file size or page count limits apply."
+          "title": "Flatten Filled Forms First",
+          "text": "If a document contains filled-in form fields, flatten it with the [PDF Sanitizer](/tools/sanitize-pdf) so the entered values become part of the page and survive the merge."
         },
         {
           "type": "step",
           "number": 2,
-          "title": "Arrange Order and Re-index",
-          "text": "Drag and drop thumbnails to organize sections, chapters, and appendices."
+          "title": "Merge in the Right Order",
+          "text": "Add the files to [Merge PDF](/tools/merge-pdf), arrange them in order, and merge. Use [Split PDF](/tools/split-pdf) first if you only need some pages of a file, or [Rotate PDF](/tools/rotate-pdf) to fix sideways pages."
         },
         {
           "type": "step",
           "number": 3,
-          "title": "Export Unified Dossier",
-          "text": "Download a master document with synchronized outlines, isolated forms, and intact annotations."
+          "title": "Add Bookmarks Afterwards if You Need Them",
+          "text": "If navigation matters (for court bundles or long reports), add bookmarks to the merged file in a desktop editor, or include a table-of-contents page."
         },
         {
           "type": "toolCta",
@@ -1849,20 +1932,20 @@
           "type": "faq",
           "items": [
             {
-              "question": "Why do some merge tools strip bookmarks completely?",
-              "answer": "Because rebuilding recursive outline pointer trees is computationally complex, cheap converter scripts simply drop the /Outlines dictionary to avoid calculation overhead."
+              "question": "Why do some merge tools drop bookmarks?",
+              "answer": "Copying outline trees and re-pointing every entry at new page objects takes extra work, so many simple mergers only copy pages."
             },
             {
-              "question": "Will merging signed PDFs preserve the digital signatures?",
-              "answer": "No. Any operation that changes page numbers, modifies byte offsets, or stitches files alters the document binary, which breaks pre-existing digital signature hashes by design."
+              "question": "Will merging keep digital signatures valid?",
+              "answer": "No. Certificate-based signatures cover the exact bytes of the original file, so any merge invalidates them. Merge first, then sign the final document."
             },
             {
-              "question": "Can I reorder individual pages from different documents before merging?",
-              "answer": "Yes. Our visual merger allows you to interleave, rotate, and delete specific pages from any source document before generating the combined file."
+              "question": "Can I reorder pages from different documents?",
+              "answer": "The merger orders whole files. To interleave individual pages, split the files into the pieces you need with [Split PDF](/tools/split-pdf) first, then merge the pieces in order."
             },
             {
-              "question": "Is there a limit on how many PDFs I can merge at once?",
-              "answer": "Because processing runs directly in your local workstation RAM via WebAssembly, you can merge dozens of files with hundreds of pages without server timeout restrictions."
+              "question": "Is there a limit on how many PDFs I can merge?",
+              "answer": "There is no fixed limit and no upload, but everything happens in your browser's memory, so very large sets may be slow on low-memory devices. If the result is too big to send, run it through [Compress PDF](/tools/compress-pdf)."
             }
           ]
         }
@@ -1876,85 +1959,84 @@
     {
       "slug": "flatten-interactive-pdf-form-fields",
       "title": "How to Flatten Interactive PDF Forms into Uneditable, Read-Only Records",
-      "seoTitle": "Flatten PDF Forms to Uneditable Records — Complete Guide",
-      "description": "Learn how to permanently bake interactive AcroForm fields, checkboxes, and signatures into page content streams to prevent tampering.",
+      "seoTitle": "Flatten PDF Form Fields into Read-Only Records",
+      "description": "Why the read-only flag doesn't protect a filled PDF form, and how flattening turns form fields into ordinary page content that is much harder to change.",
       "category": "archiving",
       "tags": [
         "Flatten PDF",
         "AcroForm",
         "Read Only",
         "Form Fields",
-        "Archiving",
         "Sanitize PDF"
       ],
       "publishedAt": "2026-06-25",
-      "updatedAt": "2026-10-25",
-      "authorId": "alex-vance",
+      "updatedAt": "2026-11-04",
+      "authorId": "yassine-k",
       "toolCta": {
         "toolId": "sanitize",
         "title": "Flatten PDF Form Fields Locally",
-        "description": "Bake fillable /AcroForm fields and annotations permanently into static vector streams in your browser.",
-        "buttonText": "Flatten PDF Forms Now",
+        "description": "Bake filled-in form fields into the page content in your browser, and clear document metadata at the same time.",
+        "buttonText": "Flatten PDF Forms",
         "href": "/tools/sanitize-pdf",
-        "highlightText": "Bakes inputs into permanent content streams"
+        "highlightText": "No uploads"
       },
       "blocks": [
         {
           "type": "paragraph",
-          "text": "When you complete a fillable insurance claim, lease application, or tax declaration, sending the interactive PDF as-is exposes you to tampering. The recipient can easily edit your numbers, clear checkboxes, or modify text. Even worse, many users mistakenly believe setting the 'Read-Only' flag protects them—unaware that any recipient can toggle that flag back to editable using free software. Here is how true form flattening permanently locks your documents."
+          "text": "When you send a completed insurance claim, lease application, or tax form as an interactive PDF, the recipient can easily change your entries, clear checkboxes, or edit text. Marking fields 'read-only' doesn't really help, because anyone with a PDF editor can switch that flag off. Flattening is the usual answer."
         },
         {
           "type": "heading2",
           "id": "the-illusion-of-read-only",
-          "text": "Why the Read-Only Flag (/Ff 1) Is an Insecure Illusion"
+          "text": "Why the Read-Only Flag Isn't Protection"
         },
         {
           "type": "paragraph",
-          "text": "In the PDF specification, form fields are interactive widget annotations (/Widget) that float above the page canvas. Setting a field to 'Read-Only' merely toggles an integer bitmask flag (/Ff 1) instructing viewers not to accept keyboard focus. However, opening the file in any developer tool or hex editor allows someone to flip the bit back to 0 in under five seconds, restoring full editability."
+          "text": "In a PDF, form fields are widget annotations (/Widget) layered over the page. Setting a field to read-only just sets bit 1 of its field-flags value (/Ff), which tells viewers not to accept input. Any PDF editor can clear that bit and make the field editable again."
         },
         {
           "type": "heading2",
           "id": "how-true-flattening-locks-data",
-          "text": "How True Flattening Bakes Data Permanently into Content Streams"
+          "text": "What Flattening Does"
         },
         {
           "type": "list",
           "ordered": false,
           "items": [
-            "Baking Appearance Streams: The visual appearance state (/AP) of every text input, checkmark, and signature is transformed into permanent graphical vector operators on the page's /Contents stream.",
-            "Purging the /AcroForm Catalog: The entire interactive form directory and associated JavaScript calculation scripts are stripped from the document root.",
-            "Vector Typography Preservation: Text remains razor-sharp vector glyphs rather than low-resolution blurry raster bitmaps.",
-            "Tamper-Proof Archiving: Because form widgets no longer exist in the file, the document becomes mathematically immutable."
+            "Draws each field's current appearance (its /AP stream) — the text, checkmark or signature you see — onto the page itself.",
+            "Removes the interactive fields, so there is nothing left to type into or toggle.",
+            "Keeps text as vector text rather than turning the page into a blurry image.",
+            "Makes casual editing much harder. A flattened PDF can still be edited like any other PDF with an editor, so keep your own copy if you may need to prove what you sent."
           ]
         },
         {
           "type": "heading3",
           "id": "acroform-appearance-stream-code",
-          "text": "Comparing Interactive /Widget Annotations vs. Flattened Vector Operators"
+          "text": "Before and After Flattening"
         },
         {
           "type": "code",
-          "title": "ISO 32000-1 § 12.7.3 AcroForm Widget Transformation",
+          "title": "Interactive Widget vs. Flattened Page Content",
           "language": "pdf",
-          "code": "% Before Flattening: Interactive Widget Annotation in /Annots\n<<\n  /Type /Annot\n  /Subtype /Widget\n  /FT /Tx\n  /T (ApplicantFullName)\n  /V (Sarah Jenkins)\n  /AP << /N 24 0 R >>  % Appearance stream rendered on top of page\n>>\n\n% After Flattening in /tools/sanitize-pdf:\n% The /Annots widget is purged and /N operators are painted directly into /Contents:\nBT\n  /F1 12 Tf\n  1 0 0 1 120 650 Tm\n  (Sarah Jenkins) Tj\nET"
+          "code": "% Before flattening: an interactive widget annotation in /Annots\n<<\n  /Type /Annot\n  /Subtype /Widget\n  /FT /Tx\n  /T (ApplicantFullName)\n  /V (Sarah Jenkins)\n  /AP << /N 24 0 R >>  % appearance drawn on top of the page\n>>\n\n% After flattening: the widget is gone and its appearance\n% is drawn as part of the page content\nBT\n  /F1 12 Tf\n  1 0 0 1 120 650 Tm\n  (Sarah Jenkins) Tj\nET"
         },
         {
           "type": "step",
           "number": 1,
-          "title": "Open the Completed Fillable Form in /tools/sanitize-pdf",
-          "text": "Drag your filled PDF into iKnowAPDF Sanitize PDF."
+          "title": "Open the Completed Form in the Sanitizer",
+          "text": "Drop your filled PDF into [Sanitize PDF](/tools/sanitize-pdf)."
         },
         {
           "type": "step",
           "number": 2,
-          "title": "Enable 'Flatten Interactive Forms'",
-          "text": "Check 'Flatten Interactive Forms' to bake all form inputs, checkmarks, and calculations permanently into static page content streams."
+          "title": "Enable Form Flattening",
+          "text": "Turn on the option to flatten interactive form fields (it is switched on automatically when the file contains fields)."
         },
         {
           "type": "step",
           "number": 3,
-          "title": "Download the Immutable Record",
-          "text": "Export a clean, uneditable PDF ready for permanent archival or distribution."
+          "title": "Download and Check",
+          "text": "Open the result and confirm the fields can no longer be edited and all values look right. Then [merge](/tools/merge-pdf) it with other documents or [sign](/tools/sign-pdf) it if needed."
         },
         {
           "type": "toolCta",
@@ -1964,20 +2046,20 @@
           "type": "faq",
           "items": [
             {
-              "question": "Can a flattened PDF ever be unflattened?",
-              "answer": "No. Once the appearance operators are merged into the main content stream and form dictionaries are stripped, the text is indistinguishable from standard static page copy."
+              "question": "Can a flattened PDF be unflattened?",
+              "answer": "Not in the sense of getting the original fields back — the values become ordinary page content. Someone could still edit that content with a PDF editor, as with any PDF."
             },
             {
-              "question": "Does flattening reduce PDF file size?",
-              "answer": "Yes, typically. Eliminating interactive widget dictionaries, calculation scripts, and redundant state dictionaries often shrinks the overall file size significantly."
+              "question": "Does flattening reduce file size?",
+              "answer": "Sometimes slightly, because field dictionaries are removed. For real size reduction, use [Compress PDF](/tools/compress-pdf)."
             },
             {
-              "question": "Does flattening preserve electronic signatures placed on the form?",
-              "answer": "Yes. Visual signature marks and timestamps are baked into the page streams, preventing any subsequent alteration of the signature image."
+              "question": "Are signatures drawn into form fields kept?",
+              "answer": "Signature images and text that appear in fields are kept as part of the page. Certificate-based digital signatures, however, are invalidated by any change to the file, so flatten before applying one."
             },
             {
-              "question": "Will calculations in form fields still run after flattening?",
-              "answer": "No. Calculation macros (/AcroForm JavaScript) are removed during flattening, freezing all calculated amounts at their final values permanently."
+              "question": "Will form calculations still run after flattening?",
+              "answer": "No. Calculated fields are frozen at the values shown when you flattened the form."
             }
           ]
         }

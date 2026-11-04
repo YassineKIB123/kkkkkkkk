@@ -1,6 +1,15 @@
 export type Language = "EN" | "FR" | "ES" | "RU" | "AR";
 
 export interface Translations {
+  site: {
+    guides: string;
+    relatedGuides: string;
+    readGuide: string;
+    suite: string;
+    popularUses: string;
+    allTools: string;
+    compressImage: string;
+  };
   nav: {
     merge: string;
     split: string;
@@ -247,6 +256,15 @@ export interface Translations {
 
 export const DICTIONARY: Record<Language, Translations> = {
   EN: {
+    site: {
+      guides: 'Guides',
+      relatedGuides: 'Related guides',
+      readGuide: 'Read guide',
+      suite: 'Free PDF tools',
+      popularUses: 'Popular uses',
+      allTools: 'All PDF tools',
+      compressImage: 'Compress Image',
+    },
   "nav": {
     "merge": "Merge PDF",
     "split": "Split PDF",
@@ -344,7 +362,7 @@ export const DICTIONARY: Record<Language, Translations> = {
     "step1Title": "1. Select or Drop Your Document",
     "step1Desc": "Drag and drop your file into the workspace above or click to browse from your device. Your file is loaded directly into local browser memory without uploading to any remote server.",
     "step2Title": "2. Customize & Preview Live",
-    "step2Desc": "Configure your options, inspect pages in real time, and apply edits or optimizations instantaneously using our client-side WebAssembly and HTML5 Canvas engine.",
+    "step2Desc": "Configure your options, inspect pages in real time, and apply edits or optimizations instantaneously using our client-side PDF.js and HTML5 Canvas engine.",
     "step3Title": "3. Instant Watermark-Free Download",
     "step3Desc": "Export your finished, ISO-compliant document straight to your computer or smartphone storage with zero watermarks, zero sign-ups, and zero cloud retention."
   },
@@ -364,7 +382,7 @@ export const DICTIONARY: Record<Language, Translations> = {
     "homepageFaqs": [
       {
         "question": "How do your PDF tools work 100% client-side?",
-        "answer": "Our tools compile core document utilities directly to native WebAssembly, JavaScript, and HTML5 Canvas engines inside your browser tab. Your files are processed entirely in your computer's local memory and never transmitted over the internet to a remote server."
+        "answer": "Our tools run open-source PDF engines (pdf-lib, PDF.js) and HTML5 Canvas directly inside your browser tab. Your files are processed entirely in your computer's local memory and never transmitted over the internet to a remote server."
       },
       {
         "question": "Are my documents uploaded, tracked, or stored anywhere?",
@@ -385,7 +403,7 @@ export const DICTIONARY: Record<Language, Translations> = {
     ],
     "toolFaqs": {
       "qLocalProcess": "How does {tool} process my files without uploading them?",
-      "aLocalProcess": "Unlike traditional cloud converters that upload your private PDFs to remote servers, iKnowAPDF executes {tool} 100% locally inside your web browser using WebAssembly, PDF.js, and HTML5 Canvas APIs. Your document never leaves your computer or phone.",
+      "aLocalProcess": "Unlike traditional cloud converters that upload your private PDFs to remote servers, iKnowAPDF executes {tool} 100% locally inside your web browser using pdf-lib, PDF.js and HTML5 Canvas APIs. Your document never leaves your computer or phone.",
       "qFreeNoWatermark": "Is {tool} completely free and free of watermarks?",
       "aFreeNoWatermark": "Yes. You can use {tool} as many times as you need without creating an account, subscribing to a plan, or dealing with watermarks on your exported documents.",
       "qConfidential": "Is it safe to process confidential contracts, tax forms, or medical records?",
@@ -492,7 +510,7 @@ export const DICTIONARY: Record<Language, Translations> = {
     "zeroUploads": "Zero Server Uploads",
     "zeroUploadsDesc": "Documents are parsed, edited, and rendered locally in your browser memory. Files never touch external storage.",
     "speed": "Instant Local Speed",
-    "speedDesc": "Powered by compiled WebAssembly and native HTML5 canvas engines. Processing begins immediately with zero queue latency.",
+    "speedDesc": "Powered by in-browser PDF.js, pdf-lib and HTML5 Canvas engines. Processing begins immediately with zero queue latency.",
     "privacy": "Bank-Grade Privacy",
     "privacyDesc": "Ideal for medical, legal, and financial files where confidentiality and compliance are strictly mandatory.",
     "portability": "Cross-Platform Access",
@@ -512,6 +530,15 @@ export const DICTIONARY: Record<Language, Translations> = {
   }
 },
   FR: {
+    site: {
+      guides: 'Guides',
+      relatedGuides: 'Guides associés',
+      readGuide: 'Lire le guide',
+      suite: 'Outils PDF gratuits',
+      popularUses: 'Utilisations courantes',
+      allTools: 'Tous les outils PDF',
+      compressImage: 'Compresser une image',
+    },
   "nav": {
     "merge": "Fusionner PDF",
     "split": "Diviser PDF",
@@ -609,7 +636,7 @@ export const DICTIONARY: Record<Language, Translations> = {
     "step1Title": "1. Sélectionnez ou déposez votre document",
     "step1Desc": "Glissez-déposez votre fichier dans la zone ci-dessus ou parcourez votre appareil. Votre fichier est chargé directement dans la mémoire locale sans aucun envoi vers un serveur externe.",
     "step2Title": "2. Personnalisez et prévisualisez en direct",
-    "step2Desc": "Configurez vos options, inspectez les pages en temps réel et appliquez vos modifications instantanément grâce à notre moteur WebAssembly et Canvas HTML5.",
+    "step2Desc": "Configurez vos options, inspectez les pages en temps réel et appliquez vos modifications instantanément grâce à notre moteur PDF.js et Canvas HTML5.",
     "step3Title": "3. Téléchargement immédiat sans filigrane",
     "step3Desc": "Exportez votre document conforme ISO directement sur votre appareil, sans filigrane, sans inscription et sans aucune conservation dans le cloud."
   },
@@ -629,7 +656,7 @@ export const DICTIONARY: Record<Language, Translations> = {
     "homepageFaqs": [
       {
         "question": "Comment fonctionnent vos outils PDF 100% côté client ?",
-        "answer": "Nos outils compilent les fonctionnalités directement en WebAssembly, JavaScript et HTML5 Canvas dans votre onglet. Vos fichiers sont traités exclusivement dans la mémoire locale de votre appareil sans jamais être envoyés vers un serveur."
+        "answer": "Nos outils exécutent les fonctionnalités directement en JavaScript et HTML5 Canvas dans votre onglet. Vos fichiers sont traités exclusivement dans la mémoire locale de votre appareil sans jamais être envoyés vers un serveur."
       },
       {
         "question": "Mes documents sont-ils téléversés ou conservés quelque part ?",
@@ -650,7 +677,7 @@ export const DICTIONARY: Record<Language, Translations> = {
     ],
     "toolFaqs": {
       "qLocalProcess": "Comment l'outil {tool} traite-t-il mes fichiers sans les envoyer sur un serveur ?",
-      "aLocalProcess": "Contrairement aux convertisseurs cloud traditionnels, iKnowAPDF exécute {tool} intégralement dans votre navigateur grâce à WebAssembly, PDF.js et HTML5 Canvas. Votre document ne quitte jamais votre ordinateur ou téléphone.",
+      "aLocalProcess": "Contrairement aux convertisseurs cloud traditionnels, iKnowAPDF exécute {tool} intégralement dans votre navigateur grâce à PDF.js et HTML5 Canvas. Votre document ne quitte jamais votre ordinateur ou téléphone.",
       "qFreeNoWatermark": "Est-ce que {tool} est totalement gratuit et sans filigrane ?",
       "aFreeNoWatermark": "Oui. Vous pouvez utiliser {tool} autant de fois que nécessaire, sans créer de compte, sans abonnement et sans aucun filigrane sur vos documents finaux.",
       "qConfidential": "Est-il sûr de traiter des contrats confidentiels, déclarations fiscales ou dossiers médicaux ?",
@@ -757,7 +784,7 @@ export const DICTIONARY: Record<Language, Translations> = {
     "zeroUploads": "Zéro téléversement serveur",
     "zeroUploadsDesc": "Les documents sont analysés, modifiés et générés localement dans la mémoire de votre navigateur.",
     "speed": "Vitesse locale instantanée",
-    "speedDesc": "Propulsé par WebAssembly et Canvas HTML5. Le traitement démarre instantanément sans file d'attente.",
+    "speedDesc": "Propulsé par PDF.js et Canvas HTML5. Le traitement démarre instantanément sans file d'attente.",
     "privacy": "Confidentialité bancaire",
     "privacyDesc": "Idéal pour les dossiers médicaux, juridiques et financiers où la conformité est obligatoire.",
     "portability": "Accès multi-plateforme",
@@ -777,6 +804,15 @@ export const DICTIONARY: Record<Language, Translations> = {
   }
 },
   ES: {
+    site: {
+      guides: 'Guías',
+      relatedGuides: 'Guías relacionadas',
+      readGuide: 'Leer la guía',
+      suite: 'Herramientas PDF gratis',
+      popularUses: 'Usos populares',
+      allTools: 'Todas las herramientas PDF',
+      compressImage: 'Comprimir imagen',
+    },
   "nav": {
     "merge": "Unir PDF",
     "split": "Dividir PDF",
@@ -874,7 +910,7 @@ export const DICTIONARY: Record<Language, Translations> = {
     "step1Title": "1. Seleccione o arrastre su documento",
     "step1Desc": "Arrastre y suelte su archivo en el área de trabajo o haga clic para buscar en su dispositivo. Su archivo se carga directamente en la memoria local sin subirse a ningún servidor remoto.",
     "step2Title": "2. Personalice y previsualice en vivo",
-    "step2Desc": "Configure sus preferencias, revise las páginas en tiempo real y aplique cambios de inmediato mediante nuestro motor local de WebAssembly y Canvas HTML5.",
+    "step2Desc": "Configure sus preferencias, revise las páginas en tiempo real y aplique cambios de inmediato mediante nuestro motor local de PDF.js y Canvas HTML5.",
     "step3Title": "3. Descarga instantánea sin marcas de agua",
     "step3Desc": "Exporte su documento final compatible con ISO directo al almacenamiento de su dispositivo, sin marcas de agua, sin registros y sin almacenamiento en la nube."
   },
@@ -894,7 +930,7 @@ export const DICTIONARY: Record<Language, Translations> = {
     "homepageFaqs": [
       {
         "question": "¿Cómo funcionan las herramientas PDF 100% en el cliente?",
-        "answer": "Nuestras herramientas compilan las utilidades centrales en WebAssembly, JavaScript y Canvas HTML5 dentro de su navegador. Sus archivos se procesan exclusivamente en la memoria de su dispositivo sin enviarse a servidores."
+        "answer": "Nuestras herramientas ejecutan las utilidades centrales en JavaScript y Canvas HTML5 dentro de su navegador. Sus archivos se procesan exclusivamente en la memoria de su dispositivo sin enviarse a servidores."
       },
       {
         "question": "¿Mis documentos se suben, rastrean o guardan en algún lugar?",
@@ -915,7 +951,7 @@ export const DICTIONARY: Record<Language, Translations> = {
     ],
     "toolFaqs": {
       "qLocalProcess": "¿Cómo procesa {tool} mis archivos sin subirlos a un servidor?",
-      "aLocalProcess": "A diferencia de convertidores en la nube que suben sus archivos privados, iKnowAPDF ejecuta {tool} 100% localmente en su navegador usando WebAssembly, PDF.js y Canvas HTML5. Su documento nunca sale de su dispositivo.",
+      "aLocalProcess": "A diferencia de convertidores en la nube que suben sus archivos privados, iKnowAPDF ejecuta {tool} 100% localmente en su navegador usando PDF.js y Canvas HTML5. Su documento nunca sale de su dispositivo.",
       "qFreeNoWatermark": "¿Es {tool} completamente gratuito y sin marcas de agua?",
       "aFreeNoWatermark": "Sí. Puede usar {tool} todas las veces que lo necesite sin crear cuentas, sin suscripciones y sin marcas de agua en los archivos exportados.",
       "qConfidential": "¿Es seguro procesar contratos confidenciales, declaraciones fiscales o documentos médicos?",
@@ -1022,7 +1058,7 @@ export const DICTIONARY: Record<Language, Translations> = {
     "zeroUploads": "Cero subidas al servidor",
     "zeroUploadsDesc": "Los documentos se procesan, editan y generan localmente en la memoria de su navegador.",
     "speed": "Velocidad local instantánea",
-    "speedDesc": "Impulsado por WebAssembly y Canvas HTML5. El procesamiento comienza de inmediato sin colas de espera.",
+    "speedDesc": "Impulsado por PDF.js y Canvas HTML5. El procesamiento comienza de inmediato sin colas de espera.",
     "privacy": "Privacidad de nivel bancario",
     "privacyDesc": "Ideal para documentos médicos, legales y financieros donde la confidencialidad es indispensable.",
     "portability": "Acceso multiplataforma",
@@ -1042,6 +1078,15 @@ export const DICTIONARY: Record<Language, Translations> = {
   }
 },
   RU: {
+    site: {
+      guides: 'Руководства',
+      relatedGuides: 'Полезные руководства',
+      readGuide: 'Читать',
+      suite: 'Бесплатные инструменты PDF',
+      popularUses: 'Популярные сценарии',
+      allTools: 'Все инструменты PDF',
+      compressImage: 'Сжать изображение',
+    },
   "nav": {
     "merge": "Объединить PDF",
     "split": "Разделить PDF",
@@ -1139,7 +1184,7 @@ export const DICTIONARY: Record<Language, Translations> = {
     "step1Title": "1. Выберите или перетащите документ",
     "step1Desc": "Перетащите файл в рабочую область выше или выберите на устройстве. Файл загружается прямо в оперативную память браузера без отправки на удаленные серверы.",
     "step2Title": "2. Настройте и проверьте результат",
-    "step2Desc": "Выберите параметры, просматривайте страницы в реальном времени и применяйте изменения мгновенно с помощью локального движка WebAssembly и HTML5 Canvas.",
+    "step2Desc": "Выберите параметры, просматривайте страницы в реальном времени и применяйте изменения мгновенно с помощью локального движка PDF.js и HTML5 Canvas.",
     "step3Title": "3. Мгновенное скачивание без водяных знаков",
     "step3Desc": "Сохраните готовый документ стандарта ISO на свой компьютер или смартфон без водяных знаков, без регистрации и без сохранения в облаке."
   },
@@ -1159,7 +1204,7 @@ export const DICTIONARY: Record<Language, Translations> = {
     "homepageFaqs": [
       {
         "question": "Как инструменты PDF работают на 100% на стороне клиента?",
-        "answer": "Наши инструменты компилируют код прямо в WebAssembly, JavaScript и HTML5 Canvas внутри вашей вкладки. Ваши файлы обрабатываются исключительно в оперативной памяти компьютера и никогда не передаются на сторонние серверы."
+        "answer": "Наши инструменты компилируют код прямо в JavaScript и HTML5 Canvas внутри вашей вкладки. Ваши файлы обрабатываются исключительно в оперативной памяти компьютера и никогда не передаются на сторонние серверы."
       },
       {
         "question": "Загружаются ли мои файлы на сервер или сохраняются ли где-то?",
@@ -1180,7 +1225,7 @@ export const DICTIONARY: Record<Language, Translations> = {
     ],
     "toolFaqs": {
       "qLocalProcess": "Как инструмент {tool} обрабатывает файлы без загрузки на сервер?",
-      "aLocalProcess": "В отличие от традиционных облачных конвертеров, iKnowAPDF запускает {tool} полностью в браузере с помощью WebAssembly, PDF.js и HTML5 Canvas. Ваш документ никогда не покидает ваше устройство.",
+      "aLocalProcess": "В отличие от традиционных облачных конвертеров, iKnowAPDF запускает {tool} полностью в браузере с помощью PDF.js и HTML5 Canvas. Ваш документ никогда не покидает ваше устройство.",
       "qFreeNoWatermark": "Является ли {tool} бесплатным и без водяных знаков?",
       "aFreeNoWatermark": "Да. Вы можете использовать {tool} неограниченное количество раз без создания учетной записи, подписок и без водяных знаков на готовых документах.",
       "qConfidential": "Безопасно ли обрабатывать конфиденциальные договоры, налоговые или медицинские документы?",
@@ -1287,7 +1332,7 @@ export const DICTIONARY: Record<Language, Translations> = {
     "zeroUploads": "Без загрузки на сервер",
     "zeroUploadsDesc": "Документы анализируются, редактируются и создаются локально в оперативной памяти вашего браузера.",
     "speed": "Мгновенная скорость работы",
-    "speedDesc": "На базе WebAssembly и Canvas HTML5. Обработка начинается моментально без ожидания очереди.",
+    "speedDesc": "На базе PDF.js и Canvas HTML5. Обработка начинается моментально без ожидания очереди.",
     "privacy": "Банковский уровень защиты",
     "privacyDesc": "Идеально подходит для медицинской, юридической и финансовой документации.",
     "portability": "Доступ на любых платформах",
@@ -1307,6 +1352,15 @@ export const DICTIONARY: Record<Language, Translations> = {
   }
 },
   AR: {
+    site: {
+      guides: 'الأدلة',
+      relatedGuides: 'أدلة ذات صلة',
+      readGuide: 'اقرأ الدليل',
+      suite: 'أدوات PDF مجانية',
+      popularUses: 'استخدامات شائعة',
+      allTools: 'جميع أدوات PDF',
+      compressImage: 'ضغط الصور',
+    },
   "nav": {
     "merge": "دمج PDF",
     "split": "تقسيم PDF",
@@ -1404,7 +1458,7 @@ export const DICTIONARY: Record<Language, Translations> = {
     "step1Title": "1. اختر أو اسحب مستندك",
     "step1Desc": "اسحب ملفك وأفلته في مساحة العمل أعلاه أو انقر لاختياره من جهازك. يتم تحميل الملف مباشرة في ذاكرة المتصفح المحلية دون رفعه إلى أي خادم خارجي.",
     "step2Title": "2. اضبط الخيارات وعاين مباشرة",
-    "step2Desc": "اضبط الخيارات والإعدادات المفضلة، عاين الصفحات في الوقت الفعلي، وطبّق التعديلات فورياً بفضل محرك WebAssembly و HTML5 Canvas المدمج في المتصفح.",
+    "step2Desc": "اضبط الخيارات والإعدادات المفضلة، عاين الصفحات في الوقت الفعلي، وطبّق التعديلات فورياً بفضل محرك PDF.js و HTML5 Canvas المدمج في المتصفح.",
     "step3Title": "3. تحميل فوري ونظيف بدون علامة مائية",
     "step3Desc": "قم بتصدير مستندك القياسي المتوافق مع معايير ISO مباشرة إلى ذاكرة هاتفك أو حاسوبك بدون أي علامات مائية وبدون تسجيل وبدون حفظ في السحابة."
   },
@@ -1424,7 +1478,7 @@ export const DICTIONARY: Record<Language, Translations> = {
     "homepageFaqs": [
       {
         "question": "كيف تعمل أدوات PDF الخاصة بكم محلياً 100% في المتصفح؟",
-        "answer": "تقوم أدواتنا بتشغيل المحركات البرمجية مباشرة عبر تقنيات WebAssembly و JavaScript و HTML5 Canvas داخل لسان تبويب متصفحك. تتم معالجة ملفاتك بالكامل في الذاكرة المحلية لجهازك دون إرسالها نهائياً عبر الإنترنت إلى أي خادم بعيد."
+        "answer": "تقوم أدواتنا بتشغيل المحركات البرمجية مباشرة عبر تقنيات PDF.js و JavaScript و HTML5 Canvas داخل لسان تبويب متصفحك. تتم معالجة ملفاتك بالكامل في الذاكرة المحلية لجهازك دون إرسالها نهائياً عبر الإنترنت إلى أي خادم بعيد."
       },
       {
         "question": "هل يتم رفع مستنداتي أو تتبعها أو تخزينها في أي مكان؟",
@@ -1445,7 +1499,7 @@ export const DICTIONARY: Record<Language, Translations> = {
     ],
     "toolFaqs": {
       "qLocalProcess": "كيف تعالج أداة {tool} ملفاتي بدون رفعها إلى خادم؟",
-      "aLocalProcess": "على عكس المحولات السحابية التقليدية التي ترفع ملفاتك إلى خوادم بعيدة، تنفذ iKnowAPDF أداة {tool} محلياً 100% داخل متصفحك باستخدام WebAssembly و PDF.js و HTML5 Canvas. لا يغادر مستندك هاتفك أو حاسوبك إطلاقاً.",
+      "aLocalProcess": "على عكس المحولات السحابية التقليدية التي ترفع ملفاتك إلى خوادم بعيدة، تنفذ iKnowAPDF أداة {tool} محلياً 100% داخل متصفحك باستخدام PDF.js و HTML5 Canvas. لا يغادر مستندك هاتفك أو حاسوبك إطلاقاً.",
       "qFreeNoWatermark": "هل أداة {tool} مجانية تماماً وبدون أي علامات مائية؟",
       "aFreeNoWatermark": "نعم. يمكنك استخدام {tool} بعدد غير محدود من المرات بدون إنشاء حساب، وبدون اشتراك، وبدون أي علامات مائية على المستندات المصدرة.",
       "qConfidential": "هل من الآمن معالجة العقود السرية والبيانات الضريبية والسجلات الطبية؟",
@@ -1552,7 +1606,7 @@ export const DICTIONARY: Record<Language, Translations> = {
     "zeroUploads": "بدون رفع إلى أي خادم",
     "zeroUploadsDesc": "تتم قراءة المستندات وتعديلها ومعالجتها داخل ذاكرة متصفحك. لا تلمس ملفاتك أي خوادم خارجية.",
     "speed": "سرعة معالجة فورية",
-    "speedDesc": "مدعوم بمحركات WebAssembly و Canvas. تبدأ المعالجة مباشرة وبدون أي انتظار أو طوابير.",
+    "speedDesc": "مدعوم بمحركات PDF.js و Canvas. تبدأ المعالجة مباشرة وبدون أي انتظار أو طوابير.",
     "privacy": "أمان بمستوى مصرفي",
     "privacyDesc": "مثالي للمستندات الطبية والقانونية والمالية حيث تكون حماية الخصوصية أمراً إجبارياً وأساسياً.",
     "portability": "دعم شامل لجميع الأجهزة",

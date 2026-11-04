@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import {
   getAllArticles,
   getArticleBySlug,
-  getAuthorById,
+  getArticleAuthor,
   extractHeadings,
   calculateReadingTime,
   getRelatedArticles,
@@ -14,7 +14,8 @@ import { TableOfContents } from "@/components/blog/TableOfContents";
 import { AuthorByline, AuthorBioBox } from "@/components/blog/AuthorCard";
 import { ArticleRenderer } from "@/components/blog/ArticleRenderer";
 import { RelatedArticles } from "@/components/blog/RelatedArticles";
-import { Layers, ChevronRight, Home, ArrowLeft } from "lucide-react";
+import { stripInlineMarkdown } from "@/lib/blog/inline-markdown";
+import { Layers, ChevronRight, Home } from "lucide-react";
 
 export const dynamic = "force-static";
 
@@ -35,23 +36,29 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!article) return {};
 
   const url = `https://iknowapdf.lol/blog/${slug}`;
+  const author = getArticleAuthor(article);
+  const baseTitle = article.seoTitle || article.title;
+  // Append the brand only while the full title stays within ~60 characters.
+  const brandedTitle = `${baseTitle} | iKnowAPDF`;
+  const pageTitle = brandedTitle.length <= 60 ? brandedTitle : baseTitle;
 
   return {
     title: {
-      absolute: `${article.seoTitle || article.title} | iKnowAPDF`,
+      absolute: pageTitle,
     },
     description: article.description,
     alternates: {
       canonical: url,
     },
-    openGraph: {
+    authors: [{ name: author.name, url: "https://iknowapdf.lol/about" }],
+    openGraph: { images: ["/opengraph-image.png"],
       title: article.title,
       description: article.description,
       url,
       type: "article",
       publishedTime: article.publishedAt,
       modifiedTime: article.updatedAt,
-      authors: [article.authorId],
+      authors: [author.name],
       siteName: "iKnowAPDF",
     },
     twitter: {
@@ -70,17 +77,7 @@ export default async function BlogPostPage({ params }: PageProps) {
     notFound();
   }
 
-  const author = getAuthorById(article.authorId) || {
-    id: "alex-vance",
-    name: "Alex Vance",
-    role: "Lead Document Security Engineer",
-    avatar: "/favicon.ico",
-    bio: "Specialist in WebAssembly document processing, cryptographic privacy, and client-side browser architectures. Former browser security researcher.",
-    credentials: "M.Sc. in Computer Science, 12+ years in Web Performance & Security",
-    twitter: "https://twitter.com/iknowapdf",
-    linkedin: "https://linkedin.com/company/iknowapdf",
-    github: "https://github.com/iknowapdf",
-  };
+  const author = getArticleAuthor(article);
 
   const headings = extractHeadings(article);
   const readingTime = calculateReadingTime(article);
@@ -95,7 +92,7 @@ export default async function BlogPostPage({ params }: PageProps) {
           name: item.question,
           acceptedAnswer: {
             "@type": "Answer",
-            text: item.answer,
+            text: stripInlineMarkdown(item.answer),
           },
         }))
       : [];
@@ -113,6 +110,7 @@ export default async function BlogPostPage({ params }: PageProps) {
       name: author.name,
       jobTitle: author.role,
       description: author.bio,
+      url: "https://iknowapdf.lol/about",
     },
     publisher: {
       "@type": "Organization",
@@ -202,7 +200,7 @@ export default async function BlogPostPage({ params }: PageProps) {
               href={article.toolCta.href}
               className="rounded-xl bg-rose-600 px-3.5 py-1.5 text-white font-bold hover:bg-rose-500 transition-colors shadow-xs"
             >
-              Open {article.toolCta.title.split(" ")[0]} Tool
+              {article.toolCta.buttonText}
             </Link>
           </div>
         </div>
@@ -273,7 +271,7 @@ export default async function BlogPostPage({ params }: PageProps) {
       {/* Footer */}
       <footer className="border-t border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900 py-10 text-xs text-slate-500">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p>© 2026 iKnowAPDF. 100% Client-Side Privacy Guaranteed.</p>
+          <p>© 2026 iKnowAPDF. PDF tools that run in your browser.</p>
           <div className="flex items-center gap-6">
             <Link href="/" className="hover:text-rose-600 transition-colors">
               Tools Home

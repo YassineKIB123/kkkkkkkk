@@ -1,6 +1,7 @@
 import React from "react";
 import { ArticleBlock, ToolCtaConfig } from "@/lib/blog/types";
 import { ArticleToolCta } from "./ArticleToolCta";
+import { InlineText } from "./InlineText";
 import { ShieldCheck, AlertCircle, Info, Lightbulb, Terminal } from "lucide-react";
 
 interface ArticleRendererProps {
@@ -11,67 +12,99 @@ interface ArticleRendererProps {
 const TOOL_MAP: Record<string, Partial<ToolCtaConfig>> = {
   sanitize: {
     toolId: "sanitize",
-    title: "Sanitize PDF Metadata & Flatten Forms Locally",
-    description: "Inspect and purge hidden author metadata, GPS streams, revisions, and interactive form fields in local RAM.",
+    title: "Strip PDF Metadata & Flatten Forms Locally",
+    description: "Remove document-level author/title fields and the XMP metadata stream, rebuild the file without old revisions, and optionally flatten form fields — in your browser.",
     buttonText: "Open PDF Sanitizer",
     href: "/tools/sanitize-pdf",
-    highlightText: "Zero cloud egress guarantee",
+    highlightText: "Runs in your browser",
   },
   sign: {
     toolId: "sign",
-    title: "Sign PDF Contracts with SHA-256 Audit Certificate",
-    description: "Draw, type, or stamp legal signatures on contracts locally and append tamper-evident verification certificates.",
+    title: "Sign a PDF in Your Browser",
+    description: "Draw, type, or upload a signature, add date stamps, and optionally append a SHA-256 audit summary page.",
     buttonText: "Open PDF Signer",
     href: "/tools/sign-pdf",
-    highlightText: "Web Crypto SHA-256 Audit Trail",
+    highlightText: "No account needed",
   },
   compress: {
     toolId: "compress",
-    title: "Compress PDF Online with Live Size Comparison",
-    description: "Choose Extreme, Recommended, or Lossless presets. 100% computed inside your device memory with instant byte savings.",
+    title: "Compress a PDF with a Live Size Comparison",
+    description: "Pick Recommended, Extreme, or Lossless / High Quality and compare the before-and-after size. Processing happens on your device.",
     buttonText: "Open PDF Compressor",
     href: "/tools/compress-pdf",
-    highlightText: "Instant client-side optimization",
+    highlightText: "Runs in your browser",
   },
   merge: {
     toolId: "merge",
     title: "Merge Multiple PDFs into One Document",
-    description: "Combine multiple PDF files and preserve bookmarks, page trees, and formatting locally.",
+    description: "Combine PDF files in the order you choose, locally in your browser.",
     buttonText: "Open PDF Merger",
     href: "/tools/merge-pdf",
-    highlightText: "Zero server uploads",
+    highlightText: "No uploads",
   },
   split: {
     toolId: "split",
     title: "Split PDF Pages into Separate Documents",
-    description: "Extract specific page ranges or split large documents into individual files in browser memory.",
+    description: "Extract page ranges or split a large document into smaller files in browser memory.",
     buttonText: "Open PDF Splitter",
     href: "/tools/split-pdf",
-    highlightText: "Instant client-side split",
+    highlightText: "No uploads",
+  },
+  rotate: {
+    toolId: "rotate",
+    title: "Rotate PDF Pages",
+    description: "Rotate individual pages or the whole document by 90°, 180°, or 270° and save the result.",
+    buttonText: "Open PDF Rotator",
+    href: "/tools/rotate-pdf",
+    highlightText: "No uploads",
   },
   convert: {
     toolId: "convert",
-    title: "Convert PDF Files Locally",
-    description: "Convert PDFs to Word, Excel, PowerPoint, images, or archival standards with zero cloud exposure.",
+    title: "Convert PDF and Office Files Locally",
+    description: "Convert between PDF and Word, Excel, PowerPoint, text, and images without uploading your files.",
     buttonText: "Open PDF Converter",
     href: "/tools/convert",
-    highlightText: "100% client-side privacy",
+    highlightText: "No uploads",
   },
   scan: {
     toolId: "scan",
-    title: "Scan & OCR Documents to PDF",
-    description: "Capture, crop, and run client-side OCR on documents directly in your browser.",
-    buttonText: "Open Scanner & OCR",
+    title: "Scan Paper Documents to PDF",
+    description: "Capture pages with your camera or upload photos, crop and straighten them, apply a clean black-and-white filter, and save a PDF.",
+    buttonText: "Open Document Scanner",
     href: "/tools/scan",
-    highlightText: "Hardware-accelerated OCR",
+    highlightText: "Camera stays on your device",
   },
   edit: {
     toolId: "edit",
-    title: "Edit PDF Text, Annotations & Forms",
-    description: "Modify text, add shapes, whiteout sections, and fill interactive forms in browser RAM.",
+    title: "Edit PDF Text, Whiteout & Annotate",
+    description: "Change existing text, add text boxes and shapes, or white out areas. Edited pages are flattened on export.",
     buttonText: "Open PDF Editor",
     href: "/tools/edit-pdf",
-    highlightText: "Real-time canvas editor",
+    highlightText: "No uploads",
+  },
+  watermark: {
+    toolId: "watermark",
+    title: "Add a Watermark to a PDF",
+    description: "Stamp custom text such as CONFIDENTIAL or DRAFT across every page with adjustable opacity.",
+    buttonText: "Open Watermark Tool",
+    href: "/tools/watermark-pdf",
+    highlightText: "No uploads",
+  },
+  imagesToPdf: {
+    toolId: "imagesToPdf",
+    title: "Convert Images to PDF",
+    description: "Combine JPG, PNG, or WebP images into a single PDF in your browser.",
+    buttonText: "Open Images to PDF",
+    href: "/tools/images-to-pdf",
+    highlightText: "No uploads",
+  },
+  pdfToImages: {
+    toolId: "pdfToImages",
+    title: "Convert PDF Pages to Images",
+    description: "Export PDF pages as PNG or JPG images locally.",
+    buttonText: "Open PDF to Images",
+    href: "/tools/pdf-to-images",
+    highlightText: "No uploads",
   },
 };
 
@@ -86,7 +119,7 @@ export function ArticleRenderer({ blocks, defaultToolCta }: ArticleRendererProps
                 key={index}
                 className="leading-relaxed text-slate-700 dark:text-slate-300"
               >
-                {block.text}
+                <InlineText text={block.text} />
               </p>
             );
 
@@ -165,7 +198,7 @@ export function ArticleRenderer({ blocks, defaultToolCta }: ArticleRendererProps
                     {block.title}
                   </h4>
                   <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
-                    {block.text}
+                    <InlineText text={block.text} />
                   </p>
                 </div>
               </div>
@@ -186,7 +219,7 @@ export function ArticleRenderer({ blocks, defaultToolCta }: ArticleRendererProps
                     {block.title}
                   </h4>
                   <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                    {block.text}
+                    <InlineText text={block.text} />
                   </p>
                 </div>
               </div>
@@ -217,7 +250,7 @@ export function ArticleRenderer({ blocks, defaultToolCta }: ArticleRendererProps
               >
                 {block.items.map((item, iIdx) => (
                   <li key={iIdx} className="leading-relaxed">
-                    {item}
+                    <InlineText text={item} />
                   </li>
                 ))}
               </ol>
@@ -228,7 +261,7 @@ export function ArticleRenderer({ blocks, defaultToolCta }: ArticleRendererProps
               >
                 {block.items.map((item, iIdx) => (
                   <li key={iIdx} className="leading-relaxed">
-                    {item}
+                    <InlineText text={item} />
                   </li>
                 ))}
               </ul>
@@ -261,7 +294,7 @@ export function ArticleRenderer({ blocks, defaultToolCta }: ArticleRendererProps
                             key={cIdx}
                             className="px-4 py-3 text-slate-600 dark:text-slate-400"
                           >
-                            {cell}
+                            <InlineText text={cell} />
                           </td>
                         ))}
                       </tr>
@@ -284,7 +317,7 @@ export function ArticleRenderer({ blocks, defaultToolCta }: ArticleRendererProps
                         {item.question}
                       </h4>
                       <p className="mt-1.5 text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-                        {item.answer}
+                        <InlineText text={item.answer} />
                       </p>
                     </div>
                   ))}

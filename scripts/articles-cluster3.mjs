@@ -2,59 +2,65 @@
 export const cluster3Articles = [
   {
     slug: "digital-signature-vs-electronic-signature-pdf",
-    title: "Cryptographic vs. Electronic Signatures in PDFs: ESIGN, eIDAS, and SHA-256 Verification",
-    seoTitle: "Digital Signature vs Electronic Signature PDF — ESIGN & eIDAS Guide",
-    description: "Understand the legal and technical differences between electronic signatures, SHA-256 audit trails, and PKCS#7 certificates in PDF workflows.",
+    title: "Digital vs. Electronic Signatures in PDFs: ESIGN, eIDAS, and SHA-256 Hashes",
+    seoTitle: "Digital vs Electronic Signature in PDF: ESIGN & eIDAS",
+    description: "The difference between simple electronic signatures, SHA-256 document hashes and certificate-based digital signatures in PDFs, and when each one is used.",
     category: "legal",
-    tags: ["Digital Signatures", "SHA-256", "eIDAS", "ESIGN Act", "Cryptography", "Sign PDF"],
+    tags: ["Digital Signatures", "SHA-256", "eIDAS", "ESIGN Act", "Sign PDF"],
     publishedAt: "2026-05-04",
-    updatedAt: "2026-10-25",
-    authorId: "alex-vance",
+    updatedAt: "2026-11-04",
+    authorId: "yassine-k",
     toolCta: {
       toolId: "sign",
-      title: "Sign PDF Contracts with SHA-256 Audit Certificate Locally",
-      description: "Draw, type, or upload your signature and append a Web Crypto SHA-256 Certificate of Completion page—100% in your browser.",
+      title: "Sign a PDF in Your Browser",
+      description: "Draw, type, or upload your signature and optionally append a page listing SHA-256 hashes of the document — processed on your device.",
       buttonText: "Open PDF Signer",
       href: "/tools/sign-pdf",
-      highlightText: "Includes Web Crypto SHA-256 Audit Certificate"
+      highlightText: "Optional SHA-256 summary page"
     },
     blocks: [
       {
         type: "paragraph",
-        text: "In everyday business, 'electronic signature' and 'digital signature' are often used as synonyms. Yet in contract law and document engineering, they describe distinct layers of evidence. Understanding when a Simple Electronic Signature (SES) paired with a SHA-256 cryptographic audit trail satisfies legal admissibility—versus when a hardware-backed PKCS#7 certificate is mandated—can save your business thousands of dollars in unnecessary SaaS subscriptions."
+        text: "In everyday business, 'electronic signature' and 'digital signature' are often used as synonyms. In law and in the PDF format, they describe different things. Knowing which one a document actually needs helps you avoid both under-protecting important agreements and paying for tooling you don't need."
+      },
+      {
+        type: "callout",
+        variant: "info",
+        title: "Not Legal Advice",
+        text: "This article explains general concepts. Signature requirements vary by country, industry and document type — check with a lawyer for anything high-stakes."
       },
       {
         type: "heading2",
         id: "the-legal-and-technical-divide",
-        text: "The 3 Legal Tiers of Electronic Signatures (US ESIGN Act & EU eIDAS)"
+        text: "Three Levels of Electronic Signatures (US ESIGN Act & EU eIDAS)"
       },
       {
         type: "paragraph",
-        text: "Under the US Electronic Signatures in Global and National Commerce (ESIGN) Act, the Uniform Electronic Transactions Act (UETA), and EU Regulation No 910/2014 (eIDAS), electronic signatures fall into three tiers:"
+        text: "The US ESIGN Act and UETA give electronic signatures legal effect in most commercial contexts, and the EU's eIDAS Regulation (No 910/2014) defines simple, advanced, and qualified electronic signatures. In practice you will meet three levels:"
       },
       {
         type: "list",
         ordered: false,
         items: [
-          "Simple Electronic Signature (SES): Drawn stylus/mouse signatures, typed cursive signatures, or uploaded signature stamps embedded into a PDF. Valid and legally binding for 95%+ of commercial agreements (NDAs, freelance contracts, leases, invoices, purchase orders).",
-          "Tamper-Evident Audited Electronic Signature: Combines visual signature placement with pre- and post-signing SHA-256 cryptographic document digests and UTC timestamps to prove the exact byte state at the time of signing.",
-          "Qualified / PKCS#7 Certificate Signature (QES / PAdES): Uses an X.509 digital certificate stored on a hardware USB token or cloud HSM issued by a Certificate Authority (CA), required only for specific statutory acts like notarized European land deeds."
+          "Simple electronic signature (SES): A drawn, typed, or image signature placed on a document. Widely used for everyday agreements such as NDAs, freelance contracts and purchase orders, although some documents (wills, certain real-estate or court documents) have stricter rules.",
+          "Signature plus an integrity record: A simple signature combined with evidence about the document — for example SHA-256 hashes and timestamps — that helps show what was signed and when.",
+          "Certificate-based digital signature (AdES/QES, PAdES): Uses an X.509 certificate from a certificate authority, often on a smart card or hardware token, and is embedded in the PDF so that any later change is detected by PDF readers. Qualified signatures are required for some regulated transactions in the EU."
         ]
       },
       {
         type: "heading2",
         id: "how-pdf-signatures-function",
-        text: "How Client-Side SHA-256 Document Hashing Works via Web Crypto API"
+        text: "How SHA-256 Document Hashing Works in the Browser"
       },
       {
         type: "paragraph",
-        text: "In iKnowAPDF's Sign PDF tool (`/tools/sign-pdf`), you can affix drawn, typed, or uploaded signatures along with date stamps and checkmarks, and check **'Append Tamper-Evident SHA-256 Audit Certificate Page'**. When enabled, your browser uses its native hardware-accelerated `window.crypto.subtle.digest('SHA-256', buffer)` engine to fingerprint the exact bytes of both the source PDF and the signed payload:"
+        text: "In iKnowAPDF's [Sign PDF](/tools/sign-pdf) tool you can place drawn, typed, or uploaded signatures and date stamps, and tick **'Append Tamper-Evident SHA-256 Audit Certificate Page'**. When enabled, your browser's built-in Web Crypto API computes a SHA-256 hash of the original PDF and of the signed content, and the tool adds a summary page listing both:"
       },
       {
         type: "code",
-        title: "Verifying a Signed PDF's SHA-256 Digest via Web Crypto API",
+        title: "Computing a SHA-256 Hash with the Web Crypto API",
         language: "ts",
-        code: `// Executed 100% locally in your browser tab (src/lib/pdf/pdf-utils.ts):
+        code: `// Runs in your browser tab (see src/lib/pdf/pdf-utils.ts):
 const hashBuffer = await window.crypto.subtle.digest("SHA-256", pdfBytes);
 const sha256Hex = Array.from(new Uint8Array(hashBuffer))
   .map((b) => b.toString(16).padStart(2, "0"))
@@ -62,27 +68,27 @@ const sha256Hex = Array.from(new Uint8Array(hashBuffer))
       },
       {
         type: "callout",
-        variant: "security",
-        title: "Zero Third-Party Custody of Your Contracts",
-        text: "Traditional e-signature platforms require uploading your confidential employment agreements and NDAs to their cloud servers. With iKnowAPDF, your signature and contract never leave your local RAM."
+        variant: "warning",
+        title: "A Hash Page Is Not a Certificate-Based Digital Signature",
+        text: "The summary page records fingerprints of the file at signing time. It is not a cryptographic PDF signature: PDF readers won't flag later edits automatically, and it doesn't identify the signer with a certificate. Keep your own copies of the original and signed files so the hashes can be checked later, and use a certificate-based signing service when a document requires one."
       },
       {
         type: "step",
         number: 1,
-        title: "Open Your Contract in /tools/sign-pdf",
-        text: "Load the PDF locally and click '+ New Signature' to draw, type, or upload your signature stamp."
+        title: "Open Your Document in Sign PDF",
+        text: "Load the PDF in [Sign PDF](/tools/sign-pdf) and create a signature by drawing, typing, or uploading an image."
       },
       {
         type: "step",
         number: 2,
-        title: "Add Date Stamps & Enable the SHA-256 Audit Certificate",
-        text: "Click '+ Date' to drop today's ISO date, and check 'Append Tamper-Evident SHA-256 Audit Certificate Page'."
+        title: "Add a Date & (Optionally) the SHA-256 Page",
+        text: "Add today's date stamp and, if you want an integrity record, tick 'Append Tamper-Evident SHA-256 Audit Certificate Page'."
       },
       {
         type: "step",
         number: 3,
-        title: "Download Your Signed & Audited PDF",
-        text: "The engine burns your signature into the page and appends the Certificate of Completion with pre- and post-signing SHA-256 hashes."
+        title: "Download and Keep Copies",
+        text: "Download the signed PDF and store it together with the original so the listed hashes can be verified if questions come up later."
       },
       {
         type: "toolCta",
@@ -92,20 +98,20 @@ const sha256Hex = Array.from(new Uint8Array(hashBuffer))
         type: "faq",
         items: [
           {
-            question: "Are contracts signed in iKnowAPDF legally binding under the US ESIGN Act?",
-            answer: "Yes. Under 15 U.S.C. § 7001 (ESIGN Act) and UETA, a contract or signature cannot be denied legal effect solely because it is in electronic form. Placing your signature and appending the SHA-256 Audit Certificate establishes clear intent and record integrity."
+            question: "Is a contract signed with iKnowAPDF legally binding?",
+            answer: "Under the ESIGN Act (15 U.S.C. § 7001) and UETA, a signature can't be denied legal effect solely because it is electronic, and eIDAS has a similar rule for simple electronic signatures. Whether a particular contract is enforceable depends on the parties, the jurisdiction and the type of document — iKnowAPDF can't guarantee that."
           },
           {
-            question: "Does signing a contract in iKnowAPDF upload my document to your servers?",
-            answer: "Never. Signature creation, placement, and SHA-256 hashing run 100% inside your browser tab."
+            question: "Is my document uploaded when I sign it?",
+            answer: "No. Creating, placing and hashing signatures all happen in your browser tab."
           },
           {
-            question: "Can I save my drawn signature so I don't have to redraw it next time?",
-            answer: "Yes! When you click 'Place & Save Signature', your signature PNG is stored in your browser's private localStorage so you can insert it in one click on future documents."
+            question: "Can I save my signature for next time?",
+            answer: "Yes. Saving a signature stores the image in your browser's localStorage on that device, so you can reuse it. Clear your browser data to remove it."
           },
           {
-            question: "Can I also stamp CONFIDENTIAL or APPROVED across all pages while signing?",
-            answer: "Yes. The Sign PDF toolbar includes an Optional Diagonal Watermark input that stamps your custom text across every page during the same pass."
+            question: "Can I add a CONFIDENTIAL or APPROVED stamp while signing?",
+            answer: "Yes. Sign PDF has an optional diagonal watermark field. For more control over opacity and placement, use [Watermark PDF](/tools/watermark-pdf)."
           }
         ]
       }
@@ -118,65 +124,75 @@ const sha256Hex = Array.from(new Uint8Array(hashBuffer))
   },
   {
     slug: "aes-256-password-protect-pdf-locally",
-    title: "PDF Encryption Standards Explained: RC4 vs. AES-128 vs. AES-256 & Pre-Encryption Sanitization",
-    seoTitle: "AES-256 PDF Encryption Explained — How to Secure PDFs Properly",
-    description: "Understand how PDF encryption revisions (R2 through R6 AES-256) work, why unencrypted metadata leaks data even in locked PDFs, and how to sanitize before encrypting.",
+    title: "PDF Encryption Explained: RC4 vs. AES-128 vs. AES-256 & Cleaning Metadata First",
+    seoTitle: "PDF Encryption Explained: RC4, AES-128 & AES-256",
+    description: "How PDF encryption evolved from 40-bit RC4 to AES-256, why metadata can stay readable in a locked PDF, and why to clean a file before encrypting it.",
     category: "legal",
     tags: ["AES-256", "Encryption", "Password Protect", "Document Security", "Sanitize PDF"],
     publishedAt: "2026-05-12",
-    updatedAt: "2026-10-25",
-    authorId: "alex-vance",
+    updatedAt: "2026-11-04",
+    authorId: "yassine-k",
     toolCta: {
       toolId: "sanitize",
-      title: "Sanitize Hidden Metadata Before Encrypting Your PDF",
-      description: "Purge plaintext XMP streams, author usernames, and incremental draft history in browser RAM so your PDF has zero metadata leaks.",
-      buttonText: "Sanitize PDF Locally First",
+      title: "Clean Hidden Metadata Before Encrypting",
+      description: "Clear document metadata and old revisions in your browser, then encrypt the clean file with the tool of your choice.",
+      buttonText: "Sanitize PDF First",
       href: "/tools/sanitize-pdf",
-      highlightText: "Prevents plaintext /Metadata leaks"
+      highlightText: "No uploads"
     },
     blocks: [
       {
         type: "paragraph",
-        text: "Before emailing tax returns, estate plans, or board resolutions, professionals know they need strong encryption. However, two major security pitfalls trip up even experienced users: first, uploading an unencrypted plaintext PDF to a 'free online password protector' exposes the plaintext document to a third-party server; second, many PDF encryption tools leave the document's XMP `/Metadata` stream and filename metadata completely unencrypted in plaintext!"
+        text: "Before emailing tax returns, estate plans or board papers, many people add a password to the PDF. Two pitfalls are common: uploading the unencrypted file to an unknown 'free password protector' website, and assuming that a password-protected PDF hides everything — when some encryption settings leave the XMP metadata readable."
+      },
+      {
+        type: "callout",
+        variant: "info",
+        title: "What iKnowAPDF Does and Doesn't Do",
+        text: "iKnowAPDF does not currently add or remove PDF passwords. Use it to clean the document first, then encrypt with a trusted desktop tool such as Adobe Acrobat, LibreOffice's PDF export, or qpdf."
       },
       {
         type: "heading2",
         id: "the-evolution-of-pdf-encryption",
-        text: "The Evolution of ISO 32000 Encryption Handlers (Revisions 2 to 6)"
+        text: "PDF Encryption Revisions (R2 to R6)"
       },
       {
         type: "paragraph",
-        text: "Not all password-protected PDFs are created equal. The PDF specification defines security handlers across five historical revisions:"
+        text: "Not all password-protected PDFs are equally strong. The standard security handler has gone through several revisions:"
       },
       {
         type: "comparisonTable",
-        headers: ["Security Revision", "Cipher Algorithm", "PDF Version", "Key Derivation", "Security Status in 2026"],
+        headers: ["Security Revision", "Cipher", "PDF Version", "Key Derivation", "Status Today"],
         rows: [
-          ["Revision 2 (R=2)", "40-bit RC4", "PDF 1.1 - 1.3", "MD5 (Un-salted)", "Broken (Cracked in milliseconds)"],
-          ["Revision 3 (R=3)", "128-bit RC4", "PDF 1.4", "MD5 (50 iterations)", "Obsolete (Vulnerable to GPU rigs)"],
-          ["Revision 4 (R=4)", "128-bit AES-CBC", "PDF 1.5 - 1.6", "MD5 + Per-object salt", "Moderate (Legacy compatibility)"],
-          ["Revision 6 (R=6)", "256-bit AES-CBC", "PDF 1.7 Ext 3 / PDF 2.0", "SHA-256 / SHA-384 / SHA-512", "Gold Standard (Military-grade)"]
+          ["Revision 2 (R=2)", "40-bit RC4", "PDF 1.1 – 1.3", "MD5", "Broken — can be cracked quickly"],
+          ["Revision 3 (R=3)", "Up to 128-bit RC4", "PDF 1.4", "MD5 (50 iterations)", "Obsolete"],
+          ["Revision 4 (R=4)", "128-bit RC4 or AES", "PDF 1.5 – 1.6", "MD5-based", "Legacy compatibility only"],
+          ["Revision 6 (R=6)", "256-bit AES", "PDF 1.7 ext. 3 / PDF 2.0", "SHA-256/384/512 based", "Current recommendation"]
         ]
+      },
+      {
+        type: "paragraph",
+        text: "Even with AES-256, the password is the weak point: a short or common password can be guessed regardless of the cipher. Use a long passphrase."
       },
       {
         type: "heading2",
         id: "user-vs-owner-passwords",
-        text: "Why You Must Sanitize Metadata & Incremental History Before Encrypting"
+        text: "Why Clean Metadata and Old Revisions Before Encrypting"
       },
       {
         type: "paragraph",
-        text: "Even when using military-grade Revision 6 AES-256 encryption, serious privacy leaks can undermine your security if metadata and incremental revisions remain exposed. The ISO 32000 standard allows encrypting either the entire document, or encrypting content streams while leaving the /Metadata XMP stream in plaintext (controlled by the /EncryptMetadata boolean). Many legacy encryptors deliberately leave metadata unencrypted for desktop search indexing, inadvertently leaking author names, corporate usernames, and software license numbers. Furthermore, incremental saves (/Prev pointers) preserve older drafts inside the binary. True security requires sanitizing all metadata and rebuilding single-generation XRef tables before applying encryption."
+        text: "The PDF standard lets an encryptor leave the XMP /Metadata stream unencrypted (controlled by the /EncryptMetadata flag), mainly so desktop search can index it. When that happens, author names, titles and similar details remain readable even though the page content is locked. Incremental saves can also carry earlier drafts inside the file. Cleaning the document first removes both issues."
       },
       {
         type: "heading3",
         id: "raw-xmp-leak-inspection",
-        text: "How Plaintext /Metadata Streams Leak in Locked PDFs"
+        text: "Example: Readable Metadata in an Encrypted PDF"
       },
       {
         type: "code",
-        title: "Plaintext /Metadata Stream in Locked PDF Container",
+        title: "XMP Metadata Left Unencrypted (/EncryptMetadata false)",
         language: "pdf",
-        code: `% ISO 32000-1 § 7.6.3.2 Encryption Dictionary with /EncryptMetadata false
+        code: `% Metadata stream left in plaintext when /EncryptMetadata is false
 14 0 obj
 <<
   /Type /Metadata
@@ -199,26 +215,26 @@ endobj`
       {
         type: "callout",
         variant: "security",
-        title: "Forensic Pre-Encryption Sanitization",
-        text: "By purging /Metadata XML, /PieceInfo dictionaries, and rebuilding single-generation XRef tables in iKnowAPDF Sanitizer, zero plaintext metadata traces can leak from your password-protected PDF."
+        title: "Clean First, Encrypt Last",
+        text: "Run the file through the [PDF Sanitizer](/tools/sanitize-pdf) to clear document metadata and rebuild it without old revisions, then apply encryption as the very last step."
       },
       {
         type: "step",
         number: 1,
-        title: "Load the Sensitive PDF into /tools/sanitize-pdf",
-        text: "Drag your PDF into the local memory sanitizer. The file stays inside local browser memory without cloud transmission."
+        title: "Load the PDF into the Sanitizer",
+        text: "Open [Sanitize PDF](/tools/sanitize-pdf) and drop in your file. It is processed in your browser."
       },
       {
         type: "step",
         number: 2,
-        title: "Select 'Purge /Info Dictionary' & 'Rebuild /XRef'",
-        text: "Our engine strips Author, Title, Creator, Producer, and XMP XML packets while rebuilding a clean single-generation object graph."
+        title: "Clear Metadata & Rebuild",
+        text: "Keep the options to clear the /Info fields and strip XMP / rebuild the file enabled."
       },
       {
         type: "step",
         number: 3,
-        title: "Download Sanitized Document & Distribute",
-        text: "Export a zero-leak container that contains zero hidden revision history or plaintext metadata before password protection."
+        title: "Encrypt the Clean File",
+        text: "Add an AES-256 password with a trusted desktop tool (for example `qpdf --encrypt <user-pw> <owner-pw> 256 -- in.pdf out.pdf`), and share the password through a different channel than the file."
       },
       {
         type: "toolCta",
@@ -228,20 +244,20 @@ endobj`
         type: "faq",
         items: [
           {
-            question: "Why does encrypting a PDF sometimes leave metadata visible in plaintext?",
-            answer: "Under ISO 32000-1 § 7.6.3.2, encryption dictionaries support an optional /EncryptMetadata false flag. When set, author names, titles, and creation timestamps remain completely unencrypted in plaintext XML streams."
+            question: "Why can metadata be visible in an encrypted PDF?",
+            answer: "The encryption dictionary can set /EncryptMetadata to false, which leaves the XMP metadata stream unencrypted so it can be indexed. Author names and titles in that stream are then readable without the password."
           },
           {
-            question: "Can deleted text inside a PDF be recovered after password protection?",
-            answer: "Yes, if the PDF was saved incrementally. Incremental saves append new byte ranges without wiping old ones. Using our local Sanitizer copies active pages into a fresh object graph, permanently destroying ghost draft revisions."
+            question: "Can earlier drafts be recovered from a password-protected PDF?",
+            answer: "If the file was saved incrementally before encryption, earlier revisions may still be inside it and readable to anyone with the password. Rebuilding the file with the sanitizer before encrypting removes them."
           },
           {
-            question: "Does sanitizing before encrypting damage font or image quality?",
-            answer: "No. Vector glyphs, page structures, and images are copied losslessly without re-compression. Only non-visual tracking dictionaries and obsolete revision pointers are purged."
+            question: "Does sanitizing reduce image or font quality?",
+            answer: "No. Pages, fonts and images are copied without re-compression. Only document-level metadata and old revisions are dropped (bookmarks are not carried over)."
           },
           {
-            question: "Can iKnowAPDF recover an encrypted PDF if the user forgets their password?",
-            answer: "No. Client-side encryption utilizes mathematical AES ciphers without cloud backdoors; lost passwords cannot be recovered. Always store passphrases in a secure password manager."
+            question: "Can iKnowAPDF recover a forgotten PDF password?",
+            answer: "No. iKnowAPDF doesn't crack or remove passwords. Store passwords in a password manager."
           }
         ]
       }
@@ -254,110 +270,116 @@ endobj`
   },
   {
     slug: "fix-encrypted-permissions-restricted-pdf",
-    title: "How to Fix 'PDF Permissions Restricted' in Financial Statements Safely",
-    seoTitle: "Unlock Bank Statement PDF — Fix Permissions Restricted Safely",
-    description: "Learn why banks apply owner permission restrictions to financial PDFs, and how CPAs can legally remove print/copy restrictions client-side.",
+    title: "'PDF Permissions Restricted' on Bank Statements: What It Means and What You Can Do",
+    seoTitle: "Restricted Bank Statement PDF: What You Can Do",
+    description: "Why banks restrict statement PDFs with an owner password, what the permission flags control, and legitimate ways account holders can work with these files.",
     category: "legal",
-    tags: ["Bank Statement", "Unlock PDF", "CPA Workflow", "Permissions Restricted", "Financial Security", "Sanitize PDF"],
+    tags: ["Bank Statement", "Permissions Restricted", "CPA Workflow", "Financial Security"],
     publishedAt: "2026-05-20",
-    updatedAt: "2026-10-25",
-    authorId: "alex-vance",
+    updatedAt: "2026-11-04",
+    authorId: "yassine-k",
     toolCta: {
-      toolId: "sanitize",
-      title: "Strip Owner Restrictions & Rebuild Statement XRef",
-      description: "Strip /Encrypt permission locks from your authorized financial statements safely in local browser memory without uploading banking records.",
-      buttonText: "Unlock Statement Locally",
-      href: "/tools/sanitize-pdf",
-      highlightText: "Zero GLBA compliance risk"
+      toolId: "merge",
+      title: "Combine Statements into One Packet",
+      description: "Merge statements and supporting documents in the order you choose — in your browser, without uploading financial records.",
+      buttonText: "Open PDF Merger",
+      href: "/tools/merge-pdf",
+      highlightText: "No uploads"
     },
     blocks: [
       {
         type: "paragraph",
-        text: "Certified Public Accountants (CPAs), mortgage loan processors, and small business owners frequently encounter a major obstacle: downloading legitimate bank statements or payroll records, only to discover they cannot combine them into tax dossiers or extract tabular data into Excel. The viewer displays an error: 'This document has permissions restrictions.' Here is why banks do this and how authorized individuals can safely resolve restrictions."
+        text: "Accountants, mortgage processors and small business owners regularly download legitimate bank statements, only to find they can't combine them into a tax or loan packet or copy figures into a spreadsheet. The viewer says 'This document has permissions restrictions.' Here is what that means and how to work with such files legitimately."
       },
       {
         type: "heading2",
         id: "why-banks-lock-statements",
-        text: "Why Financial Institutions Lock Down Statements"
+        text: "Why Banks Restrict Statement PDFs"
       },
       {
         type: "paragraph",
-        text: "Major banks apply an 'Owner Password' to monthly PDF statements to prevent accidental tampering. This sets a permission bitmask (/P value) in the document security dictionary that disables printing, page extraction, or combining pages with other exhibits. While intended for integrity, it creates an enormous bottleneck when compiling tax filings or mortgage packages."
+        text: "Some banks apply an 'owner password' to statements. This sets a permissions value (/P) in the PDF's security dictionary that asks viewers to disable actions such as printing, copying text, or changing pages. The file still opens without a password, but the content is encrypted and compliant viewers enforce the restrictions."
       },
       {
         type: "heading3",
         id: "the-encrypt-dictionary-anatomy",
-        text: "Anatomy of the PDF /Encrypt Permission Dictionary"
+        text: "Anatomy of the /Encrypt Dictionary"
       },
       {
         type: "code",
-        title: "ISO 32000-1 § 7.6 /Encrypt Dictionary Inspection",
+        title: "Standard Security Handler /Encrypt Dictionary (ISO 32000-1 § 7.6)",
         language: "pdf",
-        code: `% Standard Security Handler /Encrypt dictionary restricting permissions
+        code: `% Owner-password restrictions on a statement
 14 0 obj
 <<
   /Filter /Standard
   /V 4
   /R 4
-  /P -1028        % Bitmask disabling printing, text copying, and form modification
+  /P -1028        % Permission bits: which actions viewers should allow
   /Length 128
   /U <4a8f9c2d1b...>
   /O <b7e12f6a9e...>
 >>
 endobj
-% Re-serializing active pages into a fresh PDF container purges this /Encrypt dictionary`
+% Page content is encrypted even though no password is needed to open it`
       },
       {
         type: "callout",
         variant: "warning",
-        title: "Gramm-Leach-Bliley Act (GLBA) Warning",
-        text: "Accounting professionals are legally prohibited under FTC Safeguards and the GLBA from uploading client bank account numbers and tax returns to unauthorized public web tools. Always strip restrictions in local memory."
+        title: "iKnowAPDF Does Not Decrypt PDFs",
+        text: "Our tools don't remove passwords or decrypt files. Because the page content of a restricted PDF is encrypted, running it through tools like Merge or Sanitize may fail or produce blank pages. Use one of the options below instead."
       },
       {
         type: "heading2",
         id: "step-by-step-unrestriction",
-        text: "3 Steps to Unlock Financial Statements Locally"
+        text: "Legitimate Ways to Work with a Restricted Statement"
       },
       {
         type: "step",
         number: 1,
-        title: "Open Authorized Statement in /tools/sanitize-pdf",
-        text: "Load your bank statement into iKnowAPDF local processor. Parsing occurs inside your browser WebAssembly engine with zero network egress."
+        title: "Ask the Bank for an Unrestricted Copy or a Data Export",
+        text: "Most online banking portals offer CSV, Excel or OFX exports of transactions, which are far better for analysis than copying from a PDF. Some banks also provide unrestricted statement copies on request."
       },
       {
         type: "step",
         number: 2,
-        title: "Re-serialize the Object Catalog",
-        text: "The engine copies active pages into a fresh object graph, automatically discarding the restrictive /Encrypt dictionary while keeping authentic layout, fonts, and numbers intact."
+        title: "Print to PDF if Printing Is Allowed",
+        text: "If the statement allows printing, your operating system's 'Print to PDF' / 'Save as PDF' produces a new, unrestricted file you can then [merge](/tools/merge-pdf) with other documents."
       },
       {
         type: "step",
         number: 3,
-        title: "Export Ready for Merging & Analysis",
-        text: "Download an unrestricted PDF ready to be combined with tax returns, mortgage exhibits, and spreadsheet analysis."
+        title: "Use a Desktop Tool on Your Own Machine",
+        text: "Desktop tools such as qpdf (`qpdf --decrypt in.pdf out.pdf`) can remove owner restrictions from files you are authorized to use, without uploading them. Then combine and [compress](/tools/compress-pdf) the result as needed."
+      },
+      {
+        type: "callout",
+        variant: "security",
+        title: "Keep Client Financial Data Off Unknown Websites",
+        text: "Accountants in the US are subject to the FTC Safeguards Rule under the Gramm-Leach-Bliley Act. Uploading client statements to random web tools is hard to square with a written information security program — keep processing on systems you control."
       },
       {
         type: "toolCta",
-        toolId: "sanitize"
+        toolId: "merge"
       },
       {
         type: "faq",
         items: [
           {
             question: "Is it legal to remove restrictions from my own statements?",
-            answer: "Yes. Authorized account holders and their appointed representatives have the full legal right to manage and reformat their own financial records for legitimate accounting and tax purposes."
+            answer: "Generally, working with your own records (or a client's, with authorization) for accounting or tax purposes is routine, but rules and bank terms vary by country. When in doubt, ask the bank for an unrestricted copy or a data export."
           },
           {
-            question: "Can iKnowAPDF crack a password if I don't know the open password?",
-            answer: "No. Client-side tools do not execute illegal brute-force attacks against AES-encrypted files. It removes administrative owner restrictions when you have authorized access to view the document."
+            question: "Can iKnowAPDF open a PDF if I don't know the password?",
+            answer: "No. iKnowAPDF doesn't crack passwords or decrypt files."
           },
           {
-            question: "Will unlocking bank statements alter any transaction amounts or dates?",
-            answer: "Never. Page streams, vector glyphs, and typography are preserved bit-for-bit without alteration."
+            question: "Will printing to PDF change transaction amounts or dates?",
+            answer: "No, the visible content is the same, though the new file may lose selectable text or links depending on your printer driver."
           },
           {
-            question: "Can I combine the unlocked statement with other PDFs immediately?",
-            answer: "Yes. Once the restrictive permission dictionary is stripped, you can merge, reorder, or split the document in /tools/merge-pdf without permissions errors."
+            question: "How do I combine statements once they're unrestricted?",
+            answer: "Use [Merge PDF](/tools/merge-pdf) to combine them in order, and [Compress PDF](/tools/compress-pdf) if the packet is too large for the lender's portal."
           }
         ]
       }
@@ -370,91 +392,102 @@ endobj
   },
   {
     slug: "audit-trail-digital-signatures-contracts",
-    title: "How to Create Legally Admissible Audit Trails for Signed PDF Contracts",
-    seoTitle: "Create Legal Audit Trails for Signed PDF Contracts — Free & Private",
-    description: "Discover how freelancers and small businesses can execute legally binding contract audit trails under the ESIGN Act without expensive DocuSign subscriptions.",
+    title: "How to Keep a Record of Signed PDF Contracts: Audit Trails Explained",
+    seoTitle: "Audit Trails for Signed PDF Contracts Explained",
+    description: "What an e-signature audit trail is, what it can and can't prove, and how freelancers and small businesses can keep a simple record of signed PDF contracts.",
     category: "legal",
-    tags: ["Audit Trail", "Contract Signing", "ESIGN Act", "Legal Admissibility", "DocuSign Alternative", "SHA-256", "Sign PDF"],
+    tags: ["Audit Trail", "Contract Signing", "ESIGN Act", "SHA-256", "Sign PDF"],
     publishedAt: "2026-05-28",
-    updatedAt: "2026-10-25",
-    authorId: "alex-vance",
+    updatedAt: "2026-11-04",
+    authorId: "yassine-k",
     toolCta: {
       toolId: "sign",
-      title: "Sign Contracts with SHA-256 Audit Certificate",
-      description: "Affix legal signatures, dates, and append a tamper-evident SHA-256 Certificate of Completion page with 100% browser privacy.",
-      buttonText: "Sign & Generate Certificate",
+      title: "Sign a Contract with a SHA-256 Summary Page",
+      description: "Add your signature and date, and optionally append a page listing SHA-256 hashes of the document — in your browser.",
+      buttonText: "Open PDF Signer",
       href: "/tools/sign-pdf",
-      highlightText: "Includes Web Crypto SHA-256 Audit Certificate"
+      highlightText: "No account needed"
     },
     blocks: [
       {
         type: "paragraph",
-        text: "Small businesses and freelancers often believe they must pay $40 to $60 every month to DocuSign or Adobe Sign just to send a few client agreements. What SaaS vendors do not advertise is that the US ESIGN Act and state UETA laws do not mandate using a specific corporate cloud service. As long as you satisfy four legal pillars—intent, consent, attribution, and tamper-evident retention—self-contained contracts signed in your browser are fully admissible in court."
+        text: "Freelancers and small businesses often wonder whether they need a paid e-signature subscription to send a few client agreements. US law (the ESIGN Act and state UETA laws) doesn't require any particular provider. What matters is being able to show that the parties intended to sign, agreed to do business electronically, and that the record wasn't changed afterwards. This article explains what an audit trail contributes and what a simple self-managed approach can and can't do."
+      },
+      {
+        type: "callout",
+        variant: "info",
+        title: "Not Legal Advice",
+        text: "Requirements differ by jurisdiction and document type. For high-value or regulated agreements, a dedicated e-signature service or a lawyer's advice is worth it."
       },
       {
         type: "heading2",
         id: "the-four-legal-pillars",
-        text: "The Four Legal Pillars of the ESIGN Act"
+        text: "Four Things an E-Signature Record Should Show"
       },
       {
         type: "list",
         ordered: false,
         items: [
-          "Intent to Sign: Evidenced by the conscious placement of a visual mark or digital signature block.",
-          "Consent to Do Business Electronically: Including standard electronic transaction consent clauses in the contract footer.",
-          "Association of the Signature with the Record: Tamper-evident linking ensuring the signature cannot be excised and pasted onto another document.",
-          "Record Integrity & Retention: Generating an immutable audit trail capturing SHA-256 hashes, timestamps, and signer identification."
+          "Intent to sign: Each party deliberately applied a signature.",
+          "Consent to do business electronically: The parties agreed to use electronic records (often stated in the contract itself).",
+          "Association with the record: The signature belongs to this specific document.",
+          "Record integrity and retention: You can show the document wasn't altered after signing and you kept a copy."
         ]
       },
       {
         type: "heading2",
         id: "the-self-contained-certificate",
-        text: "The Self-Contained Completion Certificate"
+        text: "What a Paid Service Adds"
       },
       {
         type: "paragraph",
-        text: "Rather than locking your audit history inside a third-party subscription database that expires if you cancel your plan, the optimal approach is baking the cryptographic audit summary directly into the PDF as a final immutable Certificate of Completion page."
+        text: "Services like DocuSign or Adobe Sign send the document to each signer by email, log who opened and signed it from which address and when, and apply a certificate-based digital signature so later changes are detected automatically. That third-party log is the main thing a self-managed approach doesn't have."
       },
       {
         type: "heading3",
         id: "audit-certificate-spec",
-        text: "Structure of the Cryptographic Certificate of Completion"
+        text: "What the iKnowAPDF Summary Page Contains"
+      },
+      {
+        type: "paragraph",
+        text: "In [Sign PDF](/tools/sign-pdf), the optional SHA-256 page records the file name, page count, number of signatures placed, the signing time (UTC), and two SHA-256 hashes computed in your browser: one of the original file and one of the signed content before the summary page was added. For example:"
       },
       {
         type: "code",
-        title: "Cryptographic Certificate of Completion Schema",
+        title: "Example SHA-256 Summary Page",
         language: "text",
         code: `=== CERTIFICATE OF COMPLETION & CRYPTOGRAPHIC AUDIT TRAIL ===
-Audit Reference ID: AUD-8F434346648F
 Document File Name: Master_Services_Agreement_2026.pdf
 Original Page Count: 8 Page(s)
 Signatures / Stamps Placed: 2 Item(s)
-Execution Environment: Local Browser Sandbox (WebAssembly + Web Crypto API)
-Compliance Standard: US ESIGN Act (15 U.S.C. ch. 96) / UETA / eIDAS SES
 
-CRYPTOGRAPHIC SHA-256 INTEGRITY DIGESTS:
+SHA-256 DIGESTS:
 Pre-Signing Source PDF SHA-256:
   e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 Post-Signing Payload SHA-256:
   8f434346648f6b96df89dda901c5176b10e6d059612d559c41438b2929e741cf`
       },
       {
+        type: "paragraph",
+        text: "These hashes let you show which original file was signed, as long as you keep that original. They do not identify who signed, and they are not a certificate-based PDF signature, so PDF readers will not warn about later edits."
+      },
+      {
         type: "step",
         number: 1,
-        title: "Stage Contract in Local Memory",
-        text: "Open the agreement in iKnowAPDF Sign PDF. The file never leaves your local workstation."
+        title: "Agree on Electronic Signing",
+        text: "Include a short clause in the contract stating that the parties agree to sign electronically."
       },
       {
         type: "step",
         number: 2,
-        title: "Affix Signatures and Dates",
-        text: "Place your legal signature, printed name, and ISO timestamp using our touch-friendly signature canvas."
+        title: "Sign and Add the Summary Page",
+        text: "Open the agreement in [Sign PDF](/tools/sign-pdf), place your signature and date, and tick 'Append Tamper-Evident SHA-256 Audit Certificate Page'."
       },
       {
         type: "step",
         number: 3,
-        title: "Enable Tamper-Proof Audit Certificate",
-        text: "Check 'Append Tamper-Evident SHA-256 Audit Certificate Page' to automatically compute pre- and post-signing SHA-256 digests via the Web Crypto API and burn the certificate into the document."
+        title: "Exchange and Keep Records",
+        text: "Send the signed PDF to the other party by email (which gives you a timestamped record of delivery), and keep the original, the signed file and the email thread together."
       },
       {
         type: "toolCta",
@@ -464,20 +497,20 @@ Post-Signing Payload SHA-256:
         type: "faq",
         items: [
           {
-            question: "Will a judge accept a client-side signed contract?",
-            answer: "Yes. Federal Rule of Evidence 901 requires evidence sufficient to support a finding that the record is what the proponent claims. Cryptographic hash logs and timestamp certificates directly satisfy this standard."
+            question: "Will a court accept a contract signed this way?",
+            answer: "Electronic signatures are generally admissible, but how much weight a record gets depends on the evidence you can produce — who signed, how the document was exchanged, and whether it was changed. Hashes, emails and retained copies all help; for disputes-prone or high-value deals, use a service that independently logs signer identity."
           },
           {
             question: "Where are my signed contracts stored?",
-            answer: "Directly on your local hard drive. iKnowAPDF operates with zero cloud storage, meaning your contracts can never be hacked or leaked from our servers."
+            answer: "Wherever you save them. iKnowAPDF doesn't store your documents; the file is processed in your browser and downloaded to your device, so keeping backups is up to you."
           },
           {
-            question: "Does the audit certificate cost extra?",
-            answer: "No. The SHA-256 audit certificate is 100% free and computed directly in your device RAM using the W3C Web Crypto API."
+            question: "Does the SHA-256 summary page cost extra?",
+            answer: "No. It is free and computed in your browser with the Web Crypto API."
           },
           {
-            question: "Can either party tamper with the signed contract after downloading?",
-            answer: "No. Any alteration to even a single character changes the document SHA-256 checksum, immediately revealing tampering when compared against the Certificate of Completion."
+            question: "Can someone alter the signed PDF after downloading it?",
+            answer: "Anyone can edit a PDF file. What the hashes give you is a way to check: if you still have your copies, any alteration of the original or signed content produces a different hash. A certificate-based digital signature is needed if you want PDF readers to detect changes automatically."
           }
         ]
       }

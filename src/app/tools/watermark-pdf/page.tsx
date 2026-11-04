@@ -7,7 +7,7 @@ import { ToolLayout } from "@/components/tools/ToolLayout";
 import { FileDropzone } from "@/components/tools/FileDropzone";
 import { useLanguage } from "@/context/LanguageContext";
 import { downloadBlob } from "@/lib/pdf/pdf-utils";
-import { PDFDocument, rgb, degrees, StandardFonts } from "pdf-lib";
+import type { PDFImage } from "pdf-lib";
 import {
   Stamp,
   Hash,
@@ -90,6 +90,7 @@ export default function WatermarkPdfPage() {
 
     try {
       const bytes = await file.arrayBuffer();
+      const { PDFDocument, rgb, degrees, StandardFonts } = await import("pdf-lib");
       const pdfDoc = await PDFDocument.load(bytes, { ignoreEncryption: true });
       const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
       const regularFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
@@ -109,7 +110,7 @@ export default function WatermarkPdfPage() {
       };
 
       const isAsciiOnly = /^[\x20-\x7E]*$/.test(rawTrimmed);
-      let unicodeStampImage: import("pdf-lib").PDFImage | null = null;
+      let unicodeStampImage: PDFImage | null = null;
       if (rawTrimmed && !isAsciiOnly) {
         const pngBytes = renderUnicodeWatermarkPng(
           rawTrimmed,

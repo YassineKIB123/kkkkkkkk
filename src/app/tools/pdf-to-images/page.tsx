@@ -7,7 +7,6 @@ import { ToolLayout } from "@/components/tools/ToolLayout";
 import { FileDropzone } from "@/components/tools/FileDropzone";
 import { useLanguage } from "@/context/LanguageContext";
 import { downloadBlob, loadPdfJs } from "@/lib/pdf/pdf-utils";
-import JSZip from "jszip";
 import {
   FileImage,
   Download,
@@ -69,7 +68,7 @@ export default function PdfToImagesPage({
     try {
       const pdfjs = await loadPdfJs();
       const arrayBuffer = await targetFile.arrayBuffer();
-      pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
+      pdf = await pdfjs.getDocument({ data: arrayBuffer, isEvalSupported: false }).promise;
       const renderedList: RenderedPage[] = [];
 
       for (let i = 1; i <= pdf.numPages; i++) {
@@ -151,6 +150,7 @@ export default function PdfToImagesPage({
     setErrorMessage(null);
 
     try {
+      const { default: JSZip } = await import("jszip");
       const zip = new JSZip();
       const baseName = file.name.replace(/\.pdf$/i, "");
       const ext = format === "png" ? "png" : "jpg";

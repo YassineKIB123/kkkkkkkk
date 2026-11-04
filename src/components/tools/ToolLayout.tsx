@@ -37,8 +37,9 @@ import React, { useState, useEffect, useRef, createContext, useContext } from "r
 import { AdBanner } from "@/components/ads/AdBanner";
 import { BuyCoffeeButton } from "@/components/common/BuyCoffeeModal";
 import { useLanguage } from "@/context/LanguageContext";
-import { Language, Translations } from "@/lib/i18n/translations";
-import { getArticlesForTool } from "@/lib/blog/blog-utils";
+import { Translations } from "@/lib/i18n/translations";
+import { getArticlesForTool } from "@/lib/blog/articles-lite";
+import { getLanguageHref, POPULAR_BY_TOOL_PATH, LOCALE_NATIVE_NAMES, type AnyLocale } from "@/lib/seo/site-index";
 
 const EmbeddedToolContext = createContext<boolean>(false);
 
@@ -72,7 +73,8 @@ export type SupportedToolId =
   | "imagesToPdf"
   | "pdfToImages"
   | "watermark"
-  | "sanitize";
+  | "sanitize"
+  | "compressImage";
 
 interface ToolLayoutProps {
   toolId?: SupportedToolId;
@@ -81,7 +83,18 @@ interface ToolLayoutProps {
   children: React.ReactNode;
   faqs?: FAQItem[];
   hideSeoMeta?: boolean;
+  /** Hide the generic 3-step "How it works" block (pages that render their own steps). */
+  hideHowItWorks?: boolean;
+  /** Hide how-it-works, trust and FAQ blocks (hub / directory pages). */
+  hideToolSections?: boolean;
+  /** Server-rendered content placed right after the tool workspace. */
+  afterTool?: React.ReactNode;
 }
+
+const LANG_CODES: { code: AnyLocale; label: string }[] = (["en", "fr", "es", "ru", "ar"] as AnyLocale[]).map((code) => ({
+  code,
+  label: code.toUpperCase(),
+}));
 
 function getToolMeta(
   toolKey: SupportedToolId | undefined,
@@ -115,6 +128,8 @@ function getToolMeta(
       return { title: t.tools.watermarkTitle, description: t.tools.watermarkDesc };
     case "sanitize":
       return { title: t.tools.sanitizeTitle, description: t.tools.sanitizeDesc };
+    case "compressImage":
+      return { title: t.site.compressImage, description: fallbackDesc };
     default:
       return { title: fallbackTitle, description: fallbackDesc };
   }
@@ -122,6 +137,7 @@ function getToolMeta(
 
 function inferToolIdFromPathname(pathname: string): SupportedToolId | undefined {
   const clean = pathname.replace(/^\/(?:fr|es|ru|ar)\//, "/").toLowerCase();
+  if (clean.includes("compress-image")) return "compressImage";
   if (clean.includes("compress")) return "compress";
   if (clean.includes("merge")) return "merge";
   if (clean.includes("split")) return "split";
@@ -144,10 +160,14 @@ export function ToolLayout({
   children,
   faqs,
   hideSeoMeta = false,
+  hideHowItWorks = false,
+  hideToolSections = false,
+  afterTool,
 }: ToolLayoutProps) {
   const isEmbedded = useContext(EmbeddedToolContext);
   const pathname = usePathname() || "";
-  const { language, setLanguage, t, isRTL, theme, toggleTheme } = useLanguage();
+  const { language, t, isRTL, theme, toggleTheme } = useLanguage();
+  const popularUses = POPULAR_BY_TOOL_PATH[pathname.replace(/\/+$/, "")] ?? [];
 
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
   const [isLangOpen, setIsLangOpen] = useState(false);
@@ -262,7 +282,9 @@ export function ToolLayout({
 
   const activeFaqs =
     faqs && faqs.length > 0 && (hideSeoMeta || language === "EN")
-      ? [...faqs, ...defaultLocalizedFaqs].slice(0, 5)
+      ? faqs.length >= 5
+        ? faqs
+        : [...faqs, ...defaultLocalizedFaqs].slice(0, 5)
       : defaultLocalizedFaqs;
 
   return (
@@ -279,21 +301,14 @@ export function ToolLayout({
                 "@context": "https://schema.org",
                 "@type": "SoftwareApplication",
                 name: `${localizedTitle} — iKnowAPDF`,
-                applicationCategory: "BusinessApplication",
-                operatingSystem: "Windows, macOS, Linux, iOS, Android",
+                applicationCategory: "UtilitiesApplication",
+                operatingSystem: "Any (web browser)",
                 url: canonicalUrl,
                 description: localizedDesc,
                 offers: {
                   "@type": "Offer",
                   price: "0",
                   priceCurrency: "USD",
-                },
-                aggregateRating: {
-                  "@type": "AggregateRating",
-                  ratingValue: "4.9",
-                  ratingCount: "1420",
-                  bestRating: "5",
-                  worstRating: "1",
                 },
               }),
             }}
@@ -331,7 +346,7 @@ export function ToolLayout({
                   iKnowA<span className="text-rose-600">PDF</span>
                 </span>
                 <span className="text-[9px] font-bold tracking-widest uppercase text-slate-400 dark:text-slate-500">
-                  All-in-One Suite
+                  {t.site.suite}
                 </span>
               </div>
             </Link>
@@ -362,7 +377,7 @@ export function ToolLayout({
                 href="/blog"
                 className="hover:text-rose-600 transition-colors font-semibold"
               >
-                Guides
+                {t.site.guides}
               </Link>
 
               <div className="relative" ref={megaMenuRef}>
@@ -456,6 +471,22 @@ export function ToolLayout({
                             <FileImage className="h-4 w-4 text-cyan-500" />
                             <span className="font-semibold text-xs">{t.tools.pdfToImagesTitle}</span>
                           </Link>
+                          <Link
+                            href="/tools/compress-image"
+                            onClick={() => setIsMegaMenuOpen(false)}
+                            className="flex items-center gap-2.5 rounded-lg p-2 text-slate-700 hover:bg-slate-50 hover:text-rose-600 dark:text-slate-300 dark:hover:bg-slate-800 transition-colors"
+                          >
+                            <ImageIcon className="h-4 w-4 text-emerald-500" />
+                            <span className="font-semibold text-xs">{t.site.compressImage}</span>
+                          </Link>
+                          <Link
+                            href="/pdf-tools"
+                            onClick={() => setIsMegaMenuOpen(false)}
+                            className="flex items-center gap-2.5 rounded-lg p-2 text-slate-700 hover:bg-slate-50 hover:text-rose-600 dark:text-slate-300 dark:hover:bg-slate-800 transition-colors"
+                          >
+                            <LayoutGrid className="h-4 w-4 text-rose-500" />
+                            <span className="font-semibold text-xs">{t.site.allTools}</span>
+                          </Link>
                         </div>
                       </div>
 
@@ -545,29 +576,21 @@ export function ToolLayout({
 
                 {isLangOpen && (
                   <div className="absolute right-0 mt-1.5 w-36 rounded-xl border border-slate-200 bg-white py-1.5 shadow-lg dark:border-slate-800 dark:bg-slate-900 z-50">
-                    {(["EN", "FR", "ES", "RU", "AR"] as const).map((lang: Language) => (
-                      <button
-                        key={lang}
-                        type="button"
-                        onClick={() => {
-                          setLanguage(lang);
-                          setIsLangOpen(false);
-                        }}
+                    {LANG_CODES.map(({ code, label }) => (
+                      <Link
+                        key={code}
+                        href={getLanguageHref(pathname, code)}
+                        hrefLang={code}
+                        onClick={() => setIsLangOpen(false)}
                         className={`flex w-full items-center justify-between px-3 py-1.5 text-xs font-medium transition-colors ${
-                          language === lang
+                          language === label
                             ? "bg-rose-50 text-rose-600 dark:bg-rose-950/50 dark:text-rose-400 font-bold"
                             : "text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800"
                         }`}
                       >
-                        <span>
-                          {lang === "EN" && "English"}
-                          {lang === "FR" && "Français"}
-                          {lang === "ES" && "Español"}
-                          {lang === "RU" && "Русский"}
-                          {lang === "AR" && "العربية"}
-                        </span>
-                        <span className="font-mono text-[10px] text-slate-400">{lang}</span>
-                      </button>
+                        <span>{LOCALE_NATIVE_NAMES[code]}</span>
+                        <span className="font-mono text-[10px] text-slate-400">{label}</span>
+                      </Link>
                     ))}
                   </div>
                 )}
@@ -599,11 +622,6 @@ export function ToolLayout({
             </div>
 
             <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
-              <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 dark:border-amber-900/50 dark:bg-amber-950/40 px-3 py-1.5 text-xs font-bold text-amber-700 dark:text-amber-400 shadow-2xs">
-                <span>★ 4.9/5</span>
-                <span className="font-normal text-amber-600/80 dark:text-amber-400/80">(1.4k+ reviews)</span>
-              </div>
-
               <button
                 type="button"
                 onClick={handleShareClick}
@@ -646,11 +664,34 @@ export function ToolLayout({
             {children}
           </div>
 
+          {popularUses.length > 0 && (
+            <nav
+              aria-label={t.site.popularUses}
+              className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900/50 space-y-3"
+            >
+              <h2 className="text-sm font-extrabold text-slate-900 dark:text-white">{t.site.popularUses}</h2>
+              <div className="flex flex-wrap gap-2">
+                {popularUses.map((l) => (
+                  <Link
+                    key={l.href}
+                    href={l.href}
+                    className="inline-flex items-center rounded-lg border border-slate-200 bg-slate-50/70 px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-rose-400 hover:bg-white hover:text-rose-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-rose-500 transition-colors"
+                  >
+                    {l.label}
+                  </Link>
+                ))}
+              </div>
+            </nav>
+          )}
+
+          {afterTool && <div className="mt-8">{afterTool}</div>}
+
           <div className="mt-8">
             <AdBanner format="leaderboard" />
           </div>
 
           {/* 3-Step How It Works Guide */}
+          {!hideHowItWorks && !hideToolSections && (
           <section className="mt-12 rounded-2xl border border-slate-200 bg-slate-50/60 p-6 sm:p-8 dark:border-slate-800 dark:bg-slate-900/40">
             <h2 className="text-lg font-extrabold text-slate-900 dark:text-white mb-6">
               {t.howItWorks.titleTemplate.replace("{tool}", localizedTitle)}
@@ -694,8 +735,10 @@ export function ToolLayout({
               </div>
             </div>
           </section>
+          )}
 
           {/* Key Features & Client-Side Security Overview */}
+          {!hideToolSections && (
           <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-6 sm:p-8 shadow-2xs dark:border-slate-800 dark:bg-slate-900/50 space-y-6">
             <div className="space-y-2">
               <h2 className="text-lg font-extrabold text-slate-900 dark:text-white">
@@ -738,8 +781,10 @@ export function ToolLayout({
               </div>
             </div>
           </section>
+          )}
 
           {/* FAQ Accordion */}
+          {!hideToolSections && (
           <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-6 sm:p-8 shadow-2xs dark:border-slate-800 dark:bg-slate-900/50">
             <div className="flex items-center gap-2 mb-6">
               <HelpCircle className="h-5 w-5 text-rose-600" />
@@ -755,6 +800,7 @@ export function ToolLayout({
                   <div key={faq.question} className="py-3.5">
                     <button
                       type="button"
+                      aria-expanded={isOpen}
                       onClick={() => setOpenFaqIndex(isOpen ? null : index)}
                       className="flex w-full items-center justify-between text-left text-sm font-semibold text-slate-900 dark:text-white hover:text-rose-600 dark:hover:text-rose-400 transition-colors"
                     >
@@ -765,24 +811,26 @@ export function ToolLayout({
                         }`}
                       />
                     </button>
-                    {isOpen && (
-                      <p className="mt-2.5 text-xs sm:text-sm leading-relaxed text-slate-600 dark:text-slate-400">
-                        {faq.answer}
-                      </p>
-                    )}
+                    <p
+                      hidden={!isOpen}
+                      className="mt-2.5 text-xs sm:text-sm leading-relaxed text-slate-600 dark:text-slate-400"
+                    >
+                      {faq.answer}
+                    </p>
                   </div>
                 );
               })}
             </div>
           </section>
+          )}
 
-          {/* Related Engineering & Security Guides */}
+          {/* Related guides */}
           {relatedGuides.length > 0 && (
             <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-6 sm:p-8 shadow-2xs dark:border-slate-800 dark:bg-slate-900/50">
               <div className="flex items-center gap-2 mb-6">
                 <BookOpen className="h-5 w-5 text-rose-600" />
                 <h2 className="text-lg font-extrabold text-slate-900 dark:text-white">
-                  Related Engineering & Security Guides
+                  {t.site.relatedGuides}
                 </h2>
               </div>
 
@@ -808,7 +856,7 @@ export function ToolLayout({
                     <div className="mt-4 flex items-center justify-between text-[11px] text-slate-400 font-medium pt-3 border-t border-slate-100 dark:border-slate-850">
                       <span>{guide.publishedAt}</span>
                       <span className="flex items-center gap-1 text-rose-600 font-semibold group-hover:translate-x-0.5 transition-transform">
-                        Read Guide <ChevronRight className="h-3 w-3" />
+                        {t.site.readGuide} <ChevronRight className={`h-3 w-3 ${isRTL ? "rotate-180" : ""}`} />
                       </span>
                     </div>
                   </Link>
@@ -858,6 +906,8 @@ export function ToolLayout({
                 <li><Link href="/tools/convert" className="hover:text-rose-600">{t.tools.convertTitle}</Link></li>
                 <li><Link href="/tools/images-to-pdf" className="hover:text-rose-600">{t.tools.imagesToPdfTitle}</Link></li>
                 <li><Link href="/tools/pdf-to-images" className="hover:text-rose-600">{t.tools.pdfToImagesTitle}</Link></li>
+                <li><Link href="/tools/compress-image" className="hover:text-rose-600">{t.site.compressImage}</Link></li>
+                <li><Link href="/pdf-tools" className="hover:text-rose-600 font-semibold">{t.site.allTools}</Link></li>
               </ul>
             </div>
 
@@ -877,7 +927,7 @@ export function ToolLayout({
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-between border-t border-slate-200 dark:border-slate-800 pt-6 gap-4 text-slate-500">
             <div className="flex flex-wrap items-center gap-4">
               <p>iKnowAPDF &copy; 2026. {t.footer.rights}</p>
-              <Link href="/blog" className="hover:text-rose-600 underline-offset-4 hover:underline font-semibold text-rose-600 dark:text-rose-400">Guides</Link>
+              <Link href="/blog" className="hover:text-rose-600 underline-offset-4 hover:underline font-semibold text-rose-600 dark:text-rose-400">{t.site.guides}</Link>
               <Link href="/pricing" className="hover:text-rose-600 underline-offset-4 hover:underline font-semibold text-rose-600 dark:text-rose-400">{t.nav.pricing} ($5/mo Ad-Free)</Link>
               <Link href="/about" className="hover:text-rose-600 underline-offset-4 hover:underline">{t.common.about}</Link>
               <Link href="/contact" className="hover:text-rose-600 underline-offset-4 hover:underline">{t.common.contact}</Link>
@@ -887,19 +937,19 @@ export function ToolLayout({
 
             <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap justify-center sm:justify-end">
               <div className="flex items-center gap-1.5 font-medium">
-              {(["EN", "FR", "ES", "RU", "AR"] as const).map((lang) => (
-                <button
-                  key={lang}
-                  type="button"
-                  onClick={() => setLanguage(lang)}
+              {LANG_CODES.map(({ code, label }) => (
+                <Link
+                  key={code}
+                  href={getLanguageHref(pathname, code)}
+                  hrefLang={code}
                   className={`rounded px-2.5 py-1 text-xs transition-colors ${
-                    language === lang
+                    language === label
                       ? "bg-rose-600 text-white font-bold"
                       : "hover:bg-slate-200 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white"
                   }`}
                 >
-                  {lang}
-                </button>
+                  {label}
+                </Link>
               ))}
             </div>
 

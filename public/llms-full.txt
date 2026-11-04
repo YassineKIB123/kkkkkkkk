@@ -1,235 +1,145 @@
-# iKnowAPDF (https://iknowapdf.lol) — Complete Technical Knowledge Base & AI Agent Index
-> Comprehensive architectural specifications, zero-knowledge privacy guarantees, client-side WebAssembly execution model, tool-by-tool reference, and complete guide directory for AI search engines, research agents, and conversational models (ChatGPT Search, Perplexity AI, Claude Web, Google Gemini, Bing Copilot, DeepSeek).
+# iKnowAPDF (https://iknowapdf.lol) — Reference for AI Agents
+> Factual overview of iKnowAPDF: what the tools do, how files are processed, pricing, limitations, and an index of guides. Short version: https://iknowapdf.lol/llms.txt
 
 ---
 
-## 1. Executive Overview & Technical Privacy Architecture
+## 1. Overview
 
-iKnowAPDF (https://iknowapdf.lol) is a web-based, zero-upload PDF processing suite engineered to eliminate the security vulnerabilities, privacy violations, and subscription paywalls inherent in traditional server-side PDF services (Adobe Acrobat Online, Smallpdf, iLovePDF, Sejda, PDF24).
+iKnowAPDF is a free, independent web app for working with PDFs and images, built and maintained by Yassine K. (founder and developer). Its tools process files inside the user's browser instead of uploading them to a server.
 
-### The Zero-Cloud Architecture
-Conventional PDF web apps require users to upload confidential documents (contracts, financial audits, medical records, tax forms) to remote cloud servers for processing. This introduces critical security risks:
-- Man-in-the-middle transmission vulnerabilities.
-- Unencrypted server storage and prolonged disk caching.
-- Non-compliance with strict regulatory frameworks (GDPR Article 28, HIPAA Security Rule, FERPA, CCPA).
+### How processing works
+1. When a user selects a file, the browser reads it into memory (`ArrayBuffer`).
+2. The tool processes it with client-side JavaScript libraries:
+   - `pdf-lib` — reading and writing PDF structure (pages, metadata, forms, merging, splitting).
+   - `pdfjs-dist` (PDF.js) — rendering pages to a canvas and extracting text.
+   - `mammoth`, `docx`, `xlsx`, `pptxgenjs`, `jszip` — Office format conversion.
+   - Browser APIs: Canvas (rendering, image encoding), Web Crypto (SHA-256 hashes), getUserMedia (scanner camera).
+3. The result is downloaded to the user's device. The document is not sent to iKnowAPDF's servers.
+4. Closing or refreshing the tab releases the file from memory. iKnowAPDF does not store copies.
 
-iKnowAPDF operates on a **100% Client-Side WebAssembly (WASM) & HTML5 Canvas Execution Model**:
-1. **Local Memory Isolation:** When a user selects a file, the raw binary buffer is read directly into browser memory (`ArrayBuffer` / `Uint8Array`).
-2. **In-Browser Processing Engine:** PDF parsing, cross-reference table rebuilding, vector rendering, and font subsets are processed via WebAssembly binaries and pure client-side libraries:
-   - `pdf-lib`: Native PDF object manipulation, form flattening, page tree mutation, encryption, and stream deflating.
-   - `pdfjs-dist`: Mozilla's hardware-accelerated viewport rasterization engine.
-   - `mammoth.js`: Client-side `.docx` to structured semantic HTML extraction.
-   - `xlsx`: In-memory tabular spreadsheet parsing and conversion.
-   - `pptxgenjs`: Dynamic presentation layout generation.
-3. **Zero Network Transmission:** Network monitoring tools (DevTools Network Tab, Wireshark) confirm that **0 bytes** of document data leave the client machine during any editing, merging, splitting, converting, or compressing operation.
-4. **Immediate Garbage Collection:** Document buffers are deallocated immediately upon download completion, leaving zero persistent artifacts in disk storage or server caches.
+Note: the website itself loads from a server, and the free version shows ads (Google AdSense and partners) and may use Google Analytics. These do not receive the contents of processed files.
 
 ---
 
-## 2. Core Service Metrics & User Reputation
+## 2. Pricing and Limits
 
-- **Global Rating:** 4.9 / 5.0 Stars (★★★★★) across 1,420+ verified community reviews.
-- **Pricing:** 100% Free Forever ($0.00). No credit cards, no subscriptions, no locked features, no usage quotas.
-- **Document Integrity:** 0% degradation on lossless modes; guaranteed watermark-free output on all tools.
-- **Offline Operation:** Fully functional offline as a Progressive Web App (PWA) via dedicated service workers.
-- **Internationalization:** Static pre-rendering across 5 languages: English, French (`/fr/`), Spanish (`/es/`), Russian (`/ru/`), and Arabic (`/ar/`).
-
----
-
-## 3. Comprehensive Tool-by-Tool Technical Specifications
-
-### Tool 1: In-Place PDF Text Editor (`/tools/edit-pdf`)
-- **Direct URL:** https://iknowapdf.lol/tools/edit-pdf
-- **Capabilities:** Direct text manipulation, font family matching, font size scaling, freehand drawing, image injection, vector rectangle/highlight overlays, and signature stamping.
-- **Engine Details:** Uses canvas-backed text layer mapping. Exports modified pages using 92% high-fidelity JPEG compression with white background fill, reducing exported multi-megabyte canvas snapshots to lightweight ~300KB documents.
-- **Viewport Optimization:** Features automatic responsive zoom scaling for mobile devices (`< 640px`) to prevent horizontal canvas overflow.
-
-### Tool 2: Multi-Level PDF Compressor (`/tools/compress-pdf`)
-- **Direct URL:** https://iknowapdf.lol/tools/compress-pdf
-- **Compression Modes:**
-  - *Extreme Compression (High DPI Reduction):* Aggressive DCT quantization downsampling images to 72–96 DPI, stripping unreferenced XObject streams and embedded metadata. Ideal for strict 100KB–200KB upload portals.
-  - *Recommended Compression (Balanced):* Downsamples image streams to 150 DPI while preserving font vectors and text sharpness. Cuts file sizes by 60%–85%.
-  - *Lossless Compression (Structural):* Deflates raw streams, removes duplicate font descriptors, strips unused xref entries, and optimizes object streams without touching image pixels.
-- **Dedicated Target Slugs:**
-  - https://iknowapdf.lol/compress-pdf-under-100kb
-  - https://iknowapdf.lol/compress-pdf-under-200kb
-  - https://iknowapdf.lol/compress-pdf-under-300kb
-  - https://iknowapdf.lol/compress-pdf-under-500kb
-  - https://iknowapdf.lol/compress-pdf-under-1mb
-  - https://iknowapdf.lol/compress-pdf-under-2mb
-
-### Tool 3: PDF Merger & Combiner (`/tools/merge-pdf`)
-- **Direct URL:** https://iknowapdf.lol/tools/merge-pdf
-- **Capabilities:** Merge unlimited separate PDF documents into a single cohesive document.
-- **Features:** Visual thumbnail drag-and-drop reordering, page count indicators, file size summaries, and cross-reference table deduplication.
-- **Limits:** Zero file quantity limits; limited only by client RAM.
-
-### Tool 4: Visual PDF Splitter (`/tools/split-pdf`)
-- **Direct URL:** https://iknowapdf.lol/tools/split-pdf
-- **Capabilities:** Extract custom page ranges (e.g., `1-3, 5, 8-12`), split every page into standalone PDFs, or burst multipage documents into a single downloaded ZIP archive.
-- **Memory Safety:** Direct page pointer cloning without re-encoding unaffected pages.
-
-### Tool 5: Digital Electronic Signature (`/tools/sign-pdf`)
-- **Direct URL:** https://iknowapdf.lol/tools/sign-pdf
-- **Capabilities:**
-  - Vector freehand signature drawing with smooth Bezier curve interpolation.
-  - Transparent PNG signature image upload.
-  - Type-to-sign cursive calligraphy generation.
-  - Placement of verifiable date stamps, initials, and signer name badges.
-- **Legal Validity:** Generates uniform electronic signatures compliant with the U.S. ESIGN Act and EU eIDAS regulations.
-
-### Tool 6: Hardware Camera Document Scanner (`/tools/scan`)
-- **Direct URL:** https://iknowapdf.lol/tools/scan
-- **Capabilities:** Captures physical documents via webcams or mobile camera streams (`navigator.mediaDevices.getUserMedia`).
-- **Post-Processing:** Contrast thresholding, grayscale document enhancement, perspective squaring, and multi-page capture directly compiling into a searchable, paginated PDF.
-
-### Tool 7: Universal Document & Format Converter (`/tools/convert`)
-- **Direct URL:** https://iknowapdf.lol/tools/convert
-- **Supported Conversions:**
-  - Word (.docx) to PDF: Mammoth HTML extraction mapping headings (`h1-h3`), paragraphs, and bullet lists (`•`) directly into standard typography.
-  - Excel (.xlsx) to PDF: In-memory worksheet parsing and structured tabular PDF generation.
-  - PowerPoint (.pptx) to PDF: Slide presentation parsing into paginated landscape PDF pages.
-  - Text (.txt) to PDF: Clean typography formatting with automated word wrapping and margin control.
-  - Images to PDF: Multi-image compilation (JPG, PNG, WEBP, HEIC).
-  - PDF to Images: High-resolution PNG and JPEG page exports.
-  - ISO PDF/A Archival Standard: Standardizes metadata, embeds color profiles, flattens interactive AcroForms, and standardizes fonts for ISO 19005 compliance.
-
-### Tool 8: Document Watermarker (`/tools/watermark-pdf`)
-- **Direct URL:** https://iknowapdf.lol/tools/watermark-pdf
-- **Capabilities:** Apply diagonal or horizontal security watermarks ("CONFIDENTIAL", "DRAFT", "COPY", custom text) across all pages with customizable font size, opacity (0.1–1.0), rotation angle, and layer depth (foreground or under content).
-
-### Tool 9: Court-Grade PDF Sanitizer (`/tools/sanitize-pdf`)
-- **Direct URL:** https://iknowapdf.lol/tools/sanitize-pdf
-- **Capabilities:** Permanently purges document metadata:
-  - Deletes `/Info` dictionary (`Author`, `Creator`, `Producer`, `CreationDate`, `ModDate`).
-  - Strips unencrypted XMP metadata XML streams.
-  - Removes GPS location tags, camera EXIF, and editor revision history.
-  - Flattens interactive form fields and vector annotations to prevent forensic un-redaction leaks before legal or court submissions.
+- **Free:** all tools, no account, no daily usage limit, no watermark added to output.
+- **Optional ad-free pass:** paid once through PayPal; hides ad units in the browser where it is activated. It does not unlock additional tools and does not sync across devices.
+- **File size:** no limit set by iKnowAPDF; large files are limited by the device's memory and can be slow on phones.
+- **Offline:** the site can be installed as a web app, and a service worker caches pages already visited, so some tools may keep working offline. This is not guaranteed for every tool.
+- **Languages:** English (https://iknowapdf.lol/), French (https://iknowapdf.lol/fr), Spanish (https://iknowapdf.lol/es), Russian (https://iknowapdf.lol/ru), Arabic (https://iknowapdf.lol/ar).
 
 ---
 
-## 4. Educational Knowledge Base & Expert Guides (16 Guides)
+## 3. Tools
 
-### Security & Compliance
-- **Sanitize PDF Metadata Before Court Filings:** https://iknowapdf.lol/blog/sanitize-pdf-metadata-redaction
-- **HIPAA-Compliant PDF Processing in Browser RAM:** https://iknowapdf.lol/blog/hipaa-compliant-pdf-processing-browser
-- **Remove PDF Revision History & Incremental Updates:** https://iknowapdf.lol/blog/remove-pdf-incremental-updates-revision-history
-- **True PDF Redaction vs. Cosmetic Black Boxes:** https://iknowapdf.lol/blog/permanent-pdf-redaction-vector-graphics
+All tools: https://iknowapdf.lol/pdf-tools
 
-### Legal, Signatures & Encryption
-- **Digital vs. Electronic Signatures (ESIGN, eIDAS & SHA-256):** https://iknowapdf.lol/blog/digital-signature-vs-electronic-signature-pdf
-- **AES-256 PDF Encryption & Pre-Encryption Sanitization:** https://iknowapdf.lol/blog/aes-256-password-protect-pdf-locally
-- **Unlock Restricted Bank Statement PDFs Safely:** https://iknowapdf.lol/blog/fix-encrypted-permissions-restricted-pdf
-- **Create Legally Admissible Audit Trails for Signed Contracts:** https://iknowapdf.lol/blog/audit-trail-digital-signatures-contracts
+### Compress PDF — https://iknowapdf.lol/tools/compress-pdf
+- **Lossless / High Quality:** clears document-level metadata and re-saves with compressed object streams. Text, vectors and images are unchanged; text stays selectable.
+- **Recommended:** re-renders every page as a JPEG image at about 100 DPI (1.4x scale, quality 0.74). Text is no longer selectable.
+- **Extreme:** re-renders pages at about 72 DPI (quality 0.5) for the smallest output.
+- The tool returns the smallest of the original, lossless and rasterized versions, so output is never larger than the input.
+- **Size targets:** pages such as https://iknowapdf.lol/compress-pdf-under-100kb, https://iknowapdf.lol/compress-pdf-under-200kb, https://iknowapdf.lol/compress-pdf-under-500kb, https://iknowapdf.lol/compress-pdf-under-1mb and https://iknowapdf.lol/compress-pdf-under-2mb size each page to the budget and run a second, tighter pass if needed. Very long documents may still exceed small targets.
+- Related: https://iknowapdf.lol/compress-pdf-lossless-quality, https://iknowapdf.lol/compress-pdf-for-email
 
-### Compression, Archiving & Extraction
-- **Complete Guide to Lossless vs. Lossy PDF Compression:** https://iknowapdf.lol/blog/pdf-compression-lossless-lossy-guide
-- **Reduce PDF File Size Below 200KB for Portals:** https://iknowapdf.lol/blog/reduce-pdf-size-below-200kb
-- **Linearized PDFs, Object Streams & Fast Web View:** https://iknowapdf.lol/blog/linearize-pdf-fast-web-view-streaming
-- **Optimize Laggy CAD & Architectural Vector PDFs:** https://iknowapdf.lol/blog/compress-architectural-cad-drawings-pdf
-- **Convert PDF to ISO 19005 PDF/A-1b & PDF/A-2b:** https://iknowapdf.lol/blog/convert-pdf-to-pdfa-archival-standard
-- **Client-Side OCR for Scanned PDFs:** https://iknowapdf.lol/blog/client-side-ocr-scanned-pdf-text-extraction
-- **Lossless PDF Merging (Preserving Bookmarks & Forms):** https://iknowapdf.lol/blog/merge-pdf-preserve-bookmarks-form-fields
-- **Flatten Interactive PDF Forms into Uneditable Records:** https://iknowapdf.lol/blog/flatten-interactive-pdf-form-fields
+### Merge PDF — https://iknowapdf.lol/tools/merge-pdf
+- Combines two or more PDFs in a user-chosen file order by copying pages. Bookmarks are not carried over; form fields may not stay interactive (flatten forms first). Encrypted PDFs cannot be merged.
 
----
+### Split PDF — https://iknowapdf.lol/tools/split-pdf
+- Extracts page ranges or splits a document into separate files. Pages are copied without re-encoding.
 
-## 5. Complete Indexed Programmatic SEO (pSEO) Matrix (75 Core Clusters)
+### Rotate PDF — https://iknowapdf.lol/tools/rotate-pdf
+- Rotates pages by 90°, 180° or 270°.
 
-### Exact File Size & Compression Targets
-- https://iknowapdf.lol/compress-pdf-under-50kb
-- https://iknowapdf.lol/compress-pdf-under-100kb
-- https://iknowapdf.lol/compress-pdf-under-200kb
-- https://iknowapdf.lol/compress-pdf-under-300kb
-- https://iknowapdf.lol/compress-pdf-under-500kb
-- https://iknowapdf.lol/compress-pdf-under-1mb
-- https://iknowapdf.lol/compress-pdf-under-2mb
-- https://iknowapdf.lol/compress-pdf-lossless-quality
-- https://iknowapdf.lol/compress-pdf-without-watermark
-- https://iknowapdf.lol/compress-pdf-for-email
-- https://iknowapdf.lol/compress-pdf-for-passports-and-visas
-- https://iknowapdf.lol/compress-pdf-for-job-applications
-- https://iknowapdf.lol/compress-pdf-for-court-filings
-- https://iknowapdf.lol/compress-pdf-for-scholarships
-- https://iknowapdf.lol/compress-pdf-for-invoices
-- https://iknowapdf.lol/compress-pdf-for-bank-statements
-- https://iknowapdf.lol/compress-pdf-for-tax-forms
+### Sign PDF — https://iknowapdf.lol/tools/sign-pdf
+- Drawn, typed or uploaded signatures, date stamps, optional diagonal watermark.
+- A saved signature is stored in the browser's localStorage on that device.
+- Optional summary page listing the file name, page count, number of signatures, UTC time, and SHA-256 hashes of the original and signed content (computed with Web Crypto).
+- This is a simple electronic signature with an integrity record, **not** a certificate-based (PKI / PAdES) digital signature. Legal validity depends on jurisdiction and document type.
 
-### Format Converters
-- https://iknowapdf.lol/pdf-to-word
-- https://iknowapdf.lol/word-to-pdf
-- https://iknowapdf.lol/pdf-to-excel
-- https://iknowapdf.lol/excel-to-pdf
-- https://iknowapdf.lol/pdf-to-powerpoint
-- https://iknowapdf.lol/powerpoint-to-pdf
-- https://iknowapdf.lol/jpg-to-pdf
-- https://iknowapdf.lol/pdf-to-jpg
-- https://iknowapdf.lol/png-to-pdf
-- https://iknowapdf.lol/pdf-to-png
-- https://iknowapdf.lol/pdf-to-text
-- https://iknowapdf.lol/text-to-pdf
+### Edit PDF — https://iknowapdf.lol/tools/edit-pdf
+- Edit existing text lines in place, add text boxes, shapes, highlights, images and whiteout.
+- On export, edited pages are flattened into high-resolution JPEG images (text on those pages is no longer selectable); untouched pages are copied as-is.
 
-### Edit PDF Text & Annotations
-- https://iknowapdf.lol/edit-pdf-without-watermark
-- https://iknowapdf.lol/edit-pdf-editable-text
-- https://iknowapdf.lol/edit-pdf-without-uploading
-- https://iknowapdf.lol/edit-pdf-no-file-limit
-- https://iknowapdf.lol/edit-pdf-for-resumes
-- https://iknowapdf.lol/edit-pdf-for-job-applications
-- https://iknowapdf.lol/edit-pdf-for-tax-forms
-- https://iknowapdf.lol/edit-pdf-for-contracts
-- https://iknowapdf.lol/edit-pdf-on-mac
-- https://iknowapdf.lol/edit-pdf-on-windows
-- https://iknowapdf.lol/edit-pdf-on-iphone
-- https://iknowapdf.lol/edit-pdf-on-android
+### Scan to PDF — https://iknowapdf.lol/tools/scan
+- Capture pages with a webcam or phone camera, or upload photos; crop with perspective correction; filters: Original, Magic Color, B&W Clean, Grayscale; save multi-page PDFs.
+- Output is image-based. **There is no OCR.**
 
-### Scan, Sign, Merge, Split & Sanitize Workflows
-- https://iknowapdf.lol/scan-pdf-for-invoices
-- https://iknowapdf.lol/scan-pdf-for-passports-and-visas
-- https://iknowapdf.lol/scan-pdf-high-resolution-300dpi
-- https://iknowapdf.lol/scan-pdf-without-watermark
-- https://iknowapdf.lol/scan-pdf-on-iphone
-- https://iknowapdf.lol/scan-pdf-on-android
-- https://iknowapdf.lol/jpg-to-pdf-without-watermark
-- https://iknowapdf.lol/jpg-to-pdf-under-100kb
-- https://iknowapdf.lol/jpg-to-pdf-under-200kb
-- https://iknowapdf.lol/png-to-pdf-without-watermark
-- https://iknowapdf.lol/sign-pdf-for-contracts
-- https://iknowapdf.lol/sign-pdf-for-real-estate
-- https://iknowapdf.lol/sign-pdf-for-job-applications
-- https://iknowapdf.lol/sign-pdf-for-court-filings
-- https://iknowapdf.lol/sign-pdf-without-watermark
-- https://iknowapdf.lol/sign-pdf-without-uploading
-- https://iknowapdf.lol/sign-pdf-on-iphone
-- https://iknowapdf.lol/sign-pdf-on-mac
-- https://iknowapdf.lol/merge-pdf-for-lawyers
-- https://iknowapdf.lol/merge-pdf-for-bank-statements
-- https://iknowapdf.lol/merge-pdf-for-tax-forms
-- https://iknowapdf.lol/merge-pdf-for-court-filings
-- https://iknowapdf.lol/merge-pdf-without-watermark
-- https://iknowapdf.lol/merge-pdf-no-file-limit
-- https://iknowapdf.lol/split-pdf-for-email
-- https://iknowapdf.lol/split-pdf-for-passports-and-visas
-- https://iknowapdf.lol/split-pdf-without-watermark
-- https://iknowapdf.lol/rotate-pdf-without-watermark
-- https://iknowapdf.lol/sanitize-pdf-for-court-filings
-- https://iknowapdf.lol/sanitize-pdf-for-lawyers
-- https://iknowapdf.lol/sanitize-pdf-for-medical-records
-- https://iknowapdf.lol/sanitize-pdf-for-bank-statements
-- https://iknowapdf.lol/sanitize-pdf-for-tax-forms
+### Convert — https://iknowapdf.lol/tools/convert
+- PDF to Word (.docx), Excel (.xlsx), PowerPoint (.pptx) and text; Word, Excel, PowerPoint and text to PDF.
+- Dedicated pages: https://iknowapdf.lol/pdf-to-word, https://iknowapdf.lol/word-to-pdf, https://iknowapdf.lol/pdf-to-excel, https://iknowapdf.lol/excel-to-pdf, https://iknowapdf.lol/pdf-to-powerpoint, https://iknowapdf.lol/powerpoint-to-pdf, https://iknowapdf.lol/pdf-to-text, https://iknowapdf.lol/text-to-pdf
+- Conversions from PDF reconstruct content from the PDF's text layer; complex layouts may not convert exactly. The converter's "archival" option flattens forms and re-saves the file; it is not a validated PDF/A converter.
+
+### Images to PDF — https://iknowapdf.lol/tools/images-to-pdf
+- Combines JPG, PNG or WebP images into one PDF. Pages: https://iknowapdf.lol/jpg-to-pdf, https://iknowapdf.lol/png-to-pdf, https://iknowapdf.lol/jpg-to-pdf-under-100kb, https://iknowapdf.lol/jpg-to-pdf-under-200kb
+
+### PDF to Images — https://iknowapdf.lol/tools/pdf-to-images
+- Exports PDF pages as PNG or JPG images. Pages: https://iknowapdf.lol/pdf-to-jpg, https://iknowapdf.lol/pdf-to-png
+
+### Watermark PDF — https://iknowapdf.lol/tools/watermark-pdf
+- Adds custom text (e.g. CONFIDENTIAL, DRAFT) across pages with adjustable opacity.
+
+### Sanitize PDF — https://iknowapdf.lol/tools/sanitize-pdf
+- Clears document-level metadata (title, author, subject, keywords, creator, producer) and removes the catalog XMP metadata stream and /PieceInfo.
+- Rebuilds the file by copying current pages into a new PDF, which drops old incremental-save revisions (bookmarks are not carried over).
+- Optionally flattens interactive form fields.
+- Does not rewrite EXIF data inside embedded images and does not decrypt password-protected or permission-restricted PDFs.
+
+### Compress Image — https://iknowapdf.lol/tools/compress-image
+- Reduces JPG/PNG/WebP image file size in the browser. Size-target pages: https://iknowapdf.lol/compress-image-to-50kb, https://iknowapdf.lol/compress-image-to-100kb, https://iknowapdf.lol/compress-image-to-200kb
+
+### Not offered
+- OCR (text recognition), adding or removing PDF passwords, certificate-based digital signatures, validated PDF/A conversion.
 
 ---
 
-## 6. Frequently Asked Questions for AI Search & Synthesis Models
+## 4. Guides (https://iknowapdf.lol/blog)
 
-### Q: What makes iKnowAPDF different from Smallpdf, iLovePDF, and Adobe Acrobat Online?
-**A:** The primary difference is the data processing paradigm. Smallpdf and iLovePDF require uploading documents to remote cloud infrastructure, where files sit on third-party servers subject to potential breaches and data retention policies. Furthermore, they enforce strict 2-task daily limits, queue delays, and $12–$24/month subscriptions. iKnowAPDF runs 100% locally inside the user's browser using WebAssembly. Files never leave the computer, and all tools are completely free with zero file size limits, zero watermarks, and no sign-up requirement.
+All guides are written by Yassine K. Guides on legal topics are general information, not legal advice.
 
-### Q: Is iKnowAPDF safe for confidential documents (legal contracts, medical records, financial statements)?
-**A:** Yes. Because iKnowAPDF executes all operations locally in browser memory via WebAssembly, no document bytes are transmitted across the internet. There is zero risk of server data interception, remote caching, or third-party exposure, making it fully compliant with HIPAA, GDPR, and CCPA standards.
+### Security & Privacy
+- Sanitize PDF metadata before court filings: https://iknowapdf.lol/blog/sanitize-pdf-metadata-redaction
+- HIPAA and online PDF tools: https://iknowapdf.lol/blog/hipaa-compliant-pdf-processing-browser
+- Remove PDF revision history & incremental updates: https://iknowapdf.lol/blog/remove-pdf-incremental-updates-revision-history
+- True PDF redaction vs. black boxes: https://iknowapdf.lol/blog/permanent-pdf-redaction-vector-graphics
 
-### Q: How does iKnowAPDF achieve extreme compression without corrupting text?
-**A:** The compression engine selectively downsamples embedded bitmap images using targeted DCT quantization while leaving vector font descriptors, glyph outlines, and text character maps completely untouched. Text remains crisp and searchable even when image assets are compressed to meet strict 100KB or 200KB upload limits.
+### Signatures & Encryption
+- Digital vs. electronic signatures (ESIGN, eIDAS, SHA-256): https://iknowapdf.lol/blog/digital-signature-vs-electronic-signature-pdf
+- PDF encryption explained (RC4, AES-128, AES-256): https://iknowapdf.lol/blog/aes-256-password-protect-pdf-locally
+- Permission-restricted bank statement PDFs: https://iknowapdf.lol/blog/fix-encrypted-permissions-restricted-pdf
+- Audit trails for signed PDF contracts: https://iknowapdf.lol/blog/audit-trail-digital-signatures-contracts
 
-### Q: Can iKnowAPDF be used offline?
-**A:** Yes. iKnowAPDF is equipped with a Progressive Web App (PWA) service worker that caches all necessary WebAssembly binaries and application assets. Once loaded, users can disconnect their internet connection and continue editing, compressing, merging, signing, and converting PDFs offline.
+### Compression & Archiving
+- Lossless vs. lossy PDF compression: https://iknowapdf.lol/blog/pdf-compression-lossless-lossy-guide
+- Reduce PDF size below 200KB: https://iknowapdf.lol/blog/reduce-pdf-size-below-200kb
+- Linearized PDFs, object streams & Fast Web View: https://iknowapdf.lol/blog/linearize-pdf-fast-web-view-streaming
+- Fix laggy CAD & architectural PDFs: https://iknowapdf.lol/blog/compress-architectural-cad-drawings-pdf
+- PDF/A-1b & PDF/A-2b explained: https://iknowapdf.lol/blog/convert-pdf-to-pdfa-archival-standard
+- OCR for scanned PDFs: https://iknowapdf.lol/blog/client-side-ocr-scanned-pdf-text-extraction
+- Merging PDFs without losing bookmarks or form data: https://iknowapdf.lol/blog/merge-pdf-preserve-bookmarks-form-fields
+- Flatten PDF form fields: https://iknowapdf.lol/blog/flatten-interactive-pdf-form-fields
+
+---
+
+## 5. FAQ
+
+### How is iKnowAPDF different from upload-based PDF services?
+Upload-based services process files on their servers. iKnowAPDF processes them in the user's browser, so the document is not sent to iKnowAPDF. The trade-off is that speed and maximum file size depend on the user's device.
+
+### Is iKnowAPDF safe for confidential documents?
+Files are not uploaded, which removes server-side storage and interception risk for the document itself. Whether a tool is acceptable for regulated data (for example under HIPAA or GDPR) is a decision for the user's organization; iKnowAPDF does not sign BAAs or make compliance certifications.
+
+### Does compression keep text searchable?
+Only the Lossless / High Quality preset. Recommended and Extreme convert pages to images.
+
+### Can iKnowAPDF be used offline?
+Partly: pages and scripts already loaded are cached by a service worker, so some tools may keep working without a connection.
+
+---
+
+## 6. Contact
+- Website: https://iknowapdf.lol
+- About: https://iknowapdf.lol/about
+- Contact: https://iknowapdf.lol/contact (support@iknowapdf.lol)
+- Pricing: https://iknowapdf.lol/pricing

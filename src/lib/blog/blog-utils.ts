@@ -1,5 +1,6 @@
 import rawData from "@/content/blog/articles.json";
 import { BlogPost, Author, TocHeading, ArticleCategory } from "./types";
+import { stripInlineMarkdown } from "./inline-markdown";
 
 interface BlogDatabase {
   authors: Author[];
@@ -24,6 +25,17 @@ export function getAllAuthors(): Author[] {
 
 export function getAuthorById(id: string): Author | undefined {
   return data.authors.find((a) => a.id === id);
+}
+
+export const DEFAULT_AUTHOR_ID = "yassine-k";
+
+/** The article's author, falling back to the site founder if the id is unknown. */
+export function getArticleAuthor(article: BlogPost): Author {
+  return (
+    getAuthorById(article.authorId) ??
+    getAuthorById(DEFAULT_AUTHOR_ID) ??
+    data.authors[0]
+  );
 }
 
 export function getRelatedArticles(currentSlug: string, count = 3): BlogPost[] {
@@ -66,6 +78,7 @@ export function getArticlesForTool(toolId?: string, count = 3): BlogPost[] {
     imagesToPdf: ["archiving", "compression"],
     pdfToImages: ["archiving", "compression"],
     watermark: ["security", "legal"],
+    compressImage: ["compression", "guides"],
   };
 
   const exactMatches = all.filter((a) => a.toolCta.toolId === toolId);
@@ -103,37 +116,39 @@ export function extractHeadings(article: BlogPost): TocHeading[] {
 
 export function calculateReadingTime(article: BlogPost): string {
   let wordCount = 0;
+  const count = (text: string) =>
+    stripInlineMarkdown(text).split(/\s+/).filter(Boolean).length;
   for (const block of article.blocks) {
     if (
       block.type === "paragraph" ||
       block.type === "heading2" ||
       block.type === "heading3"
     ) {
-      wordCount += block.text.split(/\s+/).filter(Boolean).length;
+      wordCount += count(block.text);
     } else if (block.type === "callout" || block.type === "step") {
       wordCount +=
-        block.title.split(/\s+/).filter(Boolean).length +
-        block.text.split(/\s+/).filter(Boolean).length;
+        count(block.title) +
+        count(block.text);
     } else if (block.type === "code") {
-      wordCount += block.code.split(/\s+/).filter(Boolean).length;
+      wordCount += count(block.code);
     } else if (block.type === "list") {
       for (const item of block.items) {
-        wordCount += item.split(/\s+/).filter(Boolean).length;
+        wordCount += count(item);
       }
     } else if (block.type === "comparisonTable") {
       for (const h of block.headers) {
-        wordCount += h.split(/\s+/).filter(Boolean).length;
+        wordCount += count(h);
       }
       for (const r of block.rows) {
         for (const cell of r) {
-          wordCount += cell.split(/\s+/).filter(Boolean).length;
+          wordCount += count(cell);
         }
       }
     } else if (block.type === "faq") {
       for (const item of block.items) {
         wordCount +=
-          item.question.split(/\s+/).filter(Boolean).length +
-          item.answer.split(/\s+/).filter(Boolean).length;
+          count(item.question) +
+          count(item.answer);
       }
     }
   }

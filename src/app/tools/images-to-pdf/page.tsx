@@ -17,6 +17,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Eye,
+  Target,
+  AlertTriangle,
 } from "lucide-react";
 
 interface ImageMeta {
@@ -25,8 +27,28 @@ interface ImageMeta {
   height: number;
 }
 
-export default function ImagesToPdfPage() {
+interface ImagesToPdfPageProps {
+  /** Optional maximum PDF size in KB (pSEO presets such as "JPG to PDF under 200KB"). */
+  targetKb?: number;
+}
+
+function formatKb(bytes: number): string {
+  return bytes < 1024 * 1024
+    ? `${(bytes / 1024).toFixed(1)} KB`
+    : `${(bytes / 1024 / 1024).toFixed(2)} MB`;
+}
+
+/** Rough fixed PDF cost (header, xref, catalog) plus per-page objects, in bytes. */
+const PDF_BASE_OVERHEAD = 3000;
+const PDF_PAGE_OVERHEAD = 500;
+const MAX_TARGET_PASSES = 4;
+
+export default function ImagesToPdfPage({ targetKb }: ImagesToPdfPageProps = {}) {
   const { t, language } = useLanguage();
+  const presetTarget =
+    targetKb && Number.isFinite(targetKb) && targetKb > 0 ? Math.round(targetKb) : undefined;
+  const [progressText, setProgressText] = useState<string>("");
+  const [warningMessage, setWarningMessage] = useState<string | null>(null);
   const [files, setFiles] = useState<File[]>([]);
   const [imageMetas, setImageMetas] = useState<ImageMeta[]>([]);
   const [previewIndex, setPreviewIndex] = useState<number>(0);
@@ -135,6 +157,47 @@ export default function ImagesToPdfPage() {
     setPreviewIndex(0);
     setErrorMessage(null);
     setSuccessMessage(null);
+    setWarningMessage(null);
+  };
+
+  /**
+   * Re-encode the embedded images (JPEG, lower quality / smaller scale) until the PDF fits
+   * under `maxBytes`. Returns the smallest PDF produced, even if it is still above target.
+   */
+  const shrinkPdfToTarget = async (
+    initial: Uint8Array,
+    maxBytes: number,
+    options: Parameters<typeof imagesToPDF>[1]
+  ): Promise<Uint8Array> => {
+    const { compressImageToTarget } = await import("@/lib/image/compress-image");
+    const count = files.length;
+    let best = initial;
+    let budget = (maxBytes - PDF_BASE_OVERHEAD - PDF_PAGE_OVERHEAD * count) / count;
+
+    for (let pass = 0; pass < MAX_TARGET_PASSES && budget >= 1000; pass++) {
+      const compressed: File[] = [];
+      let imageBytes = 0;
+      for (let i = 0; i < count; i++) {
+        setProgressText(`Optimizing image ${i + 1} of ${count} to fit under ${presetTarget} KB…`);
+        const result = await compressImageToTarget(files[i], {
+          targetKb: budget / 1000,
+          format: "image/jpeg",
+          // ~A4 at 300 DPI: plenty for print, keeps "fit to image" pages a sane size.
+          maxDimension: 2480,
+        });
+        imageBytes += result.bytes;
+        compressed.push(new File([result.blob], `page-${i + 1}.jpg`, { type: "image/jpeg" }));
+      }
+
+      const candidate = await imagesToPDF(compressed, options);
+      if (candidate.length < best.length) best = candidate;
+      if (candidate.length <= maxBytes) break;
+
+      // Use the measured container overhead to size the next, tighter per-image budget.
+      const overhead = Math.max(0, candidate.length - imageBytes);
+      budget = Math.min(budget * 0.85, ((maxBytes - overhead) / count) * 0.97);
+    }
+    return best;
   };
 
   const handleConvert = async () => {
@@ -143,17 +206,30 @@ export default function ImagesToPdfPage() {
     setIsConverting(true);
     setErrorMessage(null);
     setSuccessMessage(null);
+    setWarningMessage(null);
 
     try {
-      const pdfBytes = await imagesToPDF(files, {
-        orientation,
-        margin,
-        pageSize,
-      });
+      const pdfOptions = { orientation, margin, pageSize };
+      let pdfBytes = await imagesToPDF(files, pdfOptions);
+
+      let targetNote = "";
+      if (presetTarget) {
+        const maxBytes = presetTarget * 1000;
+        if (pdfBytes.length > maxBytes) {
+          pdfBytes = await shrinkPdfToTarget(pdfBytes, maxBytes, pdfOptions);
+        }
+        if (pdfBytes.length <= maxBytes) {
+          targetNote = ` Size: ${formatKb(pdfBytes.length)} (under ${presetTarget} KB).`;
+        } else {
+          setWarningMessage(
+            `Couldn't get this PDF under ${presetTarget} KB - the smallest version is ${formatKb(pdfBytes.length)}. Try fewer images, or compress the PDF further with Compress PDF.`
+          );
+        }
+      }
 
       const fileName = `images_converted_${Date.now()}.pdf`;
       downloadBlob(pdfBytes, fileName);
-      setSuccessMessage(`Success! Converted ${files.length} images into "${fileName}".`);
+      setSuccessMessage(`Success! Converted ${files.length} images into "${fileName}".${targetNote}`);
     } catch (err: unknown) {
       const message =
         err instanceof Error
@@ -162,6 +238,7 @@ export default function ImagesToPdfPage() {
       setErrorMessage(message);
     } finally {
       setIsConverting(false);
+      setProgressText("");
     }
   };
 
@@ -202,6 +279,16 @@ export default function ImagesToPdfPage() {
       ]}
     >
       <div className="space-y-6">
+        {presetTarget && (
+          <div className="flex items-center justify-between rounded-xl border border-rose-200 bg-rose-50/70 px-4 py-2.5 text-xs text-rose-800 dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-300">
+            <div className="flex items-center gap-2 font-semibold">
+              <Target className="h-4 w-4 text-rose-600 dark:text-rose-400" aria-hidden="true" />
+              <span>Preset Active: PDF File Size Under {presetTarget} KB</span>
+            </div>
+            <span className="font-mono text-[11px] uppercase font-bold">Auto-Tuned</span>
+          </div>
+        )}
+
         <FileDropzone
           accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
           multiple={true}
@@ -407,13 +494,24 @@ export default function ImagesToPdfPage() {
               </div>
             )}
 
+            {warningMessage && (
+              <div
+                role="alert"
+                className="flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50 p-3.5 text-xs text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-300"
+              >
+                <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600 mt-0.5" aria-hidden="true" />
+                <span>{warningMessage}</span>
+              </div>
+            )}
+
             {successMessage && (
               <ToolSuccessAlert message={successMessage} />
             )}
 
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2 border-t border-slate-200 dark:border-slate-800">
-              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                {files.length} {files.length === 1 ? "page" : "pages"} ready to compile.
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium" aria-live="polite">
+                {progressText ||
+                  `${files.length} ${files.length === 1 ? "page" : "pages"} ready to compile${presetTarget ? ` (target: under ${presetTarget} KB)` : ""}.`}
               </span>
 
               <button

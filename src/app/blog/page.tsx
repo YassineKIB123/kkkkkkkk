@@ -17,16 +17,16 @@ import {
 export const dynamic = "force-static";
 
 export const metadata: Metadata = {
-  title: "PDF Guides, Security Tutorials & Technical Docs | iKnowAPDF",
+  title: "PDF Guides: Compress, Clean & Sign PDFs",
   description:
-    "Master client-side document workflows. In-depth technical guides for compressing, merging, signing, and sanitizing PDFs with 100% browser privacy and zero server uploads.",
+    "Practical guides to compressing, merging, signing, redacting, and cleaning PDFs, written by the developer of iKnowAPDF's in-browser PDF tools.",
   alternates: {
     canonical: "https://iknowapdf.lol/blog",
   },
-  openGraph: {
-    title: "PDF Guides, Security Tutorials & Technical Docs | iKnowAPDF",
+  openGraph: { images: ["/opengraph-image.png"],
+    title: "PDF Guides & Tutorials | iKnowAPDF",
     description:
-      "Expert guides on client-side document security, file compression algorithms, and digital signature legal standards.",
+      "Practical guides to PDF compression, metadata clean-up, redaction, signing, and file conversion.",
     url: "https://iknowapdf.lol/blog",
     siteName: "iKnowAPDF",
     type: "website",
@@ -59,7 +59,7 @@ export default function BlogIndexPage() {
 
           <nav className="flex items-center gap-3 sm:gap-5 text-xs font-semibold">
             <Link
-              href="/"
+              href="/pdf-tools"
               className="text-slate-600 hover:text-rose-600 dark:text-slate-300"
             >
               All Tools
@@ -97,26 +97,26 @@ export default function BlogIndexPage() {
         <div className="max-w-3xl space-y-4 mb-12">
           <div className="inline-flex items-center gap-2 rounded-full bg-rose-50 px-3 py-1 text-xs font-bold text-rose-600 border border-rose-100 dark:bg-rose-950/50 dark:border-rose-900 dark:text-rose-400">
             <BookOpen className="h-3.5 w-3.5" />
-            <span>Engineering Documentation & Privacy Hub</span>
+            <span>Guides & Tutorials</span>
           </div>
           <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">
-            Learn How to Handle PDFs with 100% Privacy
+            Practical PDF Guides
           </h1>
           <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 leading-relaxed">
-            In-depth engineering tutorials, cryptographic compliance breakdowns, compression benchmarks, and client-side WebAssembly workflows for sensitive documents.
+            How PDF compression, metadata, redaction, signatures, and file formats actually work — and how to handle sensitive documents without uploading them anywhere.
           </p>
 
           <div className="flex flex-wrap items-center gap-4 pt-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
             <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
-              <Lock className="h-4 w-4" /> Zero Cloud Uploads
+              <Lock className="h-4 w-4" /> Files stay on your device
             </span>
             <span>•</span>
             <span className="flex items-center gap-1.5 text-indigo-600 dark:text-indigo-400">
-              <Zap className="h-4 w-4" /> WebAssembly Acceleration
+              <Zap className="h-4 w-4" /> Free tools, no sign-up
             </span>
             <span>•</span>
             <span className="flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
-              <ShieldCheck className="h-4 w-4 text-rose-600" /> ISO 32000 & HIPAA Aligned
+              <ShieldCheck className="h-4 w-4 text-rose-600" /> Written by the tools&apos; developer
             </span>
           </div>
         </div>
@@ -129,7 +129,7 @@ export default function BlogIndexPage() {
                 <div className="flex flex-wrap items-center gap-3 text-xs font-bold uppercase tracking-wider text-rose-600">
                   <span className="flex items-center gap-1 bg-rose-50 dark:bg-rose-950/60 px-2 py-0.5 rounded-md">
                     <Sparkles className="h-3.5 w-3.5" />
-                    Pillar Guide
+                    Latest Guide
                   </span>
                   <span>•</span>
                   <span>{featured.category}</span>
@@ -170,7 +170,7 @@ export default function BlogIndexPage() {
                   href={`/blog/${featured.slug}`}
                   className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-5 py-2.5 text-xs font-bold text-white hover:bg-rose-600 transition-colors dark:bg-rose-600 dark:hover:bg-rose-500 shadow-xs"
                 >
-                  <span>Read Full Technical Guide</span>
+                  <span>Read the Guide</span>
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </div>
@@ -182,10 +182,10 @@ export default function BlogIndexPage() {
         <div className="space-y-6">
           <div className="flex items-center justify-between border-b border-slate-200/80 pb-4 dark:border-slate-800">
             <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-              All Engineering & Compliance Guides
+              All Guides
             </h2>
             <span className="text-xs font-bold text-slate-500">
-              {articles.length} Comprehensive Articles
+              {articles.length} Articles
             </span>
           </div>
 
@@ -231,7 +231,7 @@ export default function BlogIndexPage() {
       {/* Footer */}
       <footer className="border-t border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 py-10 text-xs text-slate-500">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p>© 2026 iKnowAPDF. 100% Client-Side Privacy Architecture.</p>
+          <p>© 2026 iKnowAPDF. PDF tools that run in your browser.</p>
           <div className="flex items-center gap-6">
             <Link href="/" className="hover:text-rose-600 transition-colors">
               Tools Home

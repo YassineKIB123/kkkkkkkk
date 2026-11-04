@@ -4,16 +4,16 @@ import Link from "next/link";
 import { ShieldCheck, ArrowLeft, Lock, Cookie, EyeOff } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy — 100% Client-Side PDF Processing",
+  title: "Privacy Policy — In-Browser PDF Processing",
   description:
-    "Read the iKnowAPDF Privacy Policy. All PDF tools run 100% locally inside your browser with zero file uploads and zero server retention.",
+    "How iKnowAPDF handles your data: PDF tools process files in your browser without uploading them, plus details on cookies, ads, analytics and payments.",
   alternates: {
     canonical: "https://iknowapdf.lol/privacy",
   },
-  openGraph: {
+  openGraph: { images: ["/opengraph-image.png"],
     title: "Privacy Policy | iKnowAPDF",
     description:
-      "Review our 100% client-side privacy guarantee, cookie policies, and Google AdSense compliance details.",
+      "How iKnowAPDF handles files, cookies, ads, analytics and payments.",
     url: "https://iknowapdf.lol/privacy",
     siteName: "iKnowAPDF",
     type: "website",
@@ -42,7 +42,7 @@ export default function PrivacyPolicyPage() {
                 Privacy Policy
               </h1>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Last updated: October 2026
+                Last updated: November 2026
               </p>
             </div>
           </div>
@@ -50,13 +50,13 @@ export default function PrivacyPolicyPage() {
           <section className="space-y-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
             <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <Lock className="h-4 w-4 text-rose-600" />
-              <span>1. 100% Client-Side Document Processing (Zero File Uploads)</span>
+              <span>1. In-Browser Document Processing (No File Uploads)</span>
             </h2>
             <p>
-              At <strong>iKnowAPDF</strong>, your privacy is built directly into our architecture. All PDF and image operations—including editing text, compressing, merging, splitting, signing, scanning, rotating, converting, and sanitizing metadata—run <strong>100% locally inside your web browser</strong> using WebAssembly and HTML5 Canvas.
+              At <strong>iKnowAPDF</strong>, PDF and image operations—including editing text, compressing, merging, splitting, signing, scanning, rotating, converting, and cleaning metadata—run <strong>locally inside your web browser</strong> using JavaScript libraries (PDF.js, pdf-lib) and the HTML5 Canvas API.
             </p>
             <p>
-              Your files are <strong>never uploaded, transmitted, or stored</strong> on our servers or any third-party cloud storage. Once you close or refresh your browser tab, your files are immediately cleared from your device&apos;s local memory.
+              The files you process are <strong>not uploaded to or stored on</strong> our servers or any third-party storage. They are held in your browser tab&apos;s memory while you work and released when you close or refresh the tab. Camera images used by the document scanner also stay on your device.
             </p>
           </section>
 
@@ -66,7 +66,16 @@ export default function PrivacyPolicyPage() {
               <span>2. Personal Data & Local Storage</span>
             </h2>
             <p>
-              We do not require account registration, and we do not collect personal names, passwords, or document contents. We use standard browser <code>localStorage</code> solely to remember your interface preferences, such as your selected language (<code>EN</code>, <code>FR</code>, <code>ES</code>, <code>RU</code>, <code>AR</code>) and theme mode (Light or Dark).
+              We do not require account registration, and we do not collect document contents. We use your browser&apos;s <code>localStorage</code> on your device to remember your language (<code>EN</code>, <code>FR</code>, <code>ES</code>, <code>RU</code>, <code>AR</code>) and theme, your cookie choice, a signature you choose to save in the Sign PDF tool, and whether an ad-free pass is active in that browser. This data stays in your browser and can be removed by clearing site data.
+            </p>
+            <p>
+              <strong>Analytics:</strong> We may use Google Analytics to understand aggregate usage (pages visited, browser type, approximate location). It does not receive the contents of your files.
+            </p>
+            <p>
+              <strong>Payments:</strong> The optional ad-free pass is paid through PayPal. PayPal processes your payment details under its own privacy policy; we do not receive your card number.
+            </p>
+            <p>
+              <strong>Email:</strong> If you email us, we use your address and message only to reply.
             </p>
           </section>
 
@@ -76,7 +85,7 @@ export default function PrivacyPolicyPage() {
               <span>3. Cookies & Third-Party Advertising (Google, NitroPay & Programmatic Partners)</span>
             </h2>
             <p>
-              To keep iKnowAPDF 100% free for everyone without watermarks or file limits, we may display advertisements provided by third-party ad networks, including <strong>Google AdSense</strong>, <strong>NitroPay</strong>, and their programmatic demand partners:
+              To keep iKnowAPDF free to use, we may display advertisements provided by third-party ad networks, including <strong>Google AdSense</strong>, <strong>NitroPay</strong>, and their programmatic demand partners:
             </p>
             <ul className="list-disc pl-5 space-y-1.5">
               <li>

@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "https://iknowapdf.lol/terms",
   },
-  openGraph: {
+  openGraph: { images: ["/opengraph-image.png"],
     title: "Terms of Service | iKnowAPDF",
     description:
       "Review the Terms of Service for iKnowAPDF client-side tools and services.",
@@ -42,7 +42,7 @@ export default function TermsOfServicePage() {
                 Terms of Service
               </h1>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Last updated: October 2026
+                Last updated: November 2026
               </p>
             </div>
           </div>
@@ -80,6 +80,28 @@ export default function TermsOfServicePage() {
             </h2>
             <p>
               iKnowAPDF is provided on an &ldquo;AS IS&rdquo; and &ldquo;AS AVAILABLE&rdquo; basis without warranties of any kind. Because all files are processed in your local browser memory and never backed up on our servers, we recommend keeping a backup copy of your original documents before editing or modifying them.
+            </p>
+          </section>
+
+          <section className="space-y-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+            <h2 className="text-base font-bold text-slate-900 dark:text-white">
+              5. Guides Are Not Legal Advice
+            </h2>
+            <p>
+              Articles on our blog about signatures, privacy rules, or document requirements are general information, not legal or compliance advice. Check the requirements that apply to you before relying on a document for legal purposes.
+            </p>
+          </section>
+
+          <section className="space-y-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+            <h2 className="text-base font-bold text-slate-900 dark:text-white">
+              6. Optional Ad-Free Pass
+            </h2>
+            <p>
+              The PDF tools are free to use. The optional ad-free pass, paid through PayPal, only removes advertisements; it does not unlock additional tools. The pass is stored in the browser where it was activated. For payment questions, contact{" "}
+              <a href="mailto:support@iknowapdf.lol" className="text-rose-600 underline hover:text-rose-500">
+                support@iknowapdf.lol
+              </a>
+              .
             </p>
           </section>
 

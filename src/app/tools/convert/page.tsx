@@ -17,7 +17,6 @@ import {
   pdfToText,
 } from "@/lib/pdf/universal-converter";
 import { imagesToPDF, downloadBlob } from "@/lib/pdf/pdf-utils";
-import { PDFDocument } from "pdf-lib";
 import { ToolType } from "@/lib/pseo/pseo-data";
 import {
   FileText,
@@ -173,17 +172,18 @@ export default function UniversalConverterPage({
           const textBlob = new Blob([text], { type: "text/plain" });
           downloadBlob(textBlob, `${baseName}.txt`, "text/plain");
         } else if (selectedFormat === "pdfa") {
-          setProgressStatus("Standardizing ISO PDF/A streams & flattening...");
+          setProgressStatus("Flattening forms & optimizing streams...");
           const bytes = await file.arrayBuffer();
+          const { PDFDocument } = await import("pdf-lib");
           const srcDoc = await PDFDocument.load(bytes, { ignoreEncryption: true });
           try {
             srcDoc.getForm().flatten();
           } catch {}
-          srcDoc.setProducer("iKnowAPDF Archival Engine (ISO 32000-1)");
+          srcDoc.setProducer("iKnowAPDF");
           srcDoc.setModificationDate(new Date());
           const pdfBytes = await srcDoc.save({ useObjectStreams: true });
           const blob = new Blob([pdfBytes as unknown as BlobPart], { type: "application/pdf" });
-          downloadBlob(blob, `${baseName}-pdfa.pdf`, "application/pdf");
+          downloadBlob(blob, `${baseName}-flattened.pdf`, "application/pdf");
         }
 
         setSuccessMessage(
@@ -233,9 +233,9 @@ export default function UniversalConverterPage({
     },
     {
       id: "pdfa",
-      label: "ISO PDF/A Archival",
+      label: "Flattened Archive PDF",
       ext: ".pdf",
-      desc: "Standardized self-contained streams & flattened forms for long-term storage",
+      desc: "Flattens form fields and optimizes streams for storage (not certified PDF/A)",
       icon: Layers,
     },
   ];
@@ -253,7 +253,7 @@ export default function UniversalConverterPage({
         {
           question: "Does PDF to Word and Excel conversion happen on my device?",
           answer:
-            "Yes. Our converter parses PDF text coordinates, rows, and paragraphs directly inside your browser memory using WebAssembly and JavaScript without uploading sensitive business spreadsheets or resumes to any server.",
+            "Yes. Our converter parses PDF text coordinates, rows, and paragraphs directly inside your browser memory using JavaScript, without uploading sensitive business spreadsheets or resumes to any server.",
         },
         {
           question: "Does the converter support non-English languages and Unicode?",
@@ -265,7 +265,7 @@ export default function UniversalConverterPage({
       <div className="space-y-6">
         {!file && (
           <FileDropzone
-            accept=".pdf,.docx,.doc,.xlsx,.xls,.csv,.pptx,.ppt,.txt,.md,.png,.jpg,.jpeg,.webp"
+            accept=".pdf,.docx,.xlsx,.xls,.csv,.pptx,.txt,.md,.png,.jpg,.jpeg,.webp"
             multiple={false}
             onFilesSelected={handleFileSelected}
           />

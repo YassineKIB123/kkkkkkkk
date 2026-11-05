@@ -299,7 +299,15 @@ export function downloadBlob(
 /**
  * Compiles a list of HTMLCanvasElements into a standard A4 multi-page PDF document.
  */
-export async function canvasesToPDF(canvases: HTMLCanvasElement[]): Promise<Uint8Array> {
+/**
+ * Builds an A4 PDF with one canvas per page. `formats[i]` picks the embedding per page:
+ * "png" is lossless (use it for black-and-white scans: JPEG rings around crisp text),
+ * "jpeg" (default) is smaller for colour and photos.
+ */
+export async function canvasesToPDF(
+  canvases: HTMLCanvasElement[],
+  formats?: ("jpeg" | "png")[]
+): Promise<Uint8Array> {
   const { PDFDocument } = await loadPdfLib();
   const pdfDoc = await PDFDocument.create();
 
@@ -310,14 +318,15 @@ export async function canvasesToPDF(canvases: HTMLCanvasElement[]): Promise<Uint
   const availableWidth = A4_WIDTH - MARGIN * 2;
   const availableHeight = A4_HEIGHT - MARGIN * 2;
 
-  for (const canvas of canvases) {
+  for (const [index, canvas] of canvases.entries()) {
+    const usePng = formats?.[index] === "png";
     const blob = await new Promise<Blob | null>((resolve) =>
-      canvas.toBlob((b) => resolve(b), "image/jpeg", 0.92)
+      canvas.toBlob((b) => resolve(b), usePng ? "image/png" : "image/jpeg", 0.92)
     );
     if (!blob) continue;
     const imageBytes = await blob.arrayBuffer();
 
-    const embeddedImage = await pdfDoc.embedJpg(imageBytes);
+    const embeddedImage = usePng ? await pdfDoc.embedPng(imageBytes) : await pdfDoc.embedJpg(imageBytes);
     const page = pdfDoc.addPage([A4_WIDTH, A4_HEIGHT]);
 
     const scale = Math.min(

@@ -8,6 +8,7 @@ import { FileDropzone } from "@/components/tools/FileDropzone";
 import { useLanguage } from "@/context/LanguageContext";
 import { FileListPreview } from "@/components/tools/FileListPreview";
 import { imagesToPDF, downloadBlob } from "@/lib/pdf/pdf-utils";
+import { isHeicFile, normalizeHeicFiles } from "@/lib/image/heic";
 import {
   Images,
   Loader2,
@@ -61,9 +62,27 @@ export default function ImagesToPdfPage({ targetKb }: ImagesToPdfPageProps = {})
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  const handleFilesSelected = async (newFiles: File[]) => {
+  const [heicConverting, setHeicConverting] = useState(0);
+
+  const handleFilesSelected = async (incoming: File[]) => {
     setErrorMessage(null);
     setSuccessMessage(null);
+
+    // iPhone HEIC photos are turned into JPGs first so every browser can place them in the PDF.
+    let newFiles = incoming;
+    const heicCount = incoming.filter(isHeicFile).length;
+    if (heicCount > 0) {
+      setHeicConverting(heicCount);
+      try {
+        newFiles = await normalizeHeicFiles(incoming);
+      } catch (err: unknown) {
+        setErrorMessage(err instanceof Error ? err.message : "A HEIC photo couldn't be converted.");
+        newFiles = incoming.filter((f) => !isHeicFile(f));
+      } finally {
+        setHeicConverting(0);
+      }
+      if (newFiles.length === 0) return;
+    }
 
     const loadMetas = newFiles.map(
       (file) =>
@@ -290,10 +309,17 @@ export default function ImagesToPdfPage({ targetKb }: ImagesToPdfPageProps = {})
         )}
 
         <FileDropzone
-          accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
+          accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.heic,.heif"
           multiple={true}
           onFilesSelected={handleFilesSelected}
         />
+
+        {heicConverting > 0 && (
+          <div role="status" className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
+            <Loader2 className="h-4 w-4 animate-spin text-rose-600" aria-hidden="true" />
+            <span>Converting {heicConverting} iPhone HEIC photo(s) to JPG…</span>
+          </div>
+        )}
 
         {files.length > 0 && (
           <div className="space-y-6 rounded-2xl border border-slate-200 bg-slate-50/60 p-5 sm:p-6 dark:border-slate-800 dark:bg-slate-900/60">

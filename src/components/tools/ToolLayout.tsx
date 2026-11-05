@@ -32,6 +32,7 @@ import {
   Check,
   Heart,
   BookOpen,
+  LockOpen,
 } from "lucide-react";
 import React, { useState, useEffect, useRef, createContext, useContext } from "react";
 import { AdBanner } from "@/components/ads/AdBanner";
@@ -74,7 +75,9 @@ export type SupportedToolId =
   | "pdfToImages"
   | "watermark"
   | "sanitize"
-  | "compressImage";
+  | "compressImage"
+  | "unlockPdf"
+  | "heicToJpg";
 
 interface ToolLayoutProps {
   toolId?: SupportedToolId;
@@ -130,6 +133,10 @@ function getToolMeta(
       return { title: t.tools.sanitizeTitle, description: t.tools.sanitizeDesc };
     case "compressImage":
       return { title: t.site.compressImage, description: fallbackDesc };
+    case "unlockPdf":
+      return { title: t.site.unlockPdf, description: fallbackDesc };
+    case "heicToJpg":
+      return { title: t.site.heicToJpg, description: fallbackDesc };
     default:
       return { title: fallbackTitle, description: fallbackDesc };
   }
@@ -138,6 +145,8 @@ function getToolMeta(
 function inferToolIdFromPathname(pathname: string): SupportedToolId | undefined {
   const clean = pathname.replace(/^\/(?:fr|es|ru|ar)\//, "/").toLowerCase();
   if (clean.includes("compress-image")) return "compressImage";
+  if (clean.includes("unlock-pdf")) return "unlockPdf";
+  if (clean.includes("heic")) return "heicToJpg";
   if (clean.includes("compress")) return "compress";
   if (clean.includes("merge")) return "merge";
   if (clean.includes("split")) return "split";
@@ -480,6 +489,14 @@ export function ToolLayout({
                             <span className="font-semibold text-xs">{t.site.compressImage}</span>
                           </Link>
                           <Link
+                            href="/tools/heic-to-jpg"
+                            onClick={() => setIsMegaMenuOpen(false)}
+                            className="flex items-center gap-2.5 rounded-lg p-2 text-slate-700 hover:bg-slate-50 hover:text-rose-600 dark:text-slate-300 dark:hover:bg-slate-800 transition-colors"
+                          >
+                            <FileImage className="h-4 w-4 text-sky-500" />
+                            <span className="font-semibold text-xs">{t.site.heicToJpg}</span>
+                          </Link>
+                          <Link
                             href="/pdf-tools"
                             onClick={() => setIsMegaMenuOpen(false)}
                             className="flex items-center gap-2.5 rounded-lg p-2 text-slate-700 hover:bg-slate-50 hover:text-rose-600 dark:text-slate-300 dark:hover:bg-slate-800 transition-colors"
@@ -534,6 +551,14 @@ export function ToolLayout({
                           >
                             <ShieldCheck className="h-4 w-4 text-teal-500" />
                             <span className="font-semibold text-xs">{t.tools.sanitizeTitle}</span>
+                          </Link>
+                          <Link
+                            href="/tools/unlock-pdf"
+                            onClick={() => setIsMegaMenuOpen(false)}
+                            className="flex items-center gap-2.5 rounded-lg p-2 text-slate-700 hover:bg-slate-50 hover:text-rose-600 dark:text-slate-300 dark:hover:bg-slate-800 transition-colors"
+                          >
+                            <LockOpen className="h-4 w-4 text-amber-500" />
+                            <span className="font-semibold text-xs">{t.site.unlockPdf}</span>
                           </Link>
                         </div>
                       </div>
@@ -907,6 +932,7 @@ export function ToolLayout({
                 <li><Link href="/tools/images-to-pdf" className="hover:text-rose-600">{t.tools.imagesToPdfTitle}</Link></li>
                 <li><Link href="/tools/pdf-to-images" className="hover:text-rose-600">{t.tools.pdfToImagesTitle}</Link></li>
                 <li><Link href="/tools/compress-image" className="hover:text-rose-600">{t.site.compressImage}</Link></li>
+                <li><Link href="/tools/heic-to-jpg" className="hover:text-rose-600">{t.site.heicToJpg}</Link></li>
                 <li><Link href="/pdf-tools" className="hover:text-rose-600 font-semibold">{t.site.allTools}</Link></li>
               </ul>
             </div>
@@ -920,6 +946,7 @@ export function ToolLayout({
                 <li><Link href="/tools/scan" className="hover:text-rose-600">{t.tools.scanTitle}</Link></li>
                 <li><Link href="/tools/sign-pdf" className="hover:text-rose-600">{t.tools.signTitle}</Link></li>
                 <li><Link href="/tools/sanitize-pdf" className="hover:text-rose-600">{t.tools.sanitizeTitle}</Link></li>
+                <li><Link href="/tools/unlock-pdf" className="hover:text-rose-600">{t.site.unlockPdf}</Link></li>
               </ul>
             </div>
           </div>

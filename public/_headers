@@ -14,6 +14,10 @@
 /pdfjs/*
   Cache-Control: public, max-age=604800
 
+# Versioned folder (/qpdf/<version>/): safe to cache forever.
+/qpdf/*
+  Cache-Control: public, max-age=31536000, immutable
+
 /sw.js
   Cache-Control: no-cache
 

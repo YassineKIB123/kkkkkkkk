@@ -25,6 +25,9 @@ iKnowAPDF is an independent web app built and maintained by Yassine K. It offers
 - Watermark PDF: https://iknowapdf.lol/tools/watermark-pdf
 - Sanitize PDF: https://iknowapdf.lol/tools/sanitize-pdf (clears document metadata and XMP, rebuilds the file without old revisions, optional form flattening)
 - Compress Image: https://iknowapdf.lol/tools/compress-image
+- Unlock PDF: https://iknowapdf.lol/tools/unlock-pdf (removes a PDF password the user knows, or print/copy/edit restrictions, with qpdf compiled to WebAssembly; does not crack unknown passwords)
+- HEIC to JPG: https://iknowapdf.lol/tools/heic-to-jpg (iPhone HEIC/HEIF to JPG or PNG, batch ZIP download; works in browsers without native HEIC support)
+- HEIC to PDF: https://iknowapdf.lol/tools/heic-to-pdf (several HEIC photos into one PDF, A4 or photo-size pages)
 
 ## Popular Tasks
 - Compress PDF under 100KB: https://iknowapdf.lol/compress-pdf-under-100kb

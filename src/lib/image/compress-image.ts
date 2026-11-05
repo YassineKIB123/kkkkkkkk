@@ -101,7 +101,7 @@ function looksLikeHeic(file: File | Blob): boolean {
 function unsupportedError(file: File | Blob): ImageCompressionError {
   if (looksLikeHeic(file)) {
     return new ImageCompressionError(
-      "This browser can't open HEIC/HEIF photos. Open the page in Safari, or convert the photo to JPG first (on iPhone: Settings > Camera > Formats > Most Compatible)."
+      "This HEIC/HEIF photo couldn't be decoded. It may be damaged; try exporting it again from the Photos app."
     );
   }
   return new ImageCompressionError(
@@ -136,6 +136,16 @@ function decodeWithImgElement(file: File | Blob): Promise<DecodedImage> {
 }
 
 async function decodeImage(file: File | Blob): Promise<DecodedImage> {
+  if (looksLikeHeic(file)) {
+    // Native decoder first (Safari), otherwise libheif/WebAssembly — works in every browser.
+    try {
+      const { decodeHeic } = await import("@/lib/image/heic");
+      const bmp = await decodeHeic(file);
+      return { source: bmp, width: bmp.width, height: bmp.height, release: () => bmp.close() };
+    } catch {
+      throw unsupportedError(file);
+    }
+  }
   if (typeof createImageBitmap === "function") {
     let bitmap: ImageBitmap | null = null;
     try {

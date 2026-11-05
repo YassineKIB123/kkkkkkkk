@@ -89,6 +89,12 @@ All tools: https://iknowapdf.lol/pdf-tools
 ### Compress Image — https://iknowapdf.lol/tools/compress-image
 - Reduces JPG/PNG/WebP image file size in the browser. Size-target pages: https://iknowapdf.lol/compress-image-to-50kb, https://iknowapdf.lol/compress-image-to-100kb, https://iknowapdf.lol/compress-image-to-200kb
 
+### Unlock PDF — https://iknowapdf.lol/tools/unlock-pdf
+- Removes the open password from a PDF when the user enters it, or removes owner restrictions (printing, copying, editing) from PDFs that open without a password. Decryption is lossless (qpdf --decrypt compiled to WebAssembly); text, links, bookmarks and forms are kept. It does not guess or crack unknown passwords. Common formats: e-Aadhaar = first four letters of the name in capitals + year of birth; e-PAN = date of birth as DDMMYYYY.
+
+### HEIC to JPG / HEIC to PDF — https://iknowapdf.lol/tools/heic-to-jpg, https://iknowapdf.lol/tools/heic-to-pdf
+- Converts iPhone HEIC/HEIF photos to JPG, PNG or a single PDF in any modern browser (native decoder in Safari, libheif/WebAssembly elsewhere). Batch conversion with ZIP download; EXIF metadata such as GPS location is not copied to the output. HEIC photos are also accepted by Images to PDF and Compress Image.
+
 ### Not offered
 - OCR (text recognition), adding or removing PDF passwords, certificate-based digital signatures, validated PDF/A conversion.
 

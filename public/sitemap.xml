@@ -581,6 +581,12 @@
     <loc>https://iknowapdf.lol/tools/edit-pdf</loc>
   </url>
   <url>
+    <loc>https://iknowapdf.lol/tools/heic-to-jpg</loc>
+  </url>
+  <url>
+    <loc>https://iknowapdf.lol/tools/heic-to-pdf</loc>
+  </url>
+  <url>
     <loc>https://iknowapdf.lol/tools/images-to-pdf</loc>
   </url>
   <url>
@@ -603,6 +609,9 @@
   </url>
   <url>
     <loc>https://iknowapdf.lol/tools/split-pdf</loc>
+  </url>
+  <url>
+    <loc>https://iknowapdf.lol/tools/unlock-pdf</loc>
   </url>
   <url>
     <loc>https://iknowapdf.lol/tools/watermark-pdf</loc>

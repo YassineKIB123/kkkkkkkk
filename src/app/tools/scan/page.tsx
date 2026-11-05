@@ -42,6 +42,8 @@ interface ScannedPageItem {
   warpedCanvas: HTMLCanvasElement;
   filteredCanvas: HTMLCanvasElement;
   filter: FilterType;
+  /** B&W strength: -40 (lighter) … +40 (darker). */
+  bwOffset: number;
   thumbnailDataUrl: string;
 }
 
@@ -53,6 +55,36 @@ const DEFAULT_CORNERS: CornerPoint[] = [
 ];
 
 const CORNER_LABELS = ["Top-Left", "Top-Right", "Bottom-Right", "Bottom-Left"];
+
+const PREVIEW_MAX_DIM = 1600;
+const LOUPE_SIZE = 112;
+const LOUPE_ZOOM = 3;
+
+/**
+ * Downscaled preview for the on-screen result. B&W previews are PNG: JPEG adds ringing around
+ * crisp black text, which made the B&W filter look noisy even when the page itself was clean.
+ */
+function canvasToPreviewUrl(canvas: HTMLCanvasElement, filter: FilterType): string {
+  const scale = Math.min(1, PREVIEW_MAX_DIM / Math.max(canvas.width, canvas.height));
+  let source = canvas;
+  if (scale < 1) {
+    const small = document.createElement("canvas");
+    small.width = Math.max(1, Math.round(canvas.width * scale));
+    small.height = Math.max(1, Math.round(canvas.height * scale));
+    const ctx = small.getContext("2d");
+    if (ctx) {
+      ctx.imageSmoothingQuality = "high";
+      ctx.drawImage(canvas, 0, 0, small.width, small.height);
+      source = small;
+    }
+  }
+  return filter === "bw" ? source.toDataURL("image/png") : source.toDataURL("image/jpeg", 0.88);
+}
+
+/** Lets React paint a spinner before a heavy synchronous image operation starts. */
+function nextPaint(): Promise<void> {
+  return new Promise((resolve) => requestAnimationFrame(() => setTimeout(resolve, 0)));
+}
 
 export default function ScanToPdfPage() {
   const { t } = useLanguage();
@@ -69,6 +101,9 @@ export default function ScanToPdfPage() {
   const [activePageIndex, setActivePageIndex] = useState<number>(0);
 
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isFiltering, setIsFiltering] = useState(false);
+  /** Slider value being dragged, tied to the page it belongs to. */
+  const [bwDraft, setBwDraft] = useState<{ pageId: string; value: number } | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [feedbackError, setFeedbackError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -282,11 +317,16 @@ export default function ScanToPdfPage() {
         y: Math.round(c.y * img.naturalHeight),
       }));
 
+      await nextPaint();
       const warpedCanvas = await warpPerspective(img, absoluteCorners);
 
-      const defaultFilter: FilterType = "magic";
-      const filteredCanvas = processCanvasWithFilter(warpedCanvas, defaultFilter);
-      const thumb = filteredCanvas.toDataURL("image/jpeg", 0.78);
+      // Re-cropping an existing page keeps the filter the user already picked.
+      const existing =
+        scannedPages[activePageIndex]?.sourceImageSrc === currentImageSrc ? scannedPages[activePageIndex] : null;
+      const filter: FilterType = existing?.filter ?? "magic";
+      const bwOffset = existing?.bwOffset ?? 0;
+      const filteredCanvas = processCanvasWithFilter(warpedCanvas, filter, { bwOffset });
+      const thumb = canvasToPreviewUrl(filteredCanvas, filter);
 
       const newPageItem: ScannedPageItem = {
         id: `page_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
@@ -294,20 +334,17 @@ export default function ScanToPdfPage() {
         corners: [...corners],
         warpedCanvas,
         filteredCanvas,
-        filter: defaultFilter,
+        filter,
+        bwOffset,
         thumbnailDataUrl: thumb,
       };
 
-      setScannedPages((prev) => {
-        if (currentStep === "crop" && prev[activePageIndex]?.sourceImageSrc === currentImageSrc) {
-          const next = [...prev];
-          next[activePageIndex] = newPageItem;
-          return next;
-        }
-        const updated = [...prev, newPageItem];
-        setActivePageIndex(updated.length - 1);
-        return updated;
-      });
+      if (existing) {
+        setScannedPages((prev) => prev.map((p) => (p.id === existing.id ? newPageItem : p)));
+      } else {
+        setScannedPages((prev) => [...prev, newPageItem]);
+        setActivePageIndex(scannedPages.length);
+      }
 
       setCurrentStep("result");
     } catch (err: unknown) {
@@ -318,26 +355,44 @@ export default function ScanToPdfPage() {
     }
   };
 
+  const applyFilter = useCallback(
+    async (filter: FilterType, bwOffset: number) => {
+      const page = scannedPages[activePageIndex];
+      if (!page) return;
+      setIsFiltering(true);
+      setFeedbackError(null);
+      try {
+        await nextPaint();
+        const filteredCanvas = processCanvasWithFilter(page.warpedCanvas, filter, { bwOffset });
+        const thumbnailDataUrl = canvasToPreviewUrl(filteredCanvas, filter);
+        setScannedPages((prev) =>
+          prev.map((p) => (p.id === page.id ? { ...p, filter, bwOffset, filteredCanvas, thumbnailDataUrl } : p))
+        );
+      } catch (err: unknown) {
+        setFeedbackError(err instanceof Error ? err.message : "Failed to apply the filter.");
+      } finally {
+        setIsFiltering(false);
+      }
+    },
+    [scannedPages, activePageIndex]
+  );
+
   const handleFilterChange = (filter: FilterType) => {
-    if (scannedPages.length === 0) return;
-
-    setScannedPages((prev) => {
-      const next = [...prev];
-      const page = next[activePageIndex];
-      if (!page) return prev;
-
-      const newFiltered = processCanvasWithFilter(page.warpedCanvas, filter);
-      const thumb = newFiltered.toDataURL("image/jpeg", 0.78);
-
-      next[activePageIndex] = {
-        ...page,
-        filter,
-        filteredCanvas: newFiltered,
-        thumbnailDataUrl: thumb,
-      };
-      return next;
-    });
+    const page = scannedPages[activePageIndex];
+    if (!page || isFiltering || page.filter === filter) return;
+    void applyFilter(filter, page.bwOffset);
   };
+
+  const viewedPage = scannedPages[activePageIndex];
+  const bwSlider = viewedPage && bwDraft?.pageId === viewedPage.id ? bwDraft.value : viewedPage?.bwOffset ?? 0;
+
+  // Re-run B&W shortly after the slider stops moving.
+  useEffect(() => {
+    if (!viewedPage || !bwDraft || bwDraft.pageId !== viewedPage.id) return;
+    if (viewedPage.filter !== "bw" || viewedPage.bwOffset === bwDraft.value) return;
+    const timer = setTimeout(() => void applyFilter("bw", bwDraft.value), 180);
+    return () => clearTimeout(timer);
+  }, [bwDraft, viewedPage, applyFilter]);
 
   const handleBackToAdjustCorners = () => {
     const page = scannedPages[activePageIndex];
@@ -375,7 +430,10 @@ export default function ScanToPdfPage() {
 
     try {
       const canvasesToEmbed = scannedPages.map((p) => p.filteredCanvas);
-      const pdfBytes = await canvasesToPDF(canvasesToEmbed);
+      const pdfBytes = await canvasesToPDF(
+        canvasesToEmbed,
+        scannedPages.map((p) => (p.filter === "bw" ? "png" : "jpeg"))
+      );
       const filename = `scan_${Date.now()}.pdf`;
       downloadBlob(pdfBytes, filename);
       setSuccessMessage(`Success! Saved and downloaded "${filename}" with ${scannedPages.length} scanned page(s).`);
@@ -579,6 +637,37 @@ export default function ScanToPdfPage() {
                       </div>
                     );
                   })}
+
+                {/* Magnifier: shows what is under the finger/cursor while a corner is dragged. */}
+                {containerDimensions.width > 0 && activeCornerIdx !== null && (() => {
+                  const pt = getPixelCoord(corners[activeCornerIdx]);
+                  const half = LOUPE_SIZE / 2;
+                  const above = pt.y - LOUPE_SIZE - 28 >= -12;
+                  const left = Math.min(
+                    Math.max(pt.x - half, -8),
+                    containerDimensions.width - LOUPE_SIZE + 8
+                  );
+                  const top = above ? pt.y - LOUPE_SIZE - 28 : pt.y + 28;
+                  return (
+                    <div
+                      aria-hidden="true"
+                      className="pointer-events-none absolute z-30 overflow-hidden rounded-full border-2 border-white bg-slate-900 shadow-xl ring-1 ring-black/30"
+                      style={{
+                        width: LOUPE_SIZE,
+                        height: LOUPE_SIZE,
+                        left,
+                        top,
+                        backgroundImage: `url(${currentImageSrc})`,
+                        backgroundRepeat: "no-repeat",
+                        backgroundSize: `${containerDimensions.width * LOUPE_ZOOM}px ${containerDimensions.height * LOUPE_ZOOM}px`,
+                        backgroundPosition: `${half - pt.x * LOUPE_ZOOM}px ${half - pt.y * LOUPE_ZOOM}px`,
+                      }}
+                    >
+                      <div className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 bg-rose-500/90" />
+                      <div className="absolute top-1/2 left-0 h-px w-full -translate-y-1/2 bg-rose-500/90" />
+                    </div>
+                  );
+                })()}
               </div>
             </div>
 
@@ -642,7 +731,9 @@ export default function ScanToPdfPage() {
                       key={f.id}
                       type="button"
                       onClick={() => handleFilterChange(f.id)}
-                      className={`inline-flex items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
+                      disabled={isFiltering}
+                      aria-pressed={isSelected}
+                      className={`inline-flex items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all disabled:cursor-wait ${
                         isSelected
                           ? "border border-rose-600 bg-rose-600 text-white shadow-xs"
                           : "border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950 text-slate-600 dark:text-slate-300 hover:border-slate-300 hover:bg-slate-50"
@@ -660,7 +751,37 @@ export default function ScanToPdfPage() {
               </div>
             </div>
 
+            {activePage.filter === "bw" && (
+              <div className="flex flex-col gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 dark:border-slate-800 dark:bg-slate-900 sm:flex-row sm:items-center sm:gap-4">
+                <label htmlFor="bw-strength" className="text-xs font-semibold text-slate-700 dark:text-slate-200 shrink-0">
+                  B&amp;W strength
+                </label>
+                <div className="flex flex-1 items-center gap-3">
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400">Lighter</span>
+                  <input
+                    id="bw-strength"
+                    type="range"
+                    min={-40}
+                    max={40}
+                    step={5}
+                    value={bwSlider}
+                    onChange={(e) => setBwDraft({ pageId: activePage.id, value: Number(e.target.value) })}
+                    className="flex-1 accent-rose-600"
+                  />
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400">Darker</span>
+                </div>
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 sm:max-w-[220px]">
+                  Darker keeps faint pencil and light print; lighter removes more background marks.
+                </span>
+              </div>
+            )}
+
             <div className="relative flex justify-center rounded-2xl border border-slate-200 bg-slate-100 dark:border-slate-800 dark:bg-slate-950 p-4 overflow-hidden">
+              {isFiltering && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/50 dark:bg-slate-950/50">
+                  <Loader2 className="h-6 w-6 animate-spin text-rose-600" />
+                </div>
+              )}
               <div className="relative inline-block max-h-[62vh] overflow-hidden rounded-lg shadow-xl border border-slate-200">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
@@ -761,7 +882,7 @@ export default function ScanToPdfPage() {
               <button
                 type="button"
                 onClick={handleDownloadPDF}
-                disabled={isExporting}
+                disabled={isExporting || isFiltering}
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-rose-600 hover:bg-rose-500 px-6 py-2.5 text-sm font-semibold text-white shadow-md shadow-rose-600/20 disabled:opacity-40 transition-all"
               >
                 {isExporting ? (

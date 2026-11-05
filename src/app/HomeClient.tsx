@@ -10,6 +10,7 @@ import {
   Split,
   RotateCw,
   Image as ImageIcon,
+  LockOpen,
   FileImage,
   Search,
   Zap,
@@ -97,6 +98,8 @@ const POPULAR_PSEO_LINKS = [
   { href: "/compress-pdf-under-50kb", label: "Compress PDF to 50KB" },
   { href: "/compress-pdf-under-20kb", label: "Compress PDF to 20KB" },
   { href: "/tools/compress-image", label: "Compress image to a target size" },
+  { href: "/tools/unlock-pdf", label: "Remove password from PDF" },
+  { href: "/tools/heic-to-jpg", label: "HEIC to JPG" },
   { href: "/compress-image-to-20kb", label: "Compress image to 20KB" },
   { href: "/compress-image-to-50kb", label: "Compress image to 50KB" },
   { href: "/compress-image-to-100kb", label: "Compress image to 100KB" },
@@ -327,6 +330,29 @@ export default function HomeClient() {
         icon: ShieldAlert,
         iconBg: "bg-teal-50 border-teal-100 dark:bg-teal-950/40 dark:border-teal-900/50",
         iconColor: "text-teal-600 dark:text-teal-400",
+      },
+      {
+        id: "unlock-pdf",
+        title: t.site.unlockPdf,
+        description: t.site.unlockPdfDesc,
+        href: "/tools/unlock-pdf",
+        formats: [".PDF"],
+        category: "organize" as const,
+        popular: false,
+        icon: LockOpen,
+        iconBg: "bg-amber-50 border-amber-100 dark:bg-amber-950/40 dark:border-amber-900/50",
+        iconColor: "text-amber-600 dark:text-amber-400",
+      },
+      {
+        id: "heic-to-jpg",
+        title: t.site.heicToJpg,
+        description: t.site.heicToJpgDesc,
+        href: "/tools/heic-to-jpg",
+        formats: [".HEIC", ".JPG", ".PDF"],
+        category: "convert" as const,
+        icon: ImageIcon,
+        iconBg: "bg-sky-50 border-sky-100 dark:bg-sky-950/40 dark:border-sky-900/50",
+        iconColor: "text-sky-600 dark:text-sky-400",
       },
       {
         id: "pdf-to-images",
@@ -1105,6 +1131,8 @@ export default function HomeClient() {
                 <li><Link href="/pdf-to-text" className="hover:text-rose-600">PDF to Text</Link></li>
                 <li><Link href="/pdf-to-jpg" className="hover:text-rose-600">PDF to JPG</Link></li>
                 <li><Link href="/tools/compress-image" className="hover:text-rose-600">{t.site.compressImage}</Link></li>
+                <li><Link href="/tools/unlock-pdf" className="hover:text-rose-600">{t.site.unlockPdf}</Link></li>
+                <li><Link href="/tools/heic-to-jpg" className="hover:text-rose-600">{t.site.heicToJpg}</Link></li>
                 <li><Link href="/pdf-tools" className="hover:text-rose-600 font-semibold">{t.site.allTools}</Link></li>
               </ul>
             </div>

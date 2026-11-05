@@ -9,6 +9,10 @@ export interface Translations {
     popularUses: string;
     allTools: string;
     compressImage: string;
+    unlockPdf: string;
+    heicToJpg: string;
+    unlockPdfDesc: string;
+    heicToJpgDesc: string;
   };
   nav: {
     merge: string;
@@ -264,6 +268,10 @@ export const DICTIONARY: Record<Language, Translations> = {
       popularUses: 'Popular uses',
       allTools: 'All PDF tools',
       compressImage: 'Compress Image',
+      unlockPdf: 'Unlock PDF',
+      heicToJpg: 'HEIC to JPG',
+      unlockPdfDesc: 'Remove a PDF password you know, or lift print and copy restrictions.',
+      heicToJpgDesc: 'Convert iPhone HEIC photos to JPG, PNG or PDF in your browser.',
     },
   "nav": {
     "merge": "Merge PDF",
@@ -538,6 +546,10 @@ export const DICTIONARY: Record<Language, Translations> = {
       popularUses: 'Utilisations courantes',
       allTools: 'Tous les outils PDF',
       compressImage: 'Compresser une image',
+      unlockPdf: 'Déverrouiller un PDF',
+      heicToJpg: 'HEIC en JPG',
+      unlockPdfDesc: 'Supprimez le mot de passe d’un PDF que vous connaissez, ou levez les restrictions d’impression et de copie.',
+      heicToJpgDesc: 'Convertissez les photos HEIC d’iPhone en JPG, PNG ou PDF dans votre navigateur.',
     },
   "nav": {
     "merge": "Fusionner PDF",
@@ -812,6 +824,10 @@ export const DICTIONARY: Record<Language, Translations> = {
       popularUses: 'Usos populares',
       allTools: 'Todas las herramientas PDF',
       compressImage: 'Comprimir imagen',
+      unlockPdf: 'Desbloquear PDF',
+      heicToJpg: 'HEIC a JPG',
+      unlockPdfDesc: 'Quita la contraseña de un PDF que conoces o elimina las restricciones de impresión y copia.',
+      heicToJpgDesc: 'Convierte fotos HEIC del iPhone a JPG, PNG o PDF en tu navegador.',
     },
   "nav": {
     "merge": "Unir PDF",
@@ -1086,6 +1102,10 @@ export const DICTIONARY: Record<Language, Translations> = {
       popularUses: 'Популярные сценарии',
       allTools: 'Все инструменты PDF',
       compressImage: 'Сжать изображение',
+      unlockPdf: 'Снять пароль с PDF',
+      heicToJpg: 'HEIC в JPG',
+      unlockPdfDesc: 'Снимите известный вам пароль с PDF или ограничения на печать и копирование.',
+      heicToJpgDesc: 'Конвертируйте фото HEIC с iPhone в JPG, PNG или PDF прямо в браузере.',
     },
   "nav": {
     "merge": "Объединить PDF",
@@ -1360,6 +1380,10 @@ export const DICTIONARY: Record<Language, Translations> = {
       popularUses: 'استخدامات شائعة',
       allTools: 'جميع أدوات PDF',
       compressImage: 'ضغط الصور',
+      unlockPdf: 'فتح قفل PDF',
+      heicToJpg: 'تحويل HEIC إلى JPG',
+      unlockPdfDesc: 'أزل كلمة مرور ملف PDF تعرفها، أو ارفع قيود الطباعة والنسخ.',
+      heicToJpgDesc: 'حوّل صور HEIC من iPhone إلى JPG أو PNG أو PDF داخل متصفحك.',
     },
   "nav": {
     "merge": "دمج PDF",

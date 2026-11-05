@@ -329,7 +329,7 @@ export default function CompressImagePage({ targetKb }: CompressImagePageProps =
         {
           question: "Which image formats are supported?",
           answer:
-            "You can add JPG, PNG and WebP (plus AVIF, GIF and BMP where your browser supports them). HEIC iPhone photos only open in Safari. Output is JPG (best for forms) or WebP. Transparent PNG areas become white in JPG.",
+            "You can add JPG, PNG, WebP and iPhone HEIC photos (plus AVIF, GIF and BMP where your browser supports them). HEIC works in every browser: if yours can't open it, a built-in decoder does. Output is JPG (best for forms) or WebP. Transparent PNG areas become white in JPG.",
         },
       ]}
     >
@@ -348,7 +348,7 @@ export default function CompressImagePage({ targetKb }: CompressImagePageProps =
           accept={ACCEPT}
           multiple={true}
           onFilesSelected={handleFilesSelected}
-          title="Drop JPG, PNG or WebP photos here"
+          title="Drop JPG, PNG, WebP or HEIC photos here"
           description="Add one or many images. They are compressed on this device and never uploaded."
         />
 

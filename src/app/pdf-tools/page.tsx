@@ -53,6 +53,9 @@ export default function PdfToolsHubPage() {
         { href: "/tools/images-to-pdf", label: "Images to PDF" },
         { href: "/tools/pdf-to-images", label: "PDF to images" },
         { href: "/tools/compress-image", label: "Compress image" },
+        { href: "/tools/unlock-pdf", label: "Unlock PDF (remove password)" },
+        { href: "/tools/heic-to-jpg", label: "HEIC to JPG" },
+        { href: "/tools/heic-to-pdf", label: "HEIC to PDF" },
       ],
     },
     {

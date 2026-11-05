@@ -1,3 +1,5 @@
+import { detectDocumentQuad, enhanceDocument } from "./cv-core";
+
 export interface Point {
   x: number;
   y: number;
@@ -5,462 +7,40 @@ export interface Point {
 
 export type FilterType = "original" | "magic" | "bw" | "grayscale";
 
+/** Whole photo: used when no page outline is convincing (e.g. an already-cropped scan). */
+export const FULL_FRAME: Point[] = [
+  { x: 0, y: 0 },
+  { x: 1, y: 0 },
+  { x: 1, y: 1 },
+  { x: 0, y: 1 },
+];
+
+/** Long side of the working copy used for corner detection. */
+const DETECT_MAX_DIM = 1200;
 
 /**
- * Perceptual color distance combining Euclidean RGB distance and opponent-color
- * chrominance (R-G and (R+G)/2 - B) so colored papers (pink, yellow, blue)
- * contrast strongly against white, grey, wood, or dark backgrounds.
- */
-function perceptualColorDist(
-  r1: number,
-  g1: number,
-  b1: number,
-  r2: number,
-  g2: number,
-  b2: number
-): number {
-  const dR = r1 - r2;
-  const dG = g1 - g2;
-  const dB = b1 - b2;
-  const rgbDist = Math.sqrt(dR * dR + dG * dG + dB * dB);
-
-  const rg1 = r1 - g1;
-  const rg2 = r2 - g2;
-  const yb1 = 0.5 * (r1 + g1) - b1;
-  const yb2 = 0.5 * (r2 + g2) - b2;
-  const dRg = rg1 - rg2;
-  const dYb = yb1 - yb2;
-  const chromaDist = Math.sqrt(dRg * dRg + dYb * dYb);
-
-  return rgbDist + 1.2 * chromaDist;
-}
-
-/**
- * Applies a 3x3 box blur on RGBA image data into a packed RGB Uint8ClampedArray
- * to suppress halftone print dots, paper grain, and sensor noise.
- */
-function computeBoxBlur3x3(
-  data: Uint8ClampedArray,
-  width: number,
-  height: number
-): Uint8ClampedArray {
-  const blurred = new Uint8ClampedArray(width * height * 3);
-  for (let y = 0; y < height; y++) {
-    const y0 = Math.max(0, y - 1);
-    const y2 = Math.min(height - 1, y + 1);
-    for (let x = 0; x < width; x++) {
-      const x0 = Math.max(0, x - 1);
-      const x2 = Math.min(width - 1, x + 1);
-      let r = 0,
-        g = 0,
-        b = 0,
-        count = 0;
-      for (let yy = y0; yy <= y2; yy++) {
-        for (let xx = x0; xx <= x2; xx++) {
-          const idx = (yy * width + xx) * 4;
-          r += data[idx];
-          g += data[idx + 1];
-          b += data[idx + 2];
-          count++;
-        }
-      }
-      const bIdx = (y * width + x) * 3;
-      blurred[bIdx] = r / count;
-      blurred[bIdx + 1] = g / count;
-      blurred[bIdx + 2] = b / count;
-    }
-  }
-  return blurred;
-}
-
-/**
- * Estimates the pure paper substrate color from the central region by taking
- * the 55th–88th luminance percentile, ignoring dark ink text and table lines.
- */
-function estimatePaperColor(
-  blurred: Uint8ClampedArray,
-  width: number,
-  height: number
-): { r: number; g: number; b: number } {
-  const samples: { r: number; g: number; b: number; lum: number }[] = [];
-  const xStart = Math.floor(width * 0.28);
-  const xEnd = Math.floor(width * 0.72);
-  const yStart = Math.floor(height * 0.28);
-  const yEnd = Math.floor(height * 0.72);
-
-  for (let y = yStart; y <= yEnd; y += 4) {
-    for (let x = xStart; x <= xEnd; x += 4) {
-      const idx = (y * width + x) * 3;
-      const r = blurred[idx];
-      const g = blurred[idx + 1];
-      const b = blurred[idx + 2];
-      const lum = 0.299 * r + 0.587 * g + 0.114 * b;
-      samples.push({ r, g, b, lum });
-    }
-  }
-
-  if (samples.length === 0) return { r: 240, g: 240, b: 240 };
-  samples.sort((a, b) => a.lum - b.lum);
-
-  const lo = Math.floor(samples.length * 0.55);
-  const hi = Math.max(lo + 1, Math.floor(samples.length * 0.88));
-  let sumR = 0,
-    sumG = 0,
-    sumB = 0,
-    count = 0;
-  for (let i = lo; i < hi && i < samples.length; i++) {
-    sumR += samples[i].r;
-    sumG += samples[i].g;
-    sumB += samples[i].b;
-    count++;
-  }
-  return {
-    r: sumR / (count || 1),
-    g: sumG / (count || 1),
-    b: sumB / (count || 1),
-  };
-}
-
-/**
- * Robust document edge & corner detector.
- * Works on all document colors (white, pink, yellow, dark, lined) across light or dark backgrounds.
- * Uses 3x3 noise suppression, percentile-based paper substrate estimation, chrominance-aware
- * outer-to-inner step transition scoring, and deterministic RANSAC line intersection.
+ * Finds the 4 page corners in a photo (normalised 0..1, ordered TL, TR, BR, BL).
+ * See cv-core.ts for the algorithm; this wrapper only rasterises the image.
  */
 export function detectDocumentCorners(image: HTMLImageElement): Point[] {
-  const FALLBACK: Point[] = [
-    { x: 0.1, y: 0.1 },
-    { x: 0.9, y: 0.1 },
-    { x: 0.9, y: 0.9 },
-    { x: 0.1, y: 0.9 },
-  ];
-
   try {
-    const sampleW = 300;
-    const aspect = (image.naturalHeight || 1) / (image.naturalWidth || 1);
-    const sampleH = Math.max(100, Math.round(sampleW * aspect));
-
+    const nw = image.naturalWidth;
+    const nh = image.naturalHeight;
+    if (!nw || !nh) return FULL_FRAME;
+    const scale = Math.min(1, DETECT_MAX_DIM / Math.max(nw, nh));
+    const w = Math.max(1, Math.round(nw * scale));
+    const h = Math.max(1, Math.round(nh * scale));
     const canvas = document.createElement("canvas");
-    canvas.width = sampleW;
-    canvas.height = sampleH;
+    canvas.width = w;
+    canvas.height = h;
     const ctx = canvas.getContext("2d", { willReadFrequently: true });
-    if (!ctx) return FALLBACK;
-
-    ctx.drawImage(image, 0, 0, sampleW, sampleH);
-    const { data } = ctx.getImageData(0, 0, sampleW, sampleH);
-
-    // 1. Box blur 3x3 on RGB to suppress text halftone and fine paper grain
-    const blurred = computeBoxBlur3x3(data, sampleW, sampleH);
-
-    // 2. Pure paper substrate color estimation (ignores dark text/lines inside the page)
-    const paper = estimatePaperColor(blurred, sampleW, sampleH);
-    const cx = Math.floor(sampleW / 2);
-    const cy = Math.floor(sampleH / 2);
-
-    // Helper to evaluate step transition from outside (desk) to inside (paper)
-    const evaluateStepScore = (
-      x: number,
-      y: number,
-      stepX: number,
-      stepY: number,
-      progressFromBorder: number
-    ): number => {
-      // Local directional gradient across +-2 pixels
-      const outNearIdx = ((y - stepY * 2) * sampleW + (x - stepX * 2)) * 3;
-      const inNearIdx = ((y + stepY * 2) * sampleW + (x + stepX * 2)) * 3;
-      const gDir = perceptualColorDist(
-        blurred[inNearIdx],
-        blurred[inNearIdx + 1],
-        blurred[inNearIdx + 2],
-        blurred[outNearIdx],
-        blurred[outNearIdx + 1],
-        blurred[outNearIdx + 2]
-      );
-
-      if (gDir < 12) return 0;
-
-      // Inside window (2..8px toward document center): find best match to paper substrate
-      let minInPaperDist = Infinity;
-      let bestInR = blurred[inNearIdx];
-      let bestInG = blurred[inNearIdx + 1];
-      let bestInB = blurred[inNearIdx + 2];
-
-      for (let k = 2; k <= 8; k += 2) {
-        const ix = Math.max(0, Math.min(sampleW - 1, x + stepX * k));
-        const iy = Math.max(0, Math.min(sampleH - 1, y + stepY * k));
-        const idx = (iy * sampleW + ix) * 3;
-        const r = blurred[idx];
-        const g = blurred[idx + 1];
-        const b = blurred[idx + 2];
-        const dPaper = perceptualColorDist(r, g, b, paper.r, paper.g, paper.b);
-        if (dPaper < minInPaperDist) {
-          minInPaperDist = dPaper;
-          bestInR = r;
-          bestInG = g;
-          bestInB = b;
-        }
-      }
-
-      // Outside window (2..8px toward image border): average background color
-      let outR = 0,
-        outG = 0,
-        outB = 0,
-        outCount = 0;
-      for (let k = 2; k <= 8; k += 2) {
-        const ox = Math.max(0, Math.min(sampleW - 1, x - stepX * k));
-        const oy = Math.max(0, Math.min(sampleH - 1, y - stepY * k));
-        const idx = (oy * sampleW + ox) * 3;
-        outR += blurred[idx];
-        outG += blurred[idx + 1];
-        outB += blurred[idx + 2];
-        outCount++;
-      }
-      outR /= outCount || 1;
-      outG /= outCount || 1;
-      outB /= outCount || 1;
-
-      const outPaperDist = perceptualColorDist(
-        outR,
-        outG,
-        outB,
-        paper.r,
-        paper.g,
-        paper.b
-      );
-      const stepDist = perceptualColorDist(
-        outR,
-        outG,
-        outB,
-        bestInR,
-        bestInG,
-        bestInB
-      );
-
-      // Reject internal text strokes where outside is already on the paper and inside is ink
-      if (minInPaperDist > 68 || minInPaperDist > outPaperDist + 8) {
-        return 0;
-      }
-
-      const transitionGain = Math.max(0, outPaperDist - minInPaperDist);
-      const paperMatchWeight = Math.exp(
-        -(minInPaperDist * minInPaperDist) / (2 * 45 * 45)
-      );
-      const outwardBias = 1 + 0.35 * (1 - progressFromBorder);
-
-      return (
-        (gDir * 1.3 + stepDist * 1.2 + transitionGain * 1.6) *
-        paperMatchWeight *
-        outwardBias
-      );
-    };
-
-    // 3. Scan across 4 cardinal sectors from outer border inward toward center
-    const topHits: Point[] = [];
-    const botHits: Point[] = [];
-    const leftHits: Point[] = [];
-    const rightHits: Point[] = [];
-
-    const startX = Math.floor(sampleW * 0.16);
-    const endX = Math.floor(sampleW * 0.84);
-    const startY = Math.floor(sampleH * 0.16);
-    const endY = Math.floor(sampleH * 0.84);
-
-    // Top edge: scan downward from top border (y = 4 .. cy)
-    for (let x = startX; x <= endX; x += 3) {
-      let bestY = -1;
-      let maxScore = 0;
-      for (let y = 4; y <= cy - 6; y++) {
-        const progress = (y - 4) / Math.max(1, cy - 4);
-        const score = evaluateStepScore(x, y, 0, 1, progress);
-        if (score > maxScore) {
-          maxScore = score;
-          bestY = y;
-        }
-      }
-      if (bestY > 0 && maxScore > 32) topHits.push({ x, y: bestY });
-    }
-
-    // Bottom edge: scan upward from bottom border (y = sampleH - 5 .. cy)
-    for (let x = startX; x <= endX; x += 3) {
-      let bestY = -1;
-      let maxScore = 0;
-      for (let y = sampleH - 5; y >= cy + 6; y--) {
-        const progress = (sampleH - 5 - y) / Math.max(1, sampleH - 5 - cy);
-        const score = evaluateStepScore(x, y, 0, -1, progress);
-        if (score > maxScore) {
-          maxScore = score;
-          bestY = y;
-        }
-      }
-      if (bestY > 0 && maxScore > 32) botHits.push({ x, y: bestY });
-    }
-
-    // Left edge: scan rightward from left border (x = 4 .. cx)
-    for (let y = startY; y <= endY; y += 3) {
-      let bestX = -1;
-      let maxScore = 0;
-      for (let x = 4; x <= cx - 6; x++) {
-        const progress = (x - 4) / Math.max(1, cx - 4);
-        const score = evaluateStepScore(x, y, 1, 0, progress);
-        if (score > maxScore) {
-          maxScore = score;
-          bestX = x;
-        }
-      }
-      if (bestX > 0 && maxScore > 32) leftHits.push({ x: bestX, y });
-    }
-
-    // Right edge: scan leftward from right border (x = sampleW - 5 .. cx)
-    for (let y = startY; y <= endY; y += 3) {
-      let bestX = -1;
-      let maxScore = 0;
-      for (let x = sampleW - 5; x >= cx + 6; x--) {
-        const progress = (sampleW - 5 - x) / Math.max(1, sampleW - 5 - cx);
-        const score = evaluateStepScore(x, y, -1, 0, progress);
-        if (score > maxScore) {
-          maxScore = score;
-          bestX = x;
-        }
-      }
-      if (bestX > 0 && maxScore > 32) rightHits.push({ x: bestX, y });
-    }
-
-    interface LineModel {
-      m: number;
-      c: number;
-      isHoriz: boolean;
-    }
-
-    // Deterministic RANSAC + least-squares line fitter
-    function fitLine(pts: Point[], isHoriz: boolean): LineModel | null {
-      if (pts.length < 4) return null;
-      let bestInliers: Point[] = [];
-      let bestLine: LineModel | null = null;
-
-      const n = pts.length;
-      for (let i = 0; i < n; i++) {
-        for (let j = i + 2; j < n; j += Math.max(1, Math.floor(n / 12))) {
-          const p1 = pts[i];
-          const p2 = pts[j];
-          if (isHoriz) {
-            if (Math.abs(p2.x - p1.x) < 12) continue;
-            const m = (p2.y - p1.y) / (p2.x - p1.x);
-            const c = p1.y - m * p1.x;
-            const denom = Math.hypot(m, 1);
-            const inliers = pts.filter(
-              (p) => Math.abs(m * p.x - p.y + c) / denom < 2.8
-            );
-            if (inliers.length > bestInliers.length) {
-              bestInliers = inliers;
-              bestLine = { m, c, isHoriz };
-            }
-          } else {
-            if (Math.abs(p2.y - p1.y) < 12) continue;
-            const m = (p2.x - p1.x) / (p2.y - p1.y);
-            const c = p1.x - m * p1.y;
-            const denom = Math.hypot(m, 1);
-            const inliers = pts.filter(
-              (p) => Math.abs(m * p.y - p.x + c) / denom < 2.8
-            );
-            if (inliers.length > bestInliers.length) {
-              bestInliers = inliers;
-              bestLine = { m, c, isHoriz };
-            }
-          }
-        }
-      }
-
-      if (bestInliers.length >= 4) {
-        if (isHoriz) {
-          let sumX = 0,
-            sumY = 0;
-          for (const p of bestInliers) {
-            sumX += p.x;
-            sumY += p.y;
-          }
-          const mx = sumX / bestInliers.length;
-          const my = sumY / bestInliers.length;
-          let num = 0,
-            den = 0;
-          for (const p of bestInliers) {
-            num += (p.x - mx) * (p.y - my);
-            den += (p.x - mx) * (p.x - mx);
-          }
-          if (Math.abs(den) > 1e-4) {
-            const m = num / den;
-            const c = my - m * mx;
-            return { m, c, isHoriz };
-          }
-        } else {
-          let sumX = 0,
-            sumY = 0;
-          for (const p of bestInliers) {
-            sumX += p.x;
-            sumY += p.y;
-          }
-          const mx = sumX / bestInliers.length;
-          const my = sumY / bestInliers.length;
-          let num = 0,
-            den = 0;
-          for (const p of bestInliers) {
-            num += (p.y - my) * (p.x - mx);
-            den += (p.y - my) * (p.y - my);
-          }
-          if (Math.abs(den) > 1e-4) {
-            const m = num / den;
-            const c = mx - m * my;
-            return { m, c, isHoriz };
-          }
-        }
-      }
-      return bestLine;
-    }
-
-    function intersect(lh: LineModel | null, lv: LineModel | null): Point | null {
-      if (!lh || !lv) return null;
-      const denom = 1 - lh.m * lv.m;
-      if (Math.abs(denom) < 1e-4) return null;
-      const y = (lh.m * lv.c + lh.c) / denom;
-      const x = lv.m * y + lv.c;
-      return { x: x / sampleW, y: y / sampleH };
-    }
-
-    const lTop = fitLine(topHits, true);
-    const lBot = fitLine(botHits, true);
-    const lLeft = fitLine(leftHits, false);
-    const lRight = fitLine(rightHits, false);
-
-    const tl = intersect(lTop, lLeft);
-    const tr = intersect(lTop, lRight);
-    const br = intersect(lBot, lRight);
-    const bl = intersect(lBot, lLeft);
-
-    if (!tl || !tr || !br || !bl) return FALLBACK;
-
-    const clamp = (v: number) => Math.max(0.01, Math.min(0.99, v));
-    const res: Point[] = [
-      { x: clamp(tl.x), y: clamp(tl.y) },
-      { x: clamp(tr.x), y: clamp(tr.y) },
-      { x: clamp(br.x), y: clamp(br.y) },
-      { x: clamp(bl.x), y: clamp(bl.y) },
-    ];
-
-    // Ensure valid ordering and reasonable area (Gauss shoelace formula)
-    const area =
-      0.5 *
-      Math.abs(
-        res[0].x * res[1].y -
-          res[1].x * res[0].y +
-          (res[1].x * res[2].y - res[2].x * res[1].y) +
-          (res[2].x * res[3].y - res[3].x * res[2].y) +
-          (res[3].x * res[0].y - res[0].x * res[3].y)
-      );
-
-    if (area < 0.12 || area > 0.98) return FALLBACK;
-
-    return res;
+    if (!ctx) return FULL_FRAME;
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(image, 0, 0, w, h);
+    const { data } = ctx.getImageData(0, 0, w, h);
+    return detectDocumentQuad({ data, width: w, height: h }) ?? FULL_FRAME;
   } catch {
-    return FALLBACK;
+    return FULL_FRAME;
   }
 }
 
@@ -697,202 +277,25 @@ export function cloneCanvas(source: HTMLCanvasElement): HTMLCanvasElement {
   return target;
 }
 
-export function applyMagicColor(
-  ctx: CanvasRenderingContext2D,
-  width: number,
-  height: number
-): void {
-  const imgData = ctx.getImageData(0, 0, width, height);
-  const data = imgData.data;
-
-  let minLum = 255;
-  let maxLum = 0;
-  for (let i = 0; i < data.length; i += 16) {
-    const lum = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
-    if (lum < minLum) minLum = lum;
-    if (lum > maxLum) maxLum = lum;
-  }
-
-  const low = Math.min(minLum + 12, 75);
-  const high = Math.max(maxLum - 20, 185);
-  const range = Math.max(high - low, 1);
-
-  // Precompute 256-entry lookup table instead of calling Math.pow millions of times
-  const lut = new Uint8ClampedArray(256);
-  for (let v = 0; v < 256; v++) {
-    const stretched = Math.min(255, Math.max(0, ((v - low) / range) * 255));
-    lut[v] = Math.round(Math.pow(stretched / 255, 0.88) * 255);
-  }
-
-  for (let i = 0; i < data.length; i += 4) {
-    data[i] = lut[data[i]];
-    data[i + 1] = lut[data[i + 1]];
-    data[i + 2] = lut[data[i + 2]];
-  }
-
-  ctx.putImageData(imgData, 0, 0);
+export interface FilterOptions {
+  /** B&W only: -40 (lighter) … +40 (darker). */
+  bwOffset?: number;
 }
 
-export interface BWThresholdOptions {
-  sensitivity?: number;
-  noiseFloor?: number;
-  softness?: number;
-}
-
-/**
- * Upgraded Integral-Image (Summed-Area Table) Adaptive Binarization Filter.
- * Eliminates legacy 24x24 checkerboard block artifacts with continuous
- * scale-invariant O(1) area sampling, 2nd-98th percentile dynamic contrast
- * normalization, and sub-pixel edge anti-aliasing for razor-sharp typography.
- */
-export function applyBWThreshold(
-  ctx: CanvasRenderingContext2D,
-  width: number,
-  height: number,
-  options: BWThresholdOptions = {}
-): void {
-  const imgData = ctx.getImageData(0, 0, width, height);
-  const data = imgData.data;
-  const sensitivity = options.sensitivity ?? 0.11;
-  const noiseFloor = options.noiseFloor ?? 5;
-  const softness = Math.max(1, options.softness ?? 6);
-
-  const totalPixels = width * height;
-  if (totalPixels === 0) return;
-
-  const luma = new Uint8Array(totalPixels);
-  const hist = new Uint32Array(256);
-
-  // Step 1: Integer perceptual luminance (77R + 150G + 29B >> 8) & histogram
-  for (let i = 0, p = 0; i < totalPixels; i++, p += 4) {
-    const y = (77 * data[p] + 150 * data[p + 1] + 29 * data[p + 2]) >> 8;
-    luma[i] = y;
-    hist[y]++;
-  }
-
-  // Step 2: 2nd and 98th percentile dynamic range stretching
-  const lowTarget = Math.floor(totalPixels * 0.02);
-  const highTarget = Math.floor(totalPixels * 0.98);
-  let cumulative = 0;
-  let pLow = 0;
-  let pHigh = 255;
-
-  for (let v = 0; v < 256; v++) {
-    cumulative += hist[v];
-    if (cumulative <= lowTarget) pLow = v;
-    if (cumulative >= highTarget) {
-      pHigh = v;
-      break;
-    }
-  }
-
-  const span = Math.max(24, pHigh - pLow);
-  const normScale = 255 / span;
-
-  // Step 3: Zero-padded Summed-Area Table (Integral Image) in a single pass
-  const stride = width + 1;
-  const integral = new Uint32Array(stride * (height + 1));
-
-  for (let y = 0; y < height; y++) {
-    let rowSum = 0;
-    const srcRowOffset = y * width;
-    const prevIntRowOffset = y * stride;
-    const currIntRowOffset = (y + 1) * stride;
-
-    for (let x = 0; x < width; x++) {
-      let normVal = ((luma[srcRowOffset + x] - pLow) * normScale + 0.5) | 0;
-      if (normVal < 0) normVal = 0;
-      else if (normVal > 255) normVal = 255;
-
-      luma[srcRowOffset + x] = normVal;
-      rowSum += normVal;
-      integral[currIntRowOffset + x + 1] = integral[prevIntRowOffset + x + 1] + rowSum;
-    }
-  }
-
-  // Step 4: Scale-invariant adaptive window radius & O(1) per-pixel local thresholding
-  const radius = Math.max(16, Math.round(Math.max(width, height) / 35));
-  const keepRatio = 1 - sensitivity;
-  const invBand = 255 / (2 * softness);
-
-  for (let y = 0; y < height; y++) {
-    const y1 = y - radius < 0 ? 0 : y - radius;
-    const y2 = y + radius >= height ? height - 1 : y + radius;
-    const boxH = y2 - y1 + 1;
-
-    const rowTop = y1 * stride;
-    const rowBottom = (y2 + 1) * stride;
-    const srcRowOffset = y * width;
-
-    for (let x = 0; x < width; x++) {
-      const x1 = x - radius < 0 ? 0 : x - radius;
-      const x2 = x + radius >= width ? width - 1 : x + radius;
-      const area = (x2 - x1 + 1) * boxH;
-
-      const sum =
-        integral[rowBottom + x2 + 1] -
-        integral[rowTop + x2 + 1] -
-        integral[rowBottom + x1] +
-        integral[rowTop + x1];
-
-      const localMean = sum / area;
-      const threshold = localMean * keepRatio - noiseFloor;
-      const pixelVal = luma[srcRowOffset + x];
-      const diff = pixelVal - threshold;
-
-      let outVal;
-      if (diff <= -softness) {
-        outVal = 0;
-      } else if (diff >= softness) {
-        outVal = 255;
-      } else {
-        outVal = ((diff + softness) * invBand + 0.5) | 0;
-      }
-
-      const rgbaIdx = (srcRowOffset + x) * 4;
-      data[rgbaIdx] = outVal;
-      data[rgbaIdx + 1] = outVal;
-      data[rgbaIdx + 2] = outVal;
-      data[rgbaIdx + 3] = 255;
-    }
-  }
-
-  ctx.putImageData(imgData, 0, 0);
-}
-
-export function applyGrayscale(
-  ctx: CanvasRenderingContext2D,
-  width: number,
-  height: number
-): void {
-  const imgData = ctx.getImageData(0, 0, width, height);
-  const data = imgData.data;
-
-  for (let i = 0; i < data.length; i += 4) {
-    const gray = (0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2] + 0.5) | 0;
-    data[i] = gray;
-    data[i + 1] = gray;
-    data[i + 2] = gray;
-  }
-
-  ctx.putImageData(imgData, 0, 0);
-}
-
+/** Returns a new canvas with the scan filter applied; the source canvas is left untouched. */
 export function processCanvasWithFilter(
   sourceCanvas: HTMLCanvasElement,
-  filter: FilterType
+  filter: FilterType,
+  options: FilterOptions = {}
 ): HTMLCanvasElement {
   const working = cloneCanvas(sourceCanvas);
-  const ctx = working.getContext("2d");
+  if (filter === "original") return working;
+  const ctx = working.getContext("2d", { willReadFrequently: true });
   if (!ctx) return working;
-
-  if (filter === "magic") {
-    applyMagicColor(ctx, working.width, working.height);
-  } else if (filter === "bw") {
-    applyBWThreshold(ctx, working.width, working.height);
-  } else if (filter === "grayscale") {
-    applyGrayscale(ctx, working.width, working.height);
-  }
-
+  const imgData = ctx.getImageData(0, 0, working.width, working.height);
+  enhanceDocument({ data: imgData.data, width: working.width, height: working.height }, filter, {
+    bwOffset: options.bwOffset,
+  });
+  ctx.putImageData(imgData, 0, 0);
   return working;
 }
